@@ -31,9 +31,6 @@ export default function IndexModal({
         return null
     }
 
-    const meshGradient =
-        'linear-gradient(115deg, #fc67fa 0%, #f4c4f3 43%,#7fd6fb 67%, #7f53ac 100%)'
-
     const handleDaily = () => {
         setIsClosing(true)
         setTimeout(() => {
@@ -84,7 +81,6 @@ export default function IndexModal({
                         <button
                             onClick={handleInfinite}
                             className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb]'
-                            style={{ background: meshGradient }}
                         >
                             <InfiniteIcon />
                             Infinite
@@ -100,29 +96,8 @@ export default function IndexModal({
                         </button>
                     </div>
                 </div>
-                {/* <div className='mt-8 flex w-full flex-col items-center gap-3 sm:flex-row sm:justify-center'>
-                    <button
-                        onClick={handleDaily}
-                        className='w-full max-w-[180px] cursor-pointer rounded-full bg-white px-6 py-3 font-semibold'
-                    >
-                        Daily
-                    </button>
-                    <button
-                        onClick={handleInfinite}
-                        className='w-full max-w-[180px] cursor-pointer rounded-full px-6 py-3 font-semibold text-black'
-                        style={{ background: meshGradient }}
-                    >
-                        Infinite
-                    </button>
-                    <button
-                        onClick={handleHangul}
-                        className='w-full max-w-[180px] cursor-pointer rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 font-semibold text-white'
-                    >
-                        Hangul
-                    </button>
-                </div> */}
 
-                <h1 className='mt-6 text-xl font-bold uppercase'>
+                <h1 className='mt-6 text-xl font-bold'>
                     {new Date().toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
