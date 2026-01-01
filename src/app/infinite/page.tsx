@@ -35,6 +35,7 @@ export default function InfinitePage() {
         lastIncorrectGuess,
         isAnimating,
         handleKeyPress,
+        notInList,
         showConfetti,
         windowDimensions,
         showStats,
@@ -152,6 +153,7 @@ export default function InfinitePage() {
                         gameLost={gameLost}
                         lastIncorrectGuess={lastIncorrectGuess}
                         isAnimating={isAnimating}
+                        notInList={notInList}
                     />
 
                     <OnScreenKeyboard

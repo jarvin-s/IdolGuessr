@@ -16,6 +16,9 @@ import {
 import { useGameProgress } from '@/hooks/useGameProgress'
 import { useUnlimitedStats } from '@/components/stats/UserStats'
 import { encodeIdolName, decodeIdolName } from '@/utils/encoding'
+import idolNames from '@/data/idolNames.json'
+
+const idolNamesSet = new Set(idolNames.map((name: string) => name.toUpperCase()))
 
 export function useGameController() {
     const pathname = usePathname()
@@ -52,6 +55,7 @@ export function useGameController() {
     const [disabledLetters, setDisabledLetters] = useState<Set<string>>(
         new Set()
     )
+    const [notInList, setNotInList] = useState(false)
 
     const {
         guesses,
@@ -796,6 +800,17 @@ export function useGameController() {
                     !gameLost
                 ) {
                     const normalizedGuess = currentGuess.toUpperCase().trim()
+
+                    if (!idolNamesSet.has(normalizedGuess)) {
+                        setNotInList(true)
+                        setIsAnimating(true)
+                        setTimeout(() => {
+                            setIsAnimating(false)
+                            setTimeout(() => setNotInList(false), 1000)
+                        }, 500)
+                        return
+                    }
+
                     const normalizedName =
                         dailyImage?.name?.toUpperCase().trim() || ''
                     const normalizedAltName =
@@ -1340,6 +1355,7 @@ export function useGameController() {
         isAnimating,
         handleKeyPress,
         disabledLetters,
+        notInList,
         // ui
         showConfetti,
         windowDimensions,

@@ -35,6 +35,7 @@ export default function Home() {
         isAnimating,
         handleKeyPress,
         disabledLetters,
+        notInList,
         showConfetti,
         windowDimensions,
         showStats,
@@ -163,6 +164,7 @@ export default function Home() {
                         gameLost={gameLost}
                         lastIncorrectGuess={lastIncorrectGuess}
                         isAnimating={isAnimating}
+                        notInList={notInList}
                     />
 
                     <OnScreenKeyboard
