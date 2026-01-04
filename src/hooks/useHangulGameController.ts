@@ -518,7 +518,8 @@ export function useHangulGameController() {
                     guesses.some((g) => g === 'empty') &&
                     !isAnimating &&
                     !gameWon &&
-                    !gameLost
+                    !gameLost &&
+                    currentGuess.length < 20
                 ) {
                     if (lastIncorrectGuess) setLastIncorrectGuess('')
                     setCurrentGuess((prev) => prev + key)
