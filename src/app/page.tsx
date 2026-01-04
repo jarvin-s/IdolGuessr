@@ -8,6 +8,7 @@ import GuessInput from '@/components/game/GuessInput'
 import StatsModal from '@/components/modals/StatsModal'
 import HelpModal from '@/components/modals/HelpModal'
 import FeedbackModal from '@/components/modals/FeedbackModal'
+import InfoModal from '@/components/modals/InfoModal'
 import WinModal from '@/components/modals/WinModal'
 import { getImageUrl } from '@/lib/supabase'
 import { useGameController } from '@/hooks/useGameController'
@@ -18,6 +19,7 @@ import { useEffect, useState, useRef } from 'react'
 export default function Home() {
     const router = useRouter()
     const [showIndexModal, setShowIndexModal] = useState(true)
+    const [showInfo, setShowInfo] = useState(false)
     const hasShownWinModalRef = useRef(false)
     const {
         gameMode,
@@ -98,6 +100,7 @@ export default function Home() {
                 <GameHeader
                     timer={timer}
                     onShowStats={() => setShowStats(true)}
+                    onShowInfo={() => setShowInfo(true)}
                     gameMode={gameMode}
                     onGameModeChange={handleGameModeChange}
                     showModeToggle={false}
@@ -178,10 +181,6 @@ export default function Home() {
             <StatsModal
                 isOpen={showStats}
                 onClose={() => setShowStats(false)}
-                onShowHelp={() => {
-                    setShowStats(false)
-                    setShowHelp(true)
-                }}
                 stats={stats}
                 statsLoaded={statsLoaded}
                 gameMode={'daily'}
@@ -190,9 +189,9 @@ export default function Home() {
             <HelpModal
                 isOpen={showHelp}
                 onClose={() => setShowHelp(false)}
-                onShowFeedback={() => {
-                    setShowFeedback(true)
+                onBack={() => {
                     setShowHelp(false)
+                    setShowInfo(true)
                 }}
             />
 
@@ -201,6 +200,19 @@ export default function Home() {
                 onClose={() => setShowFeedback(false)}
                 onBack={() => {
                     setShowFeedback(false)
+                    setShowInfo(true)
+                }}
+            />
+
+            <InfoModal
+                isOpen={showInfo}
+                onClose={() => setShowInfo(false)}
+                onShowFeedback={() => {
+                    setShowInfo(false)
+                    setShowFeedback(true)
+                }}
+                onShowHelp={() => {
+                    setShowInfo(false)
                     setShowHelp(true)
                 }}
             />

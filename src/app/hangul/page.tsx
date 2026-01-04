@@ -10,6 +10,7 @@ import OnScreenKeyboard from '@/components/input/OnScreenKeyboard'
 import StatsModal from '@/components/modals/StatsModal'
 import HelpModal from '@/components/modals/HelpModal'
 import FeedbackModal from '@/components/modals/FeedbackModal'
+import InfoModal from '@/components/modals/InfoModal'
 import WinModal from '@/components/modals/WinModal'
 import HangulStartModal from '@/components/modals/HangulStartModal'
 import HangulFilterModal from '@/components/filters/HangulFilterModal'
@@ -22,6 +23,7 @@ export default function HangulPage() {
     const router = useRouter()
     const [startOpen, setStartOpen] = useState(false)
     const [showFilterModal, setShowFilterModal] = useState(false)
+    const [showInfo, setShowInfo] = useState(false)
     const {
         isLoading,
         hangulImage,
@@ -86,6 +88,7 @@ export default function HangulPage() {
                 <GameHeader
                     timer={''}
                     onShowStats={() => setShowStats(true)}
+                    onShowInfo={() => setShowInfo(true)}
                     gameMode={'hangul'}
                     onGameModeChange={() => {
                         /* disabled in hangul mode */
@@ -150,10 +153,6 @@ export default function HangulPage() {
             <StatsModal
                 isOpen={showStats}
                 onClose={() => setShowStats(false)}
-                onShowHelp={() => {
-                    setShowStats(false)
-                    setShowHelp(true)
-                }}
                 stats={hangulStatsData}
                 statsLoaded={hangulStatsLoaded}
                 gameMode={'hangul'}
@@ -162,9 +161,9 @@ export default function HangulPage() {
             <HelpModal
                 isOpen={showHelp}
                 onClose={() => setShowHelp(false)}
-                onShowFeedback={() => {
-                    setShowFeedback(true)
+                onBack={() => {
                     setShowHelp(false)
+                    setShowInfo(true)
                 }}
             />
 
@@ -173,6 +172,19 @@ export default function HangulPage() {
                 onClose={() => setShowFeedback(false)}
                 onBack={() => {
                     setShowFeedback(false)
+                    setShowInfo(true)
+                }}
+            />
+
+            <InfoModal
+                isOpen={showInfo}
+                onClose={() => setShowInfo(false)}
+                onShowFeedback={() => {
+                    setShowInfo(false)
+                    setShowFeedback(true)
+                }}
+                onShowHelp={() => {
+                    setShowInfo(false)
                     setShowHelp(true)
                 }}
             />

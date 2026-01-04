@@ -5,6 +5,7 @@ import FilterModal from '../filters/FilterModal'
 interface GameHeaderProps {
     timer: string
     onShowStats: () => void
+    onShowInfo?: () => void
     gameMode: 'daily' | 'unlimited' | 'hangul'
     onGameModeChange: (
         mode: 'daily' | 'unlimited',
@@ -21,6 +22,7 @@ const meshGradient =
 export default function GameHeader({
     timer,
     onShowStats,
+    onShowInfo,
     gameMode,
     onGameModeChange,
     showModeToggle = true,
@@ -115,6 +117,16 @@ export default function GameHeader({
                         >
                             <StatsIcon />
                         </button>
+
+                        {onShowInfo && (
+                            <button
+                                onClick={onShowInfo}
+                                className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 transition-colors hover:bg-gray-200'
+                                aria-label='View Info'
+                            >
+                                <InfoIcon />
+                            </button>
+                        )}
 
                         {showModeToggle && (
                             <button
@@ -237,6 +249,26 @@ function HomeIcon() {
                 strokeLinejoin='round'
                 strokeWidth='2'
                 d='m4 12l8-8l8 8M6 10.5V19a1 1 0 0 0 1 1h3v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h3a1 1 0 0 0 1-1v-8.5'
+            />
+        </svg>
+    )
+}
+
+function InfoIcon() {
+    return (
+        <svg
+            xmlns='http://www.w3.org/2000/svg'
+            className='h-5 w-5 text-gray-600'
+            viewBox='0 0 24 24'
+            fill='none'
+            stroke='currentColor'
+        >
+            <circle cx='12' cy='12' r='10' strokeWidth='2' />
+            <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth='2'
+                d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3m.08 4h.01'
             />
         </svg>
     )

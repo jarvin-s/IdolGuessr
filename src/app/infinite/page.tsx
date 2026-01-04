@@ -10,6 +10,7 @@ import OnScreenKeyboard from '@/components/input/OnScreenKeyboard'
 import StatsModal from '@/components/modals/StatsModal'
 import HelpModal from '@/components/modals/HelpModal'
 import FeedbackModal from '@/components/modals/FeedbackModal'
+import InfoModal from '@/components/modals/InfoModal'
 import WinModal from '@/components/modals/WinModal'
 import InfiniteStartModal from '@/components/modals/InfiniteStartModal'
 import FilterModal from '@/components/filters/FilterModal'
@@ -22,6 +23,7 @@ export default function InfinitePage() {
     const router = useRouter()
     const [startOpen, setStartOpen] = useState(false)
     const [showFilterModal, setShowFilterModal] = useState(false)
+    const [showInfo, setShowInfo] = useState(false)
     const {
         handleGameModeChange,
         timer,
@@ -94,6 +96,7 @@ export default function InfinitePage() {
                 <GameHeader
                     timer={timer}
                     onShowStats={() => setShowStats(true)}
+                    onShowInfo={() => setShowInfo(true)}
                     gameMode={'unlimited'}
                     onGameModeChange={() => {
                         /* disabled in infinite */
@@ -166,10 +169,6 @@ export default function InfinitePage() {
             <StatsModal
                 isOpen={showStats}
                 onClose={() => setShowStats(false)}
-                onShowHelp={() => {
-                    setShowStats(false)
-                    setShowHelp(true)
-                }}
                 stats={stats}
                 statsLoaded={statsLoaded}
                 gameMode={'unlimited'}
@@ -178,9 +177,9 @@ export default function InfinitePage() {
             <HelpModal
                 isOpen={showHelp}
                 onClose={() => setShowHelp(false)}
-                onShowFeedback={() => {
-                    setShowFeedback(true)
+                onBack={() => {
                     setShowHelp(false)
+                    setShowInfo(true)
                 }}
             />
 
@@ -189,6 +188,19 @@ export default function InfinitePage() {
                 onClose={() => setShowFeedback(false)}
                 onBack={() => {
                     setShowFeedback(false)
+                    setShowInfo(true)
+                }}
+            />
+
+            <InfoModal
+                isOpen={showInfo}
+                onClose={() => setShowInfo(false)}
+                onShowFeedback={() => {
+                    setShowInfo(false)
+                    setShowFeedback(true)
+                }}
+                onShowHelp={() => {
+                    setShowInfo(false)
                     setShowHelp(true)
                 }}
             />
