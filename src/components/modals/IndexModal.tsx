@@ -64,7 +64,7 @@ export default function IndexModal({
                 </div>
 
                 <p className='text-4xl'>
-                    Guess your favorite K-pop idol in 6 tries.
+                    Guess your favorite K-pop idol in different ways!
                 </p>
 
                 <div className='mt-8 flex flex-row gap-3'>

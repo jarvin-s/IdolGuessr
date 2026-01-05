@@ -34,7 +34,7 @@ export default function HangulStartModal({
                     <ul className='list-inside list-disc space-y-1'>
                         <li>Read the idol&apos;s name in Korean (Hangul)</li>
                         <li>Type their English name to guess</li>
-                        <li>Use the hint to reveal their image</li>
+                        <li>Use the hint to reveal their group</li>
                     </ul>
                 </div>
 
