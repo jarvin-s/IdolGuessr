@@ -21,13 +21,14 @@ export default function HangulStartModal({
     return (
         <div className='fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
             <div className='modal-fade-in relative w-full max-w-sm rounded-md bg-white p-10'>
-                <div className='mb-4'>
+                <div className='mb-4 flex items-center justify-center'>
+                    <HangulIcon />
                     <h2 className='text-center text-xl font-bold uppercase md:text-2xl'>
                         Hangul Mode
                     </h2>
                 </div>
 
-                <div className='mb-6 rounded-lg bg-purple-50 p-4 text-sm text-gray-700'>
+                <div className='mb-6 bg-purple-100 p-3 text-sm'>
                     <p className='mb-2'>
                         <strong>How to play:</strong>
                     </p>
@@ -89,5 +90,21 @@ export default function HangulStartModal({
                 </div>
             </div>
         </div>
+    )
+}
+
+function HangulIcon() {
+    return (
+        <svg
+            xmlns='http://www.w3.org/2000/svg'
+            width='36'
+            height='36'
+            viewBox='0 0 24 24'
+        >
+            <path
+                fill='currentColor'
+                d='M8 4v2H4v2h2.39C5.55 8.74 5 9.8 5 11c0 2.2 1.8 4 4 4s4-1.8 4-4c0-1.2-.55-2.26-1.39-3H14V6h-4V4m5 0v12h2v-5h3V9h-3V4M9 9c1.12 0 2 .88 2 2s-.88 2-2 2s-2-.88-2-2s.88-2 2-2m-2 7v4h10v-2H9v-2Z'
+            />
+        </svg>
     )
 }
