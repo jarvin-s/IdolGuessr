@@ -951,8 +951,14 @@ export function useGameController() {
                     }
                 }
             } else if (key === '✕') {
-                if (!gameWon && !gameLost)
-                    setCurrentGuess((prev) => prev.slice(0, -1))
+                if (!gameWon && !gameLost) {
+                    if (currentGuess === '' && lastIncorrectGuess) {
+                        setCurrentGuess(lastIncorrectGuess.slice(0, -1))
+                        setLastIncorrectGuess('')
+                    } else {
+                        setCurrentGuess((prev) => prev.slice(0, -1))
+                    }
+                }
             } else {
                 if (
                     guesses.some((g) => g === 'empty') &&
