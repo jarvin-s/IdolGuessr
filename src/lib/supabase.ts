@@ -18,6 +18,11 @@ export interface DailyImage {
   group_category?: string
   base64_group?: string
   base64_idol?: string
+  hangul_name?: string
+}
+
+export interface HangulImage extends DailyImage {
+  hangul_name: string
 }
 
 export interface CurrentDaily {
@@ -78,6 +83,134 @@ export function clearSeenIdols(): void {
   } catch (error) {
     console.error('Error clearing seen idols:', error)
   }
+}
+
+// Hangul mode seen idols tracking (separate from unlimited)
+export function getSeenHangulIdols(): string[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const seen = localStorage.getItem('idol-guessr-seen-hangul-idols')
+    return seen ? JSON.parse(seen) : []
+  } catch {
+    return []
+  }
+}
+
+export function addSeenHangulIdol(imgBucket: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    const seen = getSeenHangulIdols()
+    if (!seen.includes(imgBucket)) {
+      seen.push(imgBucket)
+      localStorage.setItem('idol-guessr-seen-hangul-idols', JSON.stringify(seen))
+    }
+  } catch (error) {
+    console.error('Error adding seen hangul idol:', error)
+  }
+}
+
+export function clearSeenHangulIdols(): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem('idol-guessr-seen-hangul-idols')
+  } catch (error) {
+    console.error('Error clearing seen hangul idols:', error)
+  }
+}
+
+export async function getMultipleRandomHangulImages(
+  count: number,
+  groupFilter?: 'boy-group' | 'girl-group' | null
+): Promise<HangulImage[]> {
+  const seenIdols = getSeenHangulIdols();
+
+  const fetchCount = count * 3;
+  const { data, error } = await supabase.rpc('get_multiple_random_hangul_idols', {
+    excluded_buckets: seenIdols,
+    row_count: fetchCount
+  });
+
+  if (error) {
+    console.error('[Hangul DB Request] Error:', error);
+    return [];
+  }
+
+  if (!data || data.length === 0) {
+    clearSeenHangulIdols();
+
+    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_hangul_idols', {
+      excluded_buckets: [],
+      row_count: count
+    });
+
+    if (retryError || !retryData) {
+      console.error('get_multiple_random_hangul retry error:', retryError);
+      return [];
+    }
+
+    const validRetryData = retryData.filter((img: HangulImage) => {
+      // Only hangul_name is required - image data is optional
+      if (!img.hangul_name) {
+        return false;
+      }
+      if (groupFilter && img.group_category !== groupFilter) {
+        return false;
+      }
+      return true;
+    });
+
+    return validRetryData.slice(0, count);
+  }
+
+  const uniqueImages: HangulImage[] = [];
+  const seenBuckets = new Set<string>();
+
+  for (const image of data) {
+    // Only hangul_name is required - image data is optional
+    if (!image.hangul_name) {
+      continue;
+    }
+
+    if (groupFilter && image.group_category !== groupFilter) {
+      continue;
+    }
+
+    // Use id as fallback if no img_bucket for deduplication
+    const uniqueKey = image.img_bucket || `id-${image.id}`;
+    if (!seenBuckets.has(uniqueKey) && uniqueImages.length < count) {
+      uniqueImages.push(image);
+      seenBuckets.add(uniqueKey);
+    }
+  }
+
+  if (uniqueImages.length < count && seenIdols.length > 0) {
+    clearSeenHangulIdols();
+
+    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_hangul_idols', {
+      excluded_buckets: [],
+      row_count: count
+    });
+
+    if (retryError || !retryData) {
+      console.error('get_multiple_random_hangul retry error:', retryError);
+      return uniqueImages;
+    }
+
+    const validRetryData = retryData.filter((img: HangulImage) => {
+      // Only hangul_name is required - image data is optional
+      if (!img.hangul_name) {
+        return false;
+      }
+      if (groupFilter && img.group_category !== groupFilter) {
+        return false;
+      }
+      return true;
+    });
+
+    return validRetryData.slice(0, count);
+  }
+
+  return uniqueImages;
 }
 
 export async function getMultipleRandomUnlimitedImages(
@@ -230,7 +363,7 @@ export function getImageUrl(
   base64Group?: string,
 ): string {
   const fileName = guessNumber === 'clear' ? 'clear.png' : `00${guessNumber}.png`
-  
+
   // Normalize supabaseUrl by removing trailing slash
   const normalizedUrl = supabaseUrl.replace(/\/+$/, '')
 
@@ -252,14 +385,35 @@ export function getImageUrl(
   return `${normalizedUrl}/storage/v1/object/public/images/${mode}/${groupType}/${imgBucket}/${fileName}`
 }
 
+export function getHangulImageUrl(
+  groupCategory: string,
+  base64Group: string,
+  imgBucket: string,
+  imageType: 'hint' | 'clear' = 'clear'
+): string {
+  if (!groupCategory || !base64Group || !imgBucket) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[getHangulImageUrl] Missing required fields:', {
+        groupCategory, base64Group, imgBucket
+      });
+    }
+    return '';
+  }
+
+  const normalizedUrl = supabaseUrl.replace(/\/+$/, '');
+  const fileName = imageType === 'hint' ? 'hint.png' : 'clear.png';
+  return `${normalizedUrl}/storage/v1/object/public/images/hangul/${groupCategory}/${base64Group}/${imgBucket}/${fileName}`;
+}
+
 export interface GuessTrackingData {
   session_id: string
   image_id: number
-  guess_text: string
+  guesses: string[]
+  guess_text: string  // Keep for backwards compatibility with existing DB column
   is_correct: boolean
   guess_number: number
   guess_time: string
-  time_since_previous_guess: number | null
+  time_since_previous_guess: number | null  // Keep for backwards compatibility
   user_agent: string | null
   device_type: string | null
   browser: string | null
@@ -305,31 +459,23 @@ export function getOrCreateSessionId(): string {
   return sessionId
 }
 
-let lastGuessTime: number | null = null
-
-export async function trackGuess(
+export async function trackDailyGameEnd(
   imageId: number,
-  guessText: string,
-  isCorrect: boolean,
-  guessNumber: number
+  guesses: string[],
+  won: boolean
 ): Promise<void> {
   try {
-    const now = Date.now()
-    const timeSincePrevious = lastGuessTime
-      ? Number(((now - lastGuessTime) / 1000).toFixed(1))
-      : null
-    lastGuessTime = now
-
     const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : null
 
     const guessData: GuessTrackingData = {
       session_id: getOrCreateSessionId(),
       image_id: imageId,
-      guess_text: guessText,
-      is_correct: isCorrect,
-      guess_number: guessNumber,
+      guesses: guesses,
+      guess_text: guesses.join(', '),  // Backwards compatibility: store as comma-separated string
+      is_correct: won,
+      guess_number: guesses.length,
       guess_time: new Date().toISOString(),
-      time_since_previous_guess: timeSincePrevious,
+      time_since_previous_guess: null,  // No longer tracked per-guess
       user_agent: userAgent,
       device_type: userAgent ? getDeviceType(userAgent) : null,
       browser: userAgent ? getBrowser(userAgent) : null,
@@ -337,12 +483,13 @@ export async function trackGuess(
 
     await supabase.from('guess_tracking').insert(guessData)
   } catch (error) {
-    console.error('Error tracking guess:', error)
+    console.error('Error tracking daily game:', error)
   }
 }
 
+// Keep for backwards compatibility during transition
 export function resetGuessTimer(): void {
-  lastGuessTime = null
+  // No longer needed but kept to avoid breaking imports
 }
 
 export async function trackUnlimitedGame(
