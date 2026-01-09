@@ -408,11 +408,12 @@ export function getHangulImageUrl(
 export interface GuessTrackingData {
   session_id: string
   image_id: number
-  guess_text: string
+  guesses: string[]
+  guess_text: string  // Keep for backwards compatibility with existing DB column
   is_correct: boolean
   guess_number: number
   guess_time: string
-  time_since_previous_guess: number | null
+  time_since_previous_guess: number | null  // Keep for backwards compatibility
   user_agent: string | null
   device_type: string | null
   browser: string | null
@@ -458,31 +459,23 @@ export function getOrCreateSessionId(): string {
   return sessionId
 }
 
-let lastGuessTime: number | null = null
-
-export async function trackGuess(
+export async function trackDailyGameEnd(
   imageId: number,
-  guessText: string,
-  isCorrect: boolean,
-  guessNumber: number
+  guesses: string[],
+  won: boolean
 ): Promise<void> {
   try {
-    const now = Date.now()
-    const timeSincePrevious = lastGuessTime
-      ? Number(((now - lastGuessTime) / 1000).toFixed(1))
-      : null
-    lastGuessTime = now
-
     const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : null
 
     const guessData: GuessTrackingData = {
       session_id: getOrCreateSessionId(),
       image_id: imageId,
-      guess_text: guessText,
-      is_correct: isCorrect,
-      guess_number: guessNumber,
+      guesses: guesses,
+      guess_text: guesses.join(', '),  // Backwards compatibility: store as comma-separated string
+      is_correct: won,
+      guess_number: guesses.length,
       guess_time: new Date().toISOString(),
-      time_since_previous_guess: timeSincePrevious,
+      time_since_previous_guess: null,  // No longer tracked per-guess
       user_agent: userAgent,
       device_type: userAgent ? getDeviceType(userAgent) : null,
       browser: userAgent ? getBrowser(userAgent) : null,
@@ -490,12 +483,13 @@ export async function trackGuess(
 
     await supabase.from('guess_tracking').insert(guessData)
   } catch (error) {
-    console.error('Error tracking guess:', error)
+    console.error('Error tracking daily game:', error)
   }
 }
 
+// Keep for backwards compatibility during transition
 export function resetGuessTimer(): void {
-  lastGuessTime = null
+  // No longer needed but kept to avoid breaking imports
 }
 
 export async function trackUnlimitedGame(

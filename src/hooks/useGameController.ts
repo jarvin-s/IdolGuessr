@@ -7,7 +7,7 @@ import {
     getMultipleRandomUnlimitedImages,
     type DailyImage as DailyRow,
     getImageUrl,
-    trackGuess,
+    trackDailyGameEnd,
     trackUnlimitedGame,
     resetGuessTimer,
     addSeenIdol,
@@ -829,14 +829,6 @@ export function useGameController() {
 
                     if (gameMode === 'daily') {
                         saveGuessAttempt(normalizedGuess)
-                        if (dailyImage?.id) {
-                            void trackGuess(
-                                dailyImage.id,
-                                normalizedGuess,
-                                isCorrect,
-                                guessNumber
-                            )
-                        }
                     }
 
                     setIsAnimating(true)
@@ -880,6 +872,10 @@ export function useGameController() {
                                         setGameLost(true)
                                         if (gameMode === 'daily') {
                                             handleGameLoss()
+                                            if (dailyImage?.id) {
+                                                const allGuesses = loadGuessAttempts()
+                                                void trackDailyGameEnd(dailyImage.id, allGuesses, false)
+                                            }
                                             setTimeout(() => {
                                                 setShowWinModal(true)
                                             }, 2000)
@@ -936,6 +932,10 @@ export function useGameController() {
                         })
                         if (gameMode === 'daily') {
                             handleGameWin(guessNumber)
+                            if (dailyImage?.id) {
+                                const allGuesses = loadGuessAttempts()
+                                void trackDailyGameEnd(dailyImage.id, allGuesses, true)
+                            }
                             setTimeout(() => setShowWinModal(true), 2000)
                         } else {
                             const currentStreak =
@@ -988,6 +988,7 @@ export function useGameController() {
             setGuesses,
             dailyImage,
             saveGuessAttempt,
+            loadGuessAttempts,
             lastIncorrectGuess,
             gameMode,
             unlimitedStats,

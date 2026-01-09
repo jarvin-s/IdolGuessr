@@ -65,7 +65,7 @@ export default function WinModal({
             >
                 <button
                     onClick={onClose}
-                    className='absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200'
+                    className='absolute top-4 right-4 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200'
                     aria-label='Close'
                 >
                     <svg
