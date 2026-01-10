@@ -84,19 +84,13 @@ export default function HangulDisplay({
                     >
                         {/* Hangul Name Display */}
                         <div className='flex flex-col items-center justify-center px-4'>
-                            <h1
-                                className='text-center font-bold text-[#f3f3f3] select-none'
-                                style={{
-                                    fontSize: 'clamp(3rem, 12vw, 7rem)',
-                                    wordBreak: 'keep-all',
-                                }}
-                            >
+                            <h1 className='text-center text-[7rem] text-[#f3f3f3] select-none'>
                                 {hangulName}
                             </h1>
                             {/* Group Name Hint */}
                             {imageRevealed && hangulImage?.group_name && (
-                                <div className='mt-2 rounded-lg bg-black/40 px-4 py-2'>
-                                    <span className='text-lg font-semibold text-white/90 md:text-xl'>
+                                <div className='mt-2 rounded-md bg-[#fff97f] px-4 py-2'>
+                                    <span className='text-lg font-semibold text-black md:text-xl'>
                                         {hangulImage.group_name}
                                     </span>
                                 </div>

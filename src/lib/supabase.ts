@@ -426,6 +426,13 @@ export interface UnlimitedGameData {
   streak: number
 }
 
+export interface HangulGameData {
+  session_id: string
+  hangul_id: number
+  amount_of_guesses: number
+  streak: number
+}
+
 function getDeviceType(userAgent: string): string {
   if (/mobile/i.test(userAgent)) return 'mobile'
   if (/tablet|ipad/i.test(userAgent)) return 'tablet'
@@ -516,6 +523,33 @@ export async function trackUnlimitedGame(
     }
   } catch (error) {
     console.error('Error tracking unlimited game:', error)
+  }
+}
+
+export async function trackHangulGame(
+  hangulId: number,
+  amountOfGuesses: number,
+  streak: number
+): Promise<void> {
+  if (amountOfGuesses < 1) {
+    return
+  }
+
+  try {
+    const gameData: HangulGameData = {
+      session_id: getOrCreateSessionId(),
+      hangul_id: hangulId,
+      amount_of_guesses: amountOfGuesses,
+      streak: streak
+    }
+
+    const { error } = await supabase.from('hangul_game_tracking').insert(gameData)
+
+    if (error) {
+      console.error('Error tracking hangul game:', error)
+    }
+  } catch (error) {
+    console.error('Error tracking hangul game:', error)
   }
 }
 

@@ -8,6 +8,7 @@ import {
     resetGuessTimer,
     addSeenHangulIdol,
     clearSeenHangulIdols,
+    trackHangulGame,
 } from '@/lib/supabase'
 import { useHangulStats } from '@/components/stats/UserStats'
 import { encodeIdolName, decodeIdolName } from '@/utils/encoding'
@@ -58,6 +59,7 @@ export function useHangulGameController() {
     const loadHangulRef = useRef(false)
     const loadHangulRefFunc = useRef<((filterOverride?: GroupFilter) => Promise<void>) | null>(null)
     const lossRecordedRef = useRef(false)
+    const hasTrackedCurrentGame = useRef(false)
 
     useEffect(() => {
         guessesRef.current = guesses
@@ -188,7 +190,6 @@ export function useHangulGameController() {
                 setIsLoading(false)
 
                 if (savedGameState.prefetchedImages && savedGameState.prefetchedImages.length > 0) {
-                    // Only require hangul_name - image data is optional
                     const allImagesValid = savedGameState.prefetchedImages.every(
                         (img) => img.hangul_name
                     )
@@ -285,6 +286,8 @@ export function useHangulGameController() {
             setGameLost(false)
             setShowWinModal(false)
             resetGuessTimer()
+            lossRecordedRef.current = false
+            hasTrackedCurrentGame.current = false
 
             const finalSkipsRemaining = overrideSkipsRemaining ?? skipsRemaining
             const finalImageRevealed = overrideImageRevealed ?? false
@@ -413,6 +416,7 @@ export function useHangulGameController() {
         (overrideGroupFilter?: GroupFilter) => {
             setShowGameOver(false)
             lossRecordedRef.current = false
+            hasTrackedCurrentGame.current = false
             hangulStats.clearGameState()
             clearSeenHangulIdols()
 
@@ -472,12 +476,15 @@ export function useHangulGameController() {
                                 const remainingAfterThis = newGuesses.filter((g) => g === 'empty').length
                                 if (remainingAfterThis === 0) {
                                     setTimeout(() => {
-                                        // Capture the current streak before resetting
-                                        setFinalStreak(hangulStats.stats.currentStreak)
+                                        const streakBeforeReset = hangulStats.stats.currentStreak
+                                        setFinalStreak(streakBeforeReset)
                                         setGameLost(true)
-                                        // Only record the loss once
                                         if (!lossRecordedRef.current) {
                                             lossRecordedRef.current = true
+                                            if (hangulImage?.id && !hasTrackedCurrentGame.current && streakBeforeReset >= 1) {
+                                                void trackHangulGame(hangulImage.id, 3, streakBeforeReset)
+                                                hasTrackedCurrentGame.current = true
+                                            }
                                             hangulStats.updateStats(false, true)
                                         }
                                         hangulStats.clearGameState()

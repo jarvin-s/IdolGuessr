@@ -66,6 +66,14 @@ export default function InfoModal({
                         </h1>
                         <div className='mt-4 space-y-4'>
                             <ChangelogEntry
+                                version='1.3.0'
+                                date='January 10, 2025'
+                                changes={[
+                                    'Launched Hangul mode',
+                                    'Added Info screen',
+                                ]}
+                            />
+                            <ChangelogEntry
                                 version='1.2.0'
                                 date='December 11, 2025'
                                 changes={[
