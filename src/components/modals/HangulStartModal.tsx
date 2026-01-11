@@ -33,9 +33,9 @@ export default function HangulStartModal({
                         <strong>How to play:</strong>
                     </p>
                     <ul className='list-inside list-disc space-y-1'>
-                        <li>Read the idol&apos;s name in Korean (Hangul)</li>
-                        <li>Type their English name to guess</li>
-                        <li>Use the hint to reveal their group</li>
+                        <li>Read the idol&apos;s name in Korean (Hangul).</li>
+                        <li>Type their English name to guess.</li>
+                        <li>Use the hint to reveal their group.</li>
                     </ul>
                 </div>
 
