@@ -95,7 +95,7 @@ export default function HelpModal({ isOpen, onClose, onBack }: HelpModalProps) {
                                 backgroundPosition: 'center',
                             }}
                         />
-                        <div className='flex h-6 items-center justify-center gap-1 rounded-md bg-black px-2'>
+                        <div className='flex h-6 items-center justify-center gap-1 rounded-sm bg-black px-2'>
                             <div className='h-2.5 w-2.5 rounded-full bg-red-400/75' />
                             <div className='h-2.5 w-2.5 rounded-full bg-white' />
                             <div className='h-2.5 w-2.5 rounded-full bg-white' />
@@ -113,7 +113,7 @@ export default function HelpModal({ isOpen, onClose, onBack }: HelpModalProps) {
                                 backgroundPosition: 'center',
                             }}
                         />
-                        <div className='flex h-6 items-center justify-center gap-1 rounded-md bg-black px-2'>
+                        <div className='flex h-6 items-center justify-center gap-1 rounded-sm bg-black px-2'>
                             <div className='h-2.5 w-2.5 rounded-full bg-red-400/75' />
                             <div className='h-2.5 w-2.5 rounded-full bg-red-400/75' />
                             <div className='h-2.5 w-2.5 rounded-full bg-white' />
@@ -131,7 +131,7 @@ export default function HelpModal({ isOpen, onClose, onBack }: HelpModalProps) {
                                 backgroundPosition: 'center',
                             }}
                         />
-                        <div className='flex h-6 items-center justify-center gap-1 rounded-md bg-black px-2'>
+                        <div className='flex h-6 items-center justify-center gap-1 rounded-sm bg-black px-2'>
                             <div className='h-2.5 w-2.5 rounded-full bg-red-400/75' />
                             <div className='h-2.5 w-2.5 rounded-full bg-red-400/75' />
                             <div className='h-2.5 w-2.5 rounded-full bg-green-400' />

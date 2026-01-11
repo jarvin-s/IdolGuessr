@@ -421,15 +421,11 @@ export interface GuessTrackingData {
 
 export interface UnlimitedGameData {
   session_id: string
-  unlimited_id: number
-  amount_of_guesses: number
   streak: number
 }
 
 export interface HangulGameData {
   session_id: string
-  hangul_id: number
-  amount_of_guesses: number
   streak: number
 }
 
@@ -500,19 +496,15 @@ export function resetGuessTimer(): void {
 }
 
 export async function trackUnlimitedGame(
-  unlimitedId: number,
-  amountOfGuesses: number,
   streak: number
 ): Promise<void> {
-  if (amountOfGuesses < 1) {
+  if (streak < 1) {
     return
   }
 
   try {
     const gameData: UnlimitedGameData = {
       session_id: getOrCreateSessionId(),
-      unlimited_id: unlimitedId,
-      amount_of_guesses: amountOfGuesses,
       streak: streak
     }
 
@@ -527,19 +519,15 @@ export async function trackUnlimitedGame(
 }
 
 export async function trackHangulGame(
-  hangulId: number,
-  amountOfGuesses: number,
   streak: number
 ): Promise<void> {
-  if (amountOfGuesses < 1) {
+  if (streak < 1) {
     return
   }
 
   try {
     const gameData: HangulGameData = {
       session_id: getOrCreateSessionId(),
-      hangul_id: hangulId,
-      amount_of_guesses: amountOfGuesses,
       streak: streak
     }
 

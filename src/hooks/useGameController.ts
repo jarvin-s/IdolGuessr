@@ -565,19 +565,8 @@ export function useGameController() {
                 )
                 if (hasGuesses) {
                     const currentStreak = unlimitedStats.stats.currentStreak
-                    if (
-                        currentStreak >= 1 &&
-                        dailyImage?.id &&
-                        !hasTrackedCurrentGame.current
-                    ) {
-                        const guessCount = guesses.filter(
-                            (g) => g === 'incorrect' || g === 'correct'
-                        ).length
-                        void trackUnlimitedGame(
-                            dailyImage.id,
-                            guessCount,
-                            currentStreak
-                        )
+                    if (currentStreak >= 1 && !hasTrackedCurrentGame.current) {
+                        void trackUnlimitedGame(currentStreak)
                         hasTrackedCurrentGame.current = true
                     }
                     unlimitedStats.updateStats(false, true, true)
@@ -885,17 +874,10 @@ export function useGameController() {
                                                     .currentStreak
                                             if (
                                                 currentStreak >= 1 &&
-                                                dailyImage?.id &&
                                                 !hasTrackedCurrentGame.current
                                             ) {
-                                                const guessCount = 6
-                                                void trackUnlimitedGame(
-                                                    dailyImage.id,
-                                                    guessCount,
-                                                    currentStreak
-                                                )
-                                                hasTrackedCurrentGame.current =
-                                                    true
+                                                void trackUnlimitedGame(currentStreak)
+                                                hasTrackedCurrentGame.current = true
                                             }
                                             unlimitedStats.updateStats(
                                                 false,

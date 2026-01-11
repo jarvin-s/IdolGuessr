@@ -481,8 +481,8 @@ export function useHangulGameController() {
                                         setGameLost(true)
                                         if (!lossRecordedRef.current) {
                                             lossRecordedRef.current = true
-                                            if (hangulImage?.id && !hasTrackedCurrentGame.current && streakBeforeReset >= 1) {
-                                                void trackHangulGame(hangulImage.id, 3, streakBeforeReset)
+                                            if (!hasTrackedCurrentGame.current && streakBeforeReset >= 1) {
+                                                void trackHangulGame(streakBeforeReset)
                                                 hasTrackedCurrentGame.current = true
                                             }
                                             hangulStats.updateStats(false, true)

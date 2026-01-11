@@ -67,10 +67,11 @@ export default function InfoModal({
                         <div className='mt-4 space-y-4'>
                             <ChangelogEntry
                                 version='1.3.0'
-                                date='January 10, 2025'
+                                date='January 11, 2025'
                                 changes={[
                                     'Launched Hangul mode',
                                     'Added Info screen',
+                                    'Added restricted guessing to only idol names',
                                 ]}
                             />
                             <ChangelogEntry

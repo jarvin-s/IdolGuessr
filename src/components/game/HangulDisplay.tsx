@@ -189,7 +189,7 @@ export default function HangulDisplay({
 
                 {/* Guess Progress Bar */}
                 <div className='pointer-events-none absolute inset-0 z-[200] mb-4 flex items-end justify-center px-18'>
-                    <div className='flex h-12 w-full items-center justify-evenly rounded-lg bg-black'>
+                    <div className='flex h-12 w-full items-center justify-evenly rounded-md bg-black'>
                         <h1 className='text-xl font-bold text-white uppercase'>
                             Guess {guesses.length - remainingGuesses}/
                             {guesses.length}
