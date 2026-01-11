@@ -65,6 +65,42 @@ export interface UnlimitedGameState {
     currentImageIndex?: number
 }
 
+export interface HangulStats {
+    totalGames: number
+    totalWins: number
+    currentStreak: number
+    maxStreak: number
+}
+
+export interface HangulGameState {
+    groupType: string
+    imgBucket: string
+    groupCategory?: string
+    base64Group?: string
+    base64Idol?: string
+    encodedIdolName: string
+    encodedAltName?: string
+    hangulName: string
+    groupName?: string
+    imageRevealed?: boolean
+    skipsRemaining?: number
+    guesses: Array<'correct' | 'incorrect' | 'empty'>
+    savedAt: string
+    prefetchedImages?: Array<{
+        id: number
+        name: string
+        alt_name?: string
+        hangul_name: string
+        group_type: string
+        img_bucket: string
+        group_category?: string
+        base64_group?: string
+        base64_idol?: string
+        group_name?: string
+    }>
+    currentImageIndex?: number
+}
+
 const defaultStats: UserStats = {
     totalGames: 0,
     totalWins: 0,
@@ -77,6 +113,13 @@ const defaultStats: UserStats = {
 }
 
 const defaultUnlimitedStats: UnlimitedStats = {
+    totalGames: 0,
+    totalWins: 0,
+    currentStreak: 0,
+    maxStreak: 0,
+}
+
+const defaultHangulStats: HangulStats = {
     totalGames: 0,
     totalWins: 0,
     currentStreak: 0,
@@ -347,11 +390,97 @@ export function useUnlimitedStats() {
     return { stats, isLoaded, updateStats, saveGameState, loadGameState, clearGameState }
 }
 
+export function useHangulStats() {
+    const [stats, setStats] = useState<HangulStats>(defaultHangulStats)
+    const [isLoaded, setIsLoaded] = useState(false)
+
+    useEffect(() => {
+        const loadStats = () => {
+            try {
+                const savedStats = localStorage.getItem('idol-guessr-hangul-stats')
+                if (savedStats) {
+                    setStats(JSON.parse(savedStats))
+                } else {
+                    setStats(defaultHangulStats)
+                }
+            } catch (error) {
+                console.error('Error loading hangul stats:', error)
+                setStats(defaultHangulStats)
+            } finally {
+                setIsLoaded(true)
+            }
+        }
+        loadStats()
+    }, [])
+
+    useEffect(() => {
+        if (isLoaded) {
+            try {
+                localStorage.setItem('idol-guessr-hangul-stats', JSON.stringify(stats))
+            } catch (error) {
+                console.error('Error saving hangul stats:', error)
+            }
+        }
+    }, [stats, isLoaded])
+
+    const updateStats = (won: boolean, incrementTotalGames: boolean = true, preserveStreak: boolean = false) => {
+        setStats((prevStats) => {
+            const newStats = { ...prevStats }
+            if (incrementTotalGames) {
+                newStats.totalGames += 1
+            }
+            if (won) {
+                newStats.totalWins += 1
+                newStats.currentStreak += 1
+                newStats.maxStreak = Math.max(newStats.maxStreak, newStats.currentStreak)
+            } else {
+                if (!preserveStreak) {
+                    newStats.currentStreak = 0
+                }
+            }
+            return newStats
+        })
+    }
+
+    const saveGameState = useCallback((gameState: HangulGameState) => {
+        if (typeof window === 'undefined') return
+        try {
+            localStorage.setItem('idol-guessr-hangul-game-state', JSON.stringify(gameState))
+        } catch (error) {
+            console.error('Error saving hangul game state:', error)
+        }
+    }, [])
+
+    const loadGameState = useCallback((): HangulGameState | null => {
+        if (typeof window === 'undefined') return null
+        try {
+            const savedState = localStorage.getItem('idol-guessr-hangul-game-state')
+            if (savedState) {
+                return JSON.parse(savedState) as HangulGameState
+            }
+        } catch (error) {
+            console.error('Error loading hangul game state:', error)
+        }
+        return null
+    }, [])
+
+    const clearGameState = useCallback(() => {
+        if (typeof window === 'undefined') return
+        try {
+            localStorage.removeItem('idol-guessr-hangul-game-state')
+        } catch (error) {
+            console.error('Error clearing hangul game state:', error)
+        }
+    }, [])
+
+    return { stats, isLoaded, updateStats, saveGameState, loadGameState, clearGameState }
+}
+
 interface UserStatsProps {
-    stats: UserStats | UnlimitedStats
+    stats: UserStats | UnlimitedStats | HangulStats
     isLoaded: boolean
     className?: string
-    gameMode?: 'daily' | 'unlimited'
+    gameMode?: 'daily' | 'unlimited' | 'hangul'
 }
 
 export default function UserStats({ stats, isLoaded, className = '', gameMode = 'daily' }: UserStatsProps) {
@@ -368,7 +497,13 @@ export default function UserStats({ stats, isLoaded, className = '', gameMode = 
     }
     const winPercentage = stats.totalGames > 0 ? Math.round((stats.totalWins / stats.totalGames) * 100) : 0
     const isUnlimited = gameMode === 'unlimited'
+    const isHangul = gameMode === 'hangul'
     const hasGuessDistribution = 'guessDistribution' in stats
+    const getTitle = () => {
+        if (isUnlimited) return 'Infinite Statistics'
+        if (isHangul) return 'Hangul Statistics'
+        return 'Statistics'
+    }
     return (
         <div className={`rounded-lg bg-white p-10 shadow-lg ${className}`}>
             <div className='mb-10 flex items-center justify-center'>
@@ -376,7 +511,7 @@ export default function UserStats({ stats, isLoaded, className = '', gameMode = 
             </div>
             <div className='mb-4 flex items-center justify-center'>
                 <h2 className='text-2xl font-bold text-gray-900 uppercase'>
-                    {isUnlimited ? 'Infinite Statistics' : 'Statistics'}
+                    {getTitle()}
                 </h2>
             </div>
             <div className='mb-6 flex flex-row justify-center gap-4'>
@@ -384,7 +519,7 @@ export default function UserStats({ stats, isLoaded, className = '', gameMode = 
                     <div className='mb-2.5 text-2xl font-bold text-gray-900'>{stats.totalGames}</div>
                     <div className='text-sm leading-none text-gray-600'>Played</div>
                 </div>
-                {!isUnlimited && (
+                {!isUnlimited && !isHangul && (
                     <div className='text-center'>
                         <div className='mb-2.5 text-2xl font-bold text-gray-900'>{winPercentage}%</div>
                         <div className='text-sm leading-none text-gray-600'>Win %</div>
@@ -399,7 +534,7 @@ export default function UserStats({ stats, isLoaded, className = '', gameMode = 
                     <div className='text-sm leading-none text-gray-600'>Max streak</div>
                 </div>
             </div>
-            {!isUnlimited && hasGuessDistribution && stats.totalWins > 0 && (
+            {!isUnlimited && !isHangul && hasGuessDistribution && stats.totalWins > 0 && (
                 <>
                     <h3 className='mb-3 text-lg font-semibold text-gray-900 uppercase'>Guess distribution</h3>
                     <div className='space-y-2'>

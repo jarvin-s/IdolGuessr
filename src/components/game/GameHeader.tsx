@@ -5,7 +5,8 @@ import FilterModal from '../filters/FilterModal'
 interface GameHeaderProps {
     timer: string
     onShowStats: () => void
-    gameMode: 'daily' | 'unlimited'
+    onShowInfo?: () => void
+    gameMode: 'daily' | 'unlimited' | 'hangul'
     onGameModeChange: (
         mode: 'daily' | 'unlimited',
         filter?: 'boy-group' | 'girl-group' | 'both'
@@ -21,6 +22,7 @@ const meshGradient =
 export default function GameHeader({
     timer,
     onShowStats,
+    onShowInfo,
     gameMode,
     onGameModeChange,
     showModeToggle = true,
@@ -66,6 +68,16 @@ export default function GameHeader({
                         </div>
                     )}
 
+                    {gameMode === 'hangul' && (
+                        <div className='flex items-center justify-end'>
+                            <div className='rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-3.5 py-1.5'>
+                                <h1 className='text-sm font-bold tracking-widest text-white uppercase'>
+                                    Hangul
+                                </h1>
+                            </div>
+                        </div>
+                    )}
+
                     <div className='flex items-center gap-2'>
                         {gameMode === 'daily' && (
                             <div className='flex flex-col items-end text-right'>
@@ -78,7 +90,7 @@ export default function GameHeader({
                             </div>
                         )}
 
-                        {gameMode === 'unlimited' &&
+                        {(gameMode === 'unlimited' || gameMode === 'hangul') &&
                             currentStreak !== undefined &&
                             currentStreak >= 5 && (
                                 <div className='flex items-center gap-1'>
@@ -105,6 +117,16 @@ export default function GameHeader({
                         >
                             <StatsIcon />
                         </button>
+
+                        {onShowInfo && (
+                            <button
+                                onClick={onShowInfo}
+                                className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 transition-colors hover:bg-gray-200'
+                                aria-label='View Info'
+                            >
+                                <InfoIcon />
+                            </button>
+                        )}
 
                         {showModeToggle && (
                             <button
@@ -162,8 +184,8 @@ function StatsIcon() {
     )
 }
 
-function GameModeIcon({ gameMode }: { gameMode: 'daily' | 'unlimited' }) {
-    if (gameMode === 'unlimited') {
+function GameModeIcon({ gameMode }: { gameMode: 'daily' | 'unlimited' | 'hangul' }) {
+    if (gameMode === 'unlimited' || gameMode === 'hangul') {
         return (
             <svg
                 xmlns='http://www.w3.org/2000/svg'
@@ -227,6 +249,26 @@ function HomeIcon() {
                 strokeLinejoin='round'
                 strokeWidth='2'
                 d='m4 12l8-8l8 8M6 10.5V19a1 1 0 0 0 1 1h3v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h3a1 1 0 0 0 1-1v-8.5'
+            />
+        </svg>
+    )
+}
+
+function InfoIcon() {
+    return (
+        <svg
+            xmlns='http://www.w3.org/2000/svg'
+            className='h-5 w-5 text-gray-600'
+            viewBox='0 0 24 24'
+            fill='none'
+            stroke='currentColor'
+        >
+            <circle cx='12' cy='12' r='10' strokeWidth='2' />
+            <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth='2'
+                d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3m.08 4h.01'
             />
         </svg>
     )

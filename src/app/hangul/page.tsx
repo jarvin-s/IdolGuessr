@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Confetti from 'react-confetti'
 import GameHeader from '@/components/game/GameHeader'
-import GameImage from '@/components/game/GameImage'
+import HangulDisplay from '@/components/game/HangulDisplay'
 import GuessInput from '@/components/game/GuessInput'
 import OnScreenKeyboard from '@/components/input/OnScreenKeyboard'
 import StatsModal from '@/components/modals/StatsModal'
@@ -12,32 +12,33 @@ import HelpModal from '@/components/modals/HelpModal'
 import FeedbackModal from '@/components/modals/FeedbackModal'
 import InfoModal from '@/components/modals/InfoModal'
 import WinModal from '@/components/modals/WinModal'
-import InfiniteStartModal from '@/components/modals/InfiniteStartModal'
-import FilterModal from '@/components/filters/FilterModal'
-import { useGameController } from '@/hooks/useGameController'
+import HangulStartModal from '@/components/modals/HangulStartModal'
+import HangulFilterModal from '@/components/filters/HangulFilterModal'
+import { useHangulGameController } from '@/hooks/useHangulGameController'
 import { getImageUrl } from '@/lib/supabase'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 
-export default function InfinitePage() {
+export default function HangulPage() {
     const router = useRouter()
     const [startOpen, setStartOpen] = useState(false)
     const [showFilterModal, setShowFilterModal] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
     const {
-        handleGameModeChange,
-        timer,
         isLoading,
-        dailyImage,
+        hangulImage,
+        hangulName,
         remainingGuesses,
         gameWon,
         gameLost,
+        guesses,
         currentGuess,
         correctAnswer,
         lastIncorrectGuess,
         isAnimating,
         handleKeyPress,
-        notInList,
+        imageRevealed,
+        setImageRevealed,
         showConfetti,
         windowDimensions,
         showStats,
@@ -48,38 +49,30 @@ export default function InfinitePage() {
         setShowFeedback,
         showWinModal,
         setShowWinModal,
-        stats,
-        statsLoaded,
-        todayCompletionData,
-        loadGuessAttempts,
-        skipsRemaining,
-        hintUsed,
-        setHintUsed,
-        hintUsedOnIdol,
-        setHintUsedOnIdol,
         showStreakPopup,
         streakMilestone,
         setShowStreakPopup,
         showGameOver,
         handlePlayAgain,
         handleSkip,
-        loadNextUnlimited,
-        unlimitedCurrentStreak,
-        unlimitedMaxStreak,
-        guesses,
-    } = useGameController()
+        loadNextHangul,
+        skipsRemaining,
+        finalStreak,
+        hangulCurrentStreak,
+        hangulStatsData,
+        hangulStatsLoaded,
+        handleStart,
+    } = useHangulGameController()
 
-    const handleStart = (filter: GroupFilter) => {
-        // Start unlimited with selected filter, then lock UI by closing modal
-        handleGameModeChange('unlimited', filter)
+    const onStartGame = (filter: GroupFilter) => {
+        handleStart(filter)
         setStartOpen(false)
     }
 
     useEffect(() => {
         try {
-            const savedFilter = localStorage.getItem('idol-guessr-group-filter')
+            const savedFilter = localStorage.getItem('idol-guessr-hangul-group-filter')
             if (savedFilter === 'boy-group' || savedFilter === 'girl-group' || savedFilter === 'both') {
-                handleGameModeChange('unlimited', savedFilter as GroupFilter)
                 setStartOpen(false)
             } else {
                 setStartOpen(true)
@@ -87,63 +80,55 @@ export default function InfinitePage() {
         } catch {
             setStartOpen(true)
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     return (
         <div className='fixed inset-0 flex flex-col justify-center overflow-hidden bg-white'>
             <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:shadow-lg'>
                 <GameHeader
-                    timer={timer}
+                    timer={''}
                     onShowStats={() => setShowStats(true)}
                     onShowInfo={() => setShowInfo(true)}
-                    gameMode={'unlimited'}
+                    gameMode={'hangul'}
                     onGameModeChange={() => {
-                        /* disabled in infinite */
+                        /* disabled in hangul mode */
                     }}
                     showModeToggle={false}
-                    currentStreak={unlimitedCurrentStreak}
+                    currentStreak={hangulCurrentStreak}
                     onLogoClick={() => router.push('/', { scroll: false })}
                 />
 
                 <div className='flex min-h-0 w-full flex-1 flex-col px-4'>
                     <div className='flex min-h-0 w-full flex-1 flex-col items-center'>
-                        <GameImage
+                        <HangulDisplay
                             isLoading={isLoading}
-                            dailyImage={
-                                dailyImage && {
-                                    group_type: dailyImage.group_type || '',
-                                    img_bucket: dailyImage.img_bucket,
-                                    group_category: dailyImage.group_category,
-                                    base64_group: dailyImage.base64_group,
-                                    base64_idol: dailyImage.base64_idol,
-                                    group_name: dailyImage.group_name,
+                            hangulName={hangulName}
+                            hangulImage={
+                                hangulImage && {
+                                    group_type: hangulImage.group_type || '',
+                                    img_bucket: hangulImage.img_bucket,
+                                    group_category: hangulImage.group_category,
+                                    base64_group: hangulImage.base64_group,
+                                    base64_idol: hangulImage.base64_idol,
+                                    group_name: hangulImage.group_name,
                                 }
                             }
                             remainingGuesses={remainingGuesses}
                             gameWon={gameWon}
                             gameLost={gameLost}
-                            gameMode={'unlimited'}
+                            imageRevealed={imageRevealed}
+                            onRevealImage={() => setImageRevealed(true)}
                             onPass={
                                 !gameWon && !gameLost && skipsRemaining > 0
                                     ? handleSkip
                                     : undefined
                             }
                             skipsRemaining={skipsRemaining}
-                            hintUsed={hintUsed}
-                            hintUsedOnIdol={hintUsedOnIdol}
-                            onHintUse={() => {
-                                setHintUsed(true)
-                                if (dailyImage?.img_bucket)
-                                    setHintUsedOnIdol(dailyImage.img_bucket)
-                            }}
                             showStreakPopup={showStreakPopup}
                             streakMilestone={streakMilestone}
-                            onStreakPopupComplete={() =>
-                                setShowStreakPopup(false)
-                            }
+                            onStreakPopupComplete={() => setShowStreakPopup(false)}
                             showGameOver={showGameOver}
-                            highestStreak={unlimitedMaxStreak}
+                            currentStreak={finalStreak}
                             onPlayAgain={() => setShowFilterModal(true)}
                             guesses={guesses}
                         />
@@ -156,7 +141,6 @@ export default function InfinitePage() {
                         gameLost={gameLost}
                         lastIncorrectGuess={lastIncorrectGuess}
                         isAnimating={isAnimating}
-                        notInList={notInList}
                     />
 
                     <OnScreenKeyboard
@@ -169,9 +153,9 @@ export default function InfinitePage() {
             <StatsModal
                 isOpen={showStats}
                 onClose={() => setShowStats(false)}
-                stats={stats}
-                statsLoaded={statsLoaded}
-                gameMode={'unlimited'}
+                stats={hangulStatsData}
+                statsLoaded={hangulStatsLoaded}
+                gameMode={'hangul'}
             />
 
             <HelpModal
@@ -210,65 +194,61 @@ export default function InfinitePage() {
                 onClose={() => setShowWinModal(false)}
                 idolName={correctAnswer}
                 imageUrl={
-                    dailyImage &&
-                    dailyImage.group_category &&
-                    dailyImage.base64_group
+                    hangulImage &&
+                    hangulImage.group_category &&
+                    hangulImage.base64_group
                         ? getImageUrl(
-                              dailyImage.group_type || '',
-                              dailyImage.img_bucket,
+                              hangulImage.group_type || '',
+                              hangulImage.img_bucket,
                               'clear',
                               'unlimited',
-                              dailyImage.group_category,
-                              dailyImage.base64_group
+                              hangulImage.group_category,
+                              hangulImage.base64_group
                           )
                         : ''
                 }
                 pixelatedImageUrl={
-                    dailyImage &&
-                    dailyImage.group_category &&
-                    dailyImage.base64_group
+                    hangulImage &&
+                    hangulImage.group_category &&
+                    hangulImage.base64_group
                         ? getImageUrl(
-                              dailyImage.group_type || '',
-                              dailyImage.img_bucket,
+                              hangulImage.group_type || '',
+                              hangulImage.img_bucket,
                               1,
                               'unlimited',
-                              dailyImage.group_category,
-                              dailyImage.base64_group
+                              hangulImage.group_category,
+                              hangulImage.base64_group
                           )
                         : ''
                 }
                 guessCount={6 - guesses.filter((g) => g === 'empty').length}
                 isWin={gameWon}
-                guessAttempts={
-                    todayCompletionData?.guessAttempts || loadGuessAttempts()
-                }
+                guessAttempts={[]}
                 stats={{
-                    gamesPlayed: stats.totalGames,
+                    gamesPlayed: hangulStatsData.totalGames,
                     winPercentage:
-                        stats.totalGames > 0
+                        hangulStatsData.totalGames > 0
                             ? Math.round(
-                                  (stats.totalWins / stats.totalGames) * 100
+                                  (hangulStatsData.totalWins / hangulStatsData.totalGames) * 100
                               )
                             : 0,
-                    currentStreak: stats.currentStreak,
-                    maxStreak: stats.maxStreak,
+                    currentStreak: hangulStatsData.currentStreak,
+                    maxStreak: hangulStatsData.maxStreak,
                 }}
                 guessDistribution={[0, 0, 0, 0, 0, 0]}
-                gameMode={'unlimited'}
-                onNextUnlimited={loadNextUnlimited}
+                gameMode={'hangul'}
+                onNextUnlimited={loadNextHangul}
             />
 
-            {startOpen && (
-                <InfiniteStartModal isOpen={startOpen} onStart={handleStart} />
-            )}
+            {startOpen && <HangulStartModal isOpen={startOpen} onStart={onStartGame} />}
 
-            <FilterModal
+            <HangulFilterModal
                 isOpen={showFilterModal}
                 onClose={() => setShowFilterModal(false)}
-                onConfirm={() => {
+                onConfirm={(filter) => {
                     setShowFilterModal(false)
+                    handlePlayAgain(filter)
                 }}
-                onPlayAgain={handlePlayAgain}
             />
 
             {showConfetti && windowDimensions.width > 0 && (

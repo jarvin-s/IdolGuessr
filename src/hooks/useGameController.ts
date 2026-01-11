@@ -7,7 +7,7 @@ import {
     getMultipleRandomUnlimitedImages,
     type DailyImage as DailyRow,
     getImageUrl,
-    trackGuess,
+    trackDailyGameEnd,
     trackUnlimitedGame,
     resetGuessTimer,
     addSeenIdol,
@@ -16,6 +16,9 @@ import {
 import { useGameProgress } from '@/hooks/useGameProgress'
 import { useUnlimitedStats } from '@/components/stats/UserStats'
 import { encodeIdolName, decodeIdolName } from '@/utils/encoding'
+import idolNames from '@/data/idolNames.json'
+
+const idolNamesSet = new Set(idolNames.map((name: string) => name.toUpperCase()))
 
 export function useGameController() {
     const pathname = usePathname()
@@ -52,6 +55,7 @@ export function useGameController() {
     const [disabledLetters, setDisabledLetters] = useState<Set<string>>(
         new Set()
     )
+    const [notInList, setNotInList] = useState(false)
 
     const {
         guesses,
@@ -561,19 +565,8 @@ export function useGameController() {
                 )
                 if (hasGuesses) {
                     const currentStreak = unlimitedStats.stats.currentStreak
-                    if (
-                        currentStreak >= 1 &&
-                        dailyImage?.id &&
-                        !hasTrackedCurrentGame.current
-                    ) {
-                        const guessCount = guesses.filter(
-                            (g) => g === 'incorrect' || g === 'correct'
-                        ).length
-                        void trackUnlimitedGame(
-                            dailyImage.id,
-                            guessCount,
-                            currentStreak
-                        )
+                    if (currentStreak >= 1 && !hasTrackedCurrentGame.current) {
+                        void trackUnlimitedGame(currentStreak)
                         hasTrackedCurrentGame.current = true
                     }
                     unlimitedStats.updateStats(false, true, true)
@@ -796,6 +789,17 @@ export function useGameController() {
                     !gameLost
                 ) {
                     const normalizedGuess = currentGuess.toUpperCase().trim()
+
+                    if (!idolNamesSet.has(normalizedGuess)) {
+                        setNotInList(true)
+                        setIsAnimating(true)
+                        setTimeout(() => {
+                            setIsAnimating(false)
+                            setTimeout(() => setNotInList(false), 1000)
+                        }, 500)
+                        return
+                    }
+
                     const normalizedName =
                         dailyImage?.name?.toUpperCase().trim() || ''
                     const normalizedAltName =
@@ -814,14 +818,6 @@ export function useGameController() {
 
                     if (gameMode === 'daily') {
                         saveGuessAttempt(normalizedGuess)
-                        if (dailyImage?.id) {
-                            void trackGuess(
-                                dailyImage.id,
-                                normalizedGuess,
-                                isCorrect,
-                                guessNumber
-                            )
-                        }
                     }
 
                     setIsAnimating(true)
@@ -865,6 +861,10 @@ export function useGameController() {
                                         setGameLost(true)
                                         if (gameMode === 'daily') {
                                             handleGameLoss()
+                                            if (dailyImage?.id) {
+                                                const allGuesses = loadGuessAttempts()
+                                                void trackDailyGameEnd(dailyImage.id, allGuesses, false)
+                                            }
                                             setTimeout(() => {
                                                 setShowWinModal(true)
                                             }, 2000)
@@ -874,17 +874,10 @@ export function useGameController() {
                                                     .currentStreak
                                             if (
                                                 currentStreak >= 1 &&
-                                                dailyImage?.id &&
                                                 !hasTrackedCurrentGame.current
                                             ) {
-                                                const guessCount = 6
-                                                void trackUnlimitedGame(
-                                                    dailyImage.id,
-                                                    guessCount,
-                                                    currentStreak
-                                                )
-                                                hasTrackedCurrentGame.current =
-                                                    true
+                                                void trackUnlimitedGame(currentStreak)
+                                                hasTrackedCurrentGame.current = true
                                             }
                                             unlimitedStats.updateStats(
                                                 false,
@@ -921,6 +914,10 @@ export function useGameController() {
                         })
                         if (gameMode === 'daily') {
                             handleGameWin(guessNumber)
+                            if (dailyImage?.id) {
+                                const allGuesses = loadGuessAttempts()
+                                void trackDailyGameEnd(dailyImage.id, allGuesses, true)
+                            }
                             setTimeout(() => setShowWinModal(true), 2000)
                         } else {
                             const currentStreak =
@@ -936,14 +933,21 @@ export function useGameController() {
                     }
                 }
             } else if (key === '✕') {
-                if (!gameWon && !gameLost)
-                    setCurrentGuess((prev) => prev.slice(0, -1))
+                if (!gameWon && !gameLost) {
+                    if (currentGuess === '' && lastIncorrectGuess) {
+                        setCurrentGuess(lastIncorrectGuess.slice(0, -1))
+                        setLastIncorrectGuess('')
+                    } else {
+                        setCurrentGuess((prev) => prev.slice(0, -1))
+                    }
+                }
             } else {
                 if (
                     guesses.some((g) => g === 'empty') &&
                     !isAnimating &&
                     !gameWon &&
-                    !gameLost
+                    !gameLost &&
+                    currentGuess.length < 20
                 ) {
                     if (lastIncorrectGuess) setLastIncorrectGuess('')
                     setCurrentGuess((prev) => prev + key)
@@ -966,6 +970,7 @@ export function useGameController() {
             setGuesses,
             dailyImage,
             saveGuessAttempt,
+            loadGuessAttempts,
             lastIncorrectGuess,
             gameMode,
             unlimitedStats,
@@ -1340,6 +1345,7 @@ export function useGameController() {
         isAnimating,
         handleKeyPress,
         disabledLetters,
+        notInList,
         // ui
         showConfetti,
         windowDimensions,
