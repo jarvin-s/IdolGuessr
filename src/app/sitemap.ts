@@ -7,20 +7,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
         {
             url: baseUrl,
             lastModified: new Date(),
-            changeFrequency: 'daily',
-            priority: 1,
         },
         {
             url: `${baseUrl}/infinite`,
             lastModified: new Date(),
-            changeFrequency: 'weekly',
-            priority: 0.8,
         },
         {
             url: `${baseUrl}/hangul`,
             lastModified: new Date(),
-            changeFrequency: 'weekly',
-            priority: 0.8,
+        },
+        {
+            url: `${baseUrl}/challenge`,
+            lastModified: new Date(),
         },
     ]
 }
