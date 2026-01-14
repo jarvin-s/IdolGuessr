@@ -226,6 +226,9 @@ export default function Home() {
                 onHangul={() => {
                     router.push('/hangul', { scroll: false })
                 }}
+                onChallenge={() => {
+                    router.push('/challenge', { scroll: false })
+                }}
             />
 
             {gameMode === 'daily' && (

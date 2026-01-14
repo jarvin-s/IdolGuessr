@@ -7,6 +7,11 @@ const proximaNovaRegular = localFont({
     src: '../../public/fonts/proximanova_regular.ttf',
 })
 
+// const roboto = Roboto({
+//     weight: ['400', '700'],
+//     subsets: ['latin'],
+// })
+
 export const metadata: Metadata = {
     metadataBase: new URL('https://idolguessr.fun'),
     title: {

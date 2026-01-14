@@ -3,7 +3,6 @@
 /* Prevent scrolling on mobile */
 html,
 body {
-    overflow: hidden;
     height: 100%;
     margin: 0;
     padding: 0;
@@ -12,12 +11,12 @@ body {
 .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
-  }
-  
-  .hide-scrollbar::-webkit-scrollbar {
+}
+
+.hide-scrollbar::-webkit-scrollbar {
     display: none;
-  }
-  
+}
+
 #__next {
     height: 100vh;
     overflow: hidden;
@@ -134,4 +133,19 @@ body {
         transform: translate(50%, -60px) scale(0.8);
         opacity: 0;
     }
+}
+
+@keyframes fadeInFromTop {
+    0% {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.fade-in-from-top {
+    animation: fadeInFromTop 0.15s ease-out;
 }

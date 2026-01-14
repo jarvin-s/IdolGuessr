@@ -557,3 +557,177 @@ export async function getDailyCount(): Promise<number> {
   }
   return (count || 0) + 1;
 }
+
+// ============================================
+// Challenge Mode Types and Functions
+// ============================================
+
+export interface ChallengeIdol {
+  id: number
+  name: string
+  alt_name?: string
+  img_bucket: string
+  group_category: string
+  base64_group: string
+  group_name?: string
+}
+
+export interface Challenge {
+  id: string
+  idol_count: number
+  group_filter: string
+  created_at: string
+  expires_at: string
+  idols: ChallengeIdol[]
+}
+
+export interface ChallengeIdolResult {
+  idol_id: number
+  correct: boolean
+  guess_count: number
+  guesses: string[]
+}
+
+export interface ChallengeResult {
+  session_id: string
+  nickname: string | null
+  results: ChallengeIdolResult[]
+  total_correct: number
+  completed_at: string
+}
+
+export async function createChallenge(
+  sessionId: string,
+  idolCount: number,
+  groupFilter: 'boy-group' | 'girl-group' | 'both' = 'both'
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.rpc('create_challenge', {
+      p_session_id: sessionId,
+      p_idol_count: idolCount,
+      p_group_filter: groupFilter
+    })
+
+    if (error) {
+      console.error('Error creating challenge:', error)
+      return null
+    }
+
+    return data as string
+  } catch (error) {
+    console.error('Error creating challenge:', error)
+    return null
+  }
+}
+
+export async function getChallenge(challengeId: string): Promise<Challenge | null> {
+  try {
+    const { data, error } = await supabase.rpc('get_challenge', {
+      p_challenge_id: challengeId
+    })
+
+    if (error) {
+      console.error('Error getting challenge:', error)
+      return null
+    }
+
+    if (!data || data.length === 0) {
+      return null
+    }
+
+    const row = data[0]
+    return {
+      id: row.id,
+      idol_count: row.idol_count,
+      group_filter: row.group_filter,
+      created_at: row.created_at,
+      expires_at: row.expires_at,
+      idols: row.idols || []
+    }
+  } catch (error) {
+    console.error('Error getting challenge:', error)
+    return null
+  }
+}
+
+export async function submitChallengeResult(
+  challengeId: string,
+  sessionId: string,
+  nickname: string | null,
+  results: ChallengeIdolResult[],
+  totalCorrect: number
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.rpc('submit_challenge_result', {
+      p_challenge_id: challengeId,
+      p_session_id: sessionId,
+      p_nickname: nickname,
+      p_results: results,
+      p_total_correct: totalCorrect
+    })
+
+    if (error) {
+      console.error('Error submitting challenge result:', error)
+      return null
+    }
+
+    return data as string
+  } catch (error) {
+    console.error('Error submitting challenge result:', error)
+    return null
+  }
+}
+
+export async function getChallengeResults(challengeId: string): Promise<ChallengeResult[]> {
+  try {
+    const { data, error } = await supabase.rpc('get_challenge_results', {
+      p_challenge_id: challengeId
+    })
+
+    if (error) {
+      console.error('Error getting challenge results:', error)
+      return []
+    }
+
+    return (data || []).map((row: {
+      session_id: string
+      nickname: string | null
+      results: ChallengeIdolResult[]
+      total_correct: number
+      completed_at: string
+    }) => ({
+      session_id: row.session_id,
+      nickname: row.nickname,
+      results: row.results,
+      total_correct: row.total_correct,
+      completed_at: row.completed_at
+    }))
+  } catch (error) {
+    console.error('Error getting challenge results:', error)
+    return []
+  }
+}
+
+export async function checkChallengePlayed(
+  challengeId: string,
+  sessionId: string
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('challenge_results')
+      .select('id')
+      .eq('challenge_id', challengeId)
+      .eq('session_id', sessionId)
+      .maybeSingle()
+
+    if (error) {
+      console.error('Error checking if challenge played:', error)
+      return false
+    }
+
+    return data !== null
+  } catch (error) {
+    console.error('Error checking if challenge played:', error)
+    return false
+  }
+}

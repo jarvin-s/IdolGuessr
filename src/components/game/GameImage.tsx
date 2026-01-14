@@ -246,42 +246,44 @@ export default function GameImage({
                                 </button>
                             )}
                         </div>
-                        <div className='absolute top-3 right-3 z-10'>
-                            <button
-                                onClick={() => {
-                                    if (skipsRemaining > 0 && onPass) {
-                                        setShowMinusOne(true)
-                                        setTimeout(
-                                            () => setShowMinusOne(false),
-                                            1000
-                                        )
-                                        onPass()
-                                    }
-                                }}
-                                className={`relative flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-transform md:text-sm ${
-                                    skipsRemaining === 0
-                                        ? 'cursor-not-allowed bg-gray-200 text-gray-500'
-                                        : 'cursor-pointer bg-white text-black hover:scale-105 hover:bg-gray-100 active:scale-95'
-                                }`}
-                                style={{ border: '1px solid #00000012' }}
-                                disabled={skipsRemaining === 0}
-                            >
-                                <SkipButton />
-                                SKIP (
-                                {skipsRemaining === 0 ? 0 : skipsRemaining})
-                            </button>
-                            {showMinusOne && (
-                                <div
-                                    className='pointer-events-none absolute top-0 right-1/2 translate-x-1/2 text-2xl font-bold text-red-500'
-                                    style={{
-                                        animation:
-                                            'float-up 1s ease-out forwards',
+                        {onPass && (
+                            <div className='absolute top-3 right-3 z-10'>
+                                <button
+                                    onClick={() => {
+                                        if (skipsRemaining > 0 && onPass) {
+                                            setShowMinusOne(true)
+                                            setTimeout(
+                                                () => setShowMinusOne(false),
+                                                1000
+                                            )
+                                            onPass()
+                                        }
                                     }}
+                                    className={`relative flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-transform md:text-sm ${
+                                        skipsRemaining === 0
+                                            ? 'cursor-not-allowed bg-gray-200 text-gray-500'
+                                            : 'cursor-pointer bg-white text-black hover:scale-105 hover:bg-gray-100 active:scale-95'
+                                    }`}
+                                    style={{ border: '1px solid #00000012' }}
+                                    disabled={skipsRemaining === 0}
                                 >
-                                    -1
-                                </div>
-                            )}
-                        </div>
+                                    <SkipButton />
+                                    SKIP (
+                                    {skipsRemaining === 0 ? 0 : skipsRemaining})
+                                </button>
+                                {showMinusOne && (
+                                    <div
+                                        className='pointer-events-none absolute top-0 right-1/2 translate-x-1/2 text-2xl font-bold text-red-500'
+                                        style={{
+                                            animation:
+                                                'float-up 1s ease-out forwards',
+                                        }}
+                                    >
+                                        -1
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </>
                 )}
 
