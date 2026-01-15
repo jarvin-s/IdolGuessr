@@ -132,6 +132,7 @@ export default function ChallengePlayPage() {
                         showModeToggle={false}
                         currentStreak={totalCorrect}
                         onLogoClick={() => router.push('/')}
+                        isChallenge={true}
                     />
 
                     <ChallengeProgress current={currentIndex} total={totalIdols} />
