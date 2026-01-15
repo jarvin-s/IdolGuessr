@@ -1,13 +1,14 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import GameHeader from '@/components/game/GameHeader'
 import GameImage from '@/components/game/GameImage'
 import GuessInput from '@/components/game/GuessInput'
 import OnScreenKeyboard from '@/components/input/OnScreenKeyboard'
 import ChallengeProgress from '@/components/challenge/ChallengeProgress'
 import ChallengeCompleteModal from '@/components/challenge/ChallengeCompleteModal'
+import ChallengeIntroModal from '@/components/challenge/ChallengeIntroModal'
 import { useChallengeController } from '@/hooks/useChallengeController'
 
 export default function ChallengePlayPage() {
@@ -16,6 +17,7 @@ export default function ChallengePlayPage() {
     const challengeId = params.id as string
 
     const {
+        challenge,
         isLoading,
         error,
         alreadyPlayed,
@@ -36,7 +38,19 @@ export default function ChallengePlayPage() {
         isSubmitting,
         handleKeyPress,
         submitResults,
+        results,
     } = useChallengeController(challengeId)
+
+    const [showIntro, setShowIntro] = useState(false)
+
+    useEffect(() => {
+        if (challenge && currentIndex === 0 && !isLoading && results.length === 0) {
+            const savedProgress = localStorage.getItem('idol-guessr-challenge-progress')
+            if (!savedProgress) {
+                setShowIntro(true)
+            }
+        }
+    }, [challenge, currentIndex, isLoading, results.length])
 
     useEffect(() => {
         if (alreadyPlayed) {
@@ -49,6 +63,10 @@ export default function ChallengePlayPage() {
         if (success) {
             router.push(`/challenge/${challengeId}/results`)
         }
+    }
+
+    const handleStartChallenge = () => {
+        setShowIntro(false)
     }
 
     if (isLoading) {
@@ -95,24 +113,32 @@ export default function ChallengePlayPage() {
 
     return (
         <div className='fixed inset-0 flex flex-col justify-center overflow-hidden bg-white'>
-            <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:shadow-lg'>
-                <GameHeader
-                    timer={`${currentIndex + 1}/${totalIdols}`}
-                    onShowStats={() => {}}
-                    onShowInfo={() => {}}
-                    gameMode={'unlimited'}
-                    onGameModeChange={() => {}}
-                    showModeToggle={false}
-                    currentStreak={totalCorrect}
-                    onLogoClick={() => router.push('/')}
+            {challenge && (
+                <ChallengeIntroModal
+                    isOpen={showIntro}
+                    idolCount={challenge.idol_count}
+                    groupFilter={challenge.group_filter}
+                    onStart={handleStartChallenge}
                 />
+            )}
+            {!showIntro && (
+                <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:shadow-lg'>
+                    <GameHeader
+                        timer={`${currentIndex + 1}/${totalIdols}`}
+                        onShowStats={() => {}}
+                        onShowInfo={() => {}}
+                        gameMode={'unlimited'}
+                        onGameModeChange={() => {}}
+                        showModeToggle={false}
+                        currentStreak={totalCorrect}
+                        onLogoClick={() => router.push('/')}
+                    />
 
-                {/* Challenge progress bar */}
-                <ChallengeProgress current={currentIndex} total={totalIdols} />
+                    <ChallengeProgress current={currentIndex} total={totalIdols} />
 
-                <div className='flex min-h-0 w-full flex-1 flex-col px-4'>
-                    <div className='flex min-h-0 w-full flex-1 flex-col items-center'>
-                        <GameImage
+                    <div className='flex min-h-0 w-full flex-1 flex-col px-4'>
+                        <div className='flex min-h-0 w-full flex-1 flex-col items-center'>
+                            <GameImage
                             isLoading={!currentIdol}
                             dailyImage={
                                 currentIdol
@@ -139,28 +165,28 @@ export default function ChallengePlayPage() {
                             showGameOver={false}
                             highestStreak={0}
                             onPlayAgain={() => {}}
-                            guesses={guesses}
+                                guesses={guesses}
+                            />
+                        </div>
+
+                        <GuessInput
+                            currentGuess={currentGuess}
+                            correctAnswer={correctAnswer}
+                            gameWon={gameWon}
+                            gameLost={gameLost}
+                            lastIncorrectGuess={lastIncorrectGuess}
+                            isAnimating={isAnimating}
+                            notInList={notInList}
+                        />
+
+                        <OnScreenKeyboard
+                            onKeyPress={handleKeyPress}
+                            className='flex-shrink-0 pb-4'
                         />
                     </div>
-
-                    <GuessInput
-                        currentGuess={currentGuess}
-                        correctAnswer={correctAnswer}
-                        gameWon={gameWon}
-                        gameLost={gameLost}
-                        lastIncorrectGuess={lastIncorrectGuess}
-                        isAnimating={isAnimating}
-                        notInList={notInList}
-                    />
-
-                    <OnScreenKeyboard
-                        onKeyPress={handleKeyPress}
-                        className='flex-shrink-0 pb-4'
-                    />
                 </div>
-            </div>
+            )}
 
-            {/* Challenge complete modal */}
             <ChallengeCompleteModal
                 isOpen={isComplete}
                 totalCorrect={totalCorrect}

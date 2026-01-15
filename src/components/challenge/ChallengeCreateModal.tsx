@@ -69,7 +69,9 @@ export default function ChallengeCreateModal({
                     <ul className='space-y-1 text-sm'>
                         <li className='flex items-start gap-2'>
                             <span>•</span>
-                            <span>Choose how many idols to guess</span>
+                            <span>
+                                Choose the group type and number of idols
+                            </span>
                         </li>
                         <li className='flex items-start gap-2'>
                             <span>•</span>

@@ -69,7 +69,9 @@ export default function ChallengeResultsPage() {
             <div className='fixed inset-0 flex items-center justify-center bg-white'>
                 <div className='text-center'>
                     <div className='mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-pink-500 border-t-transparent' />
-                    <p className='text-gray-600'>Loading results...</p>
+                    <p className='text-gray-600'>
+                        Loading challenge results...
+                    </p>
                 </div>
             </div>
         )
@@ -97,7 +99,6 @@ export default function ChallengeResultsPage() {
     }
 
     const hasPlayed = results.some((r) => r.session_id === sessionId)
-    const myResult = results.find((r) => r.session_id === sessionId)
 
     return (
         <div className='min-h-screen bg-gradient-to-b from-pink-50 to-white'>
@@ -146,28 +147,10 @@ export default function ChallengeResultsPage() {
                             onClick={() =>
                                 router.push(`/challenge/${challengeId}`)
                             }
-                            className='cursor-pointer rounded-lg bg-pink-500 px-6 py-2 font-bold text-white transition-colors hover:bg-pink-600'
+                            className='cursor-pointer rounded-full bg-pink-500 px-6 py-2 font-bold text-white transition-colors hover:bg-pink-600'
                         >
                             Play challenge
                         </button>
-                    </div>
-                )}
-
-                {/* My score summary */}
-                {myResult && (
-                    <div className='mb-6 rounded-lg bg-gradient-to-r from-pink-100 to-pink-50 p-6 text-center'>
-                        <p className='mb-1 text-lg text-black'>Your score</p>
-                        <div className='mb-1 text-4xl font-bold text-pink-600'>
-                            {myResult.total_correct}/{challenge.idol_count}
-                        </div>
-                        <div className='text-gray-600'>
-                            {Math.round(
-                                (myResult.total_correct /
-                                    challenge.idol_count) *
-                                    100
-                            )}
-                            % accuracy
-                        </div>
                     </div>
                 )}
 
@@ -178,7 +161,7 @@ export default function ChallengeResultsPage() {
                             onClick={handleNewChallenge}
                             className='flex-1 cursor-pointer rounded-full bg-pink-500 px-4 py-3 font-bold text-white hover:bg-pink-600'
                         >
-                            Create new challenge
+                            Play again?
                         </button>
                         <button
                             onClick={handleCopyLink}
