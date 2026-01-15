@@ -51,6 +51,9 @@ export const metadata: Metadata = {
         'guess the kpop idol',
         'kpop idol guesser',
         'kpop idol guessr',
+        'guess kpop idol',
+        'guess idol kpop',
+        'guess kpop'
     ],
     openGraph: {
         title: 'IdolGuessr - K-pop Idol Guessing Game',

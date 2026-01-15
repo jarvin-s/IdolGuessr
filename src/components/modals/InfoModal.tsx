@@ -66,6 +66,11 @@ export default function InfoModal({
                         </h1>
                         <div className='mt-4 space-y-4'>
                             <ChangelogEntry
+                                version='1.4.0'
+                                date='January 15, 2025'
+                                changes={['Launched Challenge mode']}
+                            />
+                            <ChangelogEntry
                                 version='1.3.0'
                                 date='January 11, 2025'
                                 changes={[
