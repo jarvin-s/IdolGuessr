@@ -480,6 +480,7 @@ export default function Home() {
                     setShowInfo(false)
                     setShowHistory(true)
                 }}
+                gameMode={gameMode}
             />
 
             <HistoryModal

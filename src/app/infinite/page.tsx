@@ -203,6 +203,8 @@ export default function InfinitePage() {
                     setShowInfo(false)
                     setShowHelp(true)
                 }}
+                onShowHistory={() => {}}
+                gameMode='unlimited'
             />
 
             <WinModal

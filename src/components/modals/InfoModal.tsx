@@ -11,6 +11,7 @@ interface InfoModalProps {
     onShowFeedback: () => void
     onShowHelp: () => void
     onShowHistory: () => void
+    gameMode?: 'daily' | 'unlimited' | 'hangul'
 }
 
 export default function InfoModal({
@@ -19,6 +20,7 @@ export default function InfoModal({
     onShowFeedback,
     onShowHelp,
     onShowHistory,
+    gameMode = 'daily',
 }: InfoModalProps) {
     const [showChangelog, setShowChangelog] = useState(false)
 
@@ -172,25 +174,27 @@ export default function InfoModal({
                                 <ChevronRightIcon />
                             </button>
 
-                            <button
-                                onClick={onShowHistory}
-                                className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
-                            >
-                                <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
-                                    <HistoryIcon />
-                                </div>
-                                <div className='text-left'>
-                                    <h3
-                                        className={`${proximaNovaBold.className} text-lg`}
-                                    >
-                                        Past idols
-                                    </h3>
-                                    <p className='text-sm text-gray-500'>
-                                        Play idols from previous days
-                                    </p>
-                                </div>
-                                <ChevronRightIcon />
-                            </button>
+                            {gameMode === 'daily' && (
+                                <button
+                                    onClick={onShowHistory}
+                                    className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
+                                >
+                                    <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                                        <HistoryIcon />
+                                    </div>
+                                    <div className='text-left'>
+                                        <h3
+                                            className={`${proximaNovaBold.className} text-lg`}
+                                        >
+                                            Past idols
+                                        </h3>
+                                        <p className='text-sm text-gray-500'>
+                                            Play idols from previous days
+                                        </p>
+                                    </div>
+                                    <ChevronRightIcon />
+                                </button>
+                            )}
                         </div>
 
                         <div className='mt-6 flex justify-center gap-4 border-t border-gray-200 pt-4'>
