@@ -558,6 +558,59 @@ export async function getDailyCount(): Promise<number> {
   return (count || 0) + 1;
 }
 
+export interface HistoryDailyImage extends DailyImage {
+  play_date: string;
+}
+
+export async function getDailyImageByDate(date: string): Promise<HistoryDailyImage | null> {
+  const startOfDay = `${date}T00:00:00`;
+  const endOfDay = `${date}T23:59:59`;
+
+  const { data, error } = await supabase
+    .from('dailies')
+    .select('*')
+    .gte('play_date', startOfDay)
+    .lte('play_date', endOfDay)
+    .single();
+
+  if (error) {
+    return null;
+  }
+
+  return data as HistoryDailyImage;
+}
+
+export async function getAvailableDailyDates(): Promise<{ dates: string[], firstDate: string | null, lastDate: string | null }> {
+  const now = new Date();
+  const gmtPlus1 = new Date(now.getTime() + (60 * 60 * 1000));
+  const today = gmtPlus1.toISOString().split('T')[0];
+  const endOfToday = `${today}T23:59:59`;
+
+  const { data, error } = await supabase
+    .from('dailies')
+    .select('play_date')
+    .lte('play_date', endOfToday)
+    .order('play_date', { ascending: true });
+
+  if (error) {
+    return { dates: [], firstDate: null, lastDate: null };
+  }
+
+  const dates = data?.map(d => {
+    const playDate = new Date(d.play_date);
+    const year = playDate.getFullYear();
+    const month = String(playDate.getMonth() + 1).padStart(2, '0');
+    const day = String(playDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }) || [];
+
+  return {
+    dates,
+    firstDate: dates.length > 0 ? dates[0] : null,
+    lastDate: dates.length > 0 ? dates[dates.length - 1] : null
+  };
+}
+
 // ============================================
 // Challenge Mode Types and Functions
 // ============================================
