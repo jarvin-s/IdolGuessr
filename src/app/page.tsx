@@ -35,7 +35,6 @@ export default function Home() {
     const [historyIsAnimating, setHistoryIsAnimating] = useState(false)
     const [historyDisabledLetters, setHistoryDisabledLetters] = useState<Set<string>>(new Set())
     const [historyNotInList, setHistoryNotInList] = useState(false)
-    const [historyShowWinModal, setHistoryShowWinModal] = useState(false)
     const hasShownWinModalRef = useRef(false)
     const {
         gameMode,
@@ -89,32 +88,7 @@ export default function Home() {
     const historyCorrectAnswer = historyImage?.name?.toUpperCase() || ''
     const historyRemainingGuesses = historyGuesses.filter((g) => g === 'empty').length
 
-    // Load history game progress from localStorage
-    const loadHistoryProgress = useCallback((date: string) => {
-        try {
-            const saved = localStorage.getItem(`idol-guessr-history-${date}`)
-            if (saved) {
-                const data = JSON.parse(saved)
-                setHistoryGuesses(data.guesses || ['empty', 'empty', 'empty', 'empty', 'empty', 'empty'])
-                setHistoryGameWon(data.won || false)
-                setHistoryGameLost(data.lost || false)
-                setHistoryDisabledLetters(new Set(data.disabledLetters || []))
-                return data
-            }
-        } catch {}
-        return null
-    }, [])
-
-    const saveHistoryProgress = useCallback((date: string, guesses: Array<'correct' | 'incorrect' | 'empty'>, won: boolean, lost: boolean, disabledLetters: Set<string>) => {
-        try {
-            localStorage.setItem(`idol-guessr-history-${date}`, JSON.stringify({
-                guesses,
-                won,
-                lost,
-                disabledLetters: Array.from(disabledLetters)
-            }))
-        } catch {}
-    }, [])
+    // Past idol games are no longer saved to localStorage - users must recomplete on refresh
 
     const handleSelectHistoryDate = useCallback(async (date: string) => {
         setShowHistory(false)
@@ -127,17 +101,13 @@ export default function Home() {
             setHistoryIsAnimating(false)
             setHistoryNotInList(false)
             
-            // Try to load saved progress
-            const saved = loadHistoryProgress(date)
-            if (!saved) {
-                // Fresh game
-                setHistoryGuesses(['empty', 'empty', 'empty', 'empty', 'empty', 'empty'])
-                setHistoryGameWon(false)
-                setHistoryGameLost(false)
-                setHistoryDisabledLetters(new Set())
-            }
+            // Always start fresh - no localStorage saving for past idols
+            setHistoryGuesses(['empty', 'empty', 'empty', 'empty', 'empty', 'empty'])
+            setHistoryGameWon(false)
+            setHistoryGameLost(false)
+            setHistoryDisabledLetters(new Set())
         }
-    }, [loadHistoryProgress])
+    }, [])
 
     const handleExitHistoryMode = useCallback(() => {
         setHistoryDate(null)
@@ -150,7 +120,6 @@ export default function Home() {
         setHistoryIsAnimating(false)
         setHistoryDisabledLetters(new Set())
         setHistoryNotInList(false)
-        setHistoryShowWinModal(false)
     }, [])
 
     const handleHistoryKeyPress = useCallback((key: string) => {
@@ -206,11 +175,8 @@ export default function Home() {
                             if (remainingAfterThis === 0) {
                                 setTimeout(() => {
                                     setHistoryGameLost(true)
-                                    saveHistoryProgress(historyDate, newGuesses, false, true, newDisabledLetters)
-                                    setTimeout(() => setHistoryShowWinModal(true), 2000)
+                                    // Win modal disabled for past idols
                                 }, 300)
-                            } else {
-                                saveHistoryProgress(historyDate, newGuesses, false, false, newDisabledLetters)
                             }
                             return newGuesses
                         })
@@ -224,10 +190,9 @@ export default function Home() {
                         const newGuesses = [...prev] as Array<'correct' | 'incorrect' | 'empty'>
                         if (emptyIndex === -1) return prev
                         newGuesses[emptyIndex] = 'correct'
-                        saveHistoryProgress(historyDate, newGuesses, true, false, historyDisabledLetters)
+                        // Win modal disabled for past idols
                         return newGuesses
                     })
-                    setTimeout(() => setHistoryShowWinModal(true), 2000)
                 }
             }
         } else if (key === '✕') {
@@ -251,7 +216,7 @@ export default function Home() {
                 setHistoryCurrentGuess((prev) => prev + key)
             }
         }
-    }, [historyDate, historyImage, historyCurrentGuess, historyGuesses, historyIsAnimating, historyGameWon, historyGameLost, historyLastIncorrectGuess, historyDisabledLetters, saveHistoryProgress])
+    }, [historyDate, historyImage, historyCurrentGuess, historyGuesses, historyIsAnimating, historyGameWon, historyGameLost, historyLastIncorrectGuess, historyDisabledLetters])
 
     // Handle physical keyboard for history mode
     useEffect(() => {
@@ -571,56 +536,7 @@ export default function Home() {
                 />
             )}
 
-            {/* History mode win modal */}
-            {isInHistoryMode && historyImage && (
-                <WinModal
-                    isOpen={historyShowWinModal}
-                    onClose={() => setHistoryShowWinModal(false)}
-                    idolName={historyCorrectAnswer}
-                    imageUrl={getImageUrl(
-                        historyImage.group_type || '',
-                        historyImage.img_bucket,
-                        'clear',
-                        'daily',
-                        historyImage.group_category,
-                        historyImage.base64_group
-                    )}
-                    pixelatedImageUrl={getImageUrl(
-                        historyImage.group_type || '',
-                        historyImage.img_bucket,
-                        1,
-                        'daily',
-                        historyImage.group_category,
-                        historyImage.base64_group
-                    )}
-                    guessCount={6 - historyGuesses.filter((g) => g === 'empty').length}
-                    isWin={historyGameWon}
-                    guessAttempts={[]}
-                    stats={{
-                        gamesPlayed: stats.totalGames,
-                        winPercentage:
-                            stats.totalGames > 0
-                                ? Math.round(
-                                      (stats.totalWins / stats.totalGames) * 100
-                                  )
-                                : 0,
-                        currentStreak: stats.currentStreak,
-                        maxStreak: stats.maxStreak,
-                    }}
-                    guessDistribution={[
-                        stats.guessDistribution[1] || 0,
-                        stats.guessDistribution[2] || 0,
-                        stats.guessDistribution[3] || 0,
-                        stats.guessDistribution[4] || 0,
-                        stats.guessDistribution[5] || 0,
-                        stats.guessDistribution[6] || 0,
-                    ]}
-                    gameMode='daily'
-                    onNextUnlimited={loadNextUnlimited}
-                    isHistoryMode={true}
-                    historyDate={historyDate!}
-                />
-            )}
+            {/* Win modal disabled for past idols */}
 
             {showConfetti && windowDimensions.width > 0 && (
                 <div className='pointer-events-none fixed inset-0 z-[9999]'>
