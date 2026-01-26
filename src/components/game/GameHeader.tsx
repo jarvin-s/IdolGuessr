@@ -103,6 +103,7 @@ export default function GameHeader({
                         )}
 
                         {(gameMode === 'unlimited' || gameMode === 'hangul') &&
+                            !isChallenge &&
                             currentStreak !== undefined &&
                             currentStreak >= 5 && (
                                 <div className='flex items-center gap-1'>
