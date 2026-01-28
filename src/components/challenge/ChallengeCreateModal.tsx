@@ -58,7 +58,7 @@ export default function ChallengeCreateModal({
                 <div className='mb-4 flex items-center justify-center gap-2'>
                     <ChallengeIcon />
                     <h2 className='text-xl font-bold uppercase md:text-2xl'>
-                        Challenge Mode
+                        Challenge mode
                     </h2>
                 </div>
 
@@ -115,32 +115,32 @@ export default function ChallengeCreateModal({
                     <h3 className='mb-2 text-center text-lg font-bold uppercase'>
                         Group Type
                     </h3>
-                    <div className='space-y-2'>
+                    <div className='grid grid-cols-3 gap-2'>
                         <button
                             onClick={() => setSelectedFilter('boy-group')}
-                            className={`w-full cursor-pointer border-2 px-3 py-2 text-left font-medium transition-all ${
+                            className={`w-full cursor-pointer border-2 px-3 py-2 text-center transition-all ${
                                 selectedFilter === 'boy-group'
                                     ? 'border-pink-500 bg-pink-500 text-white'
                                     : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
                             }`}
                         >
-                            Boy groups
+                            Boy
                         </button>
 
                         <button
                             onClick={() => setSelectedFilter('girl-group')}
-                            className={`w-full cursor-pointer border-2 px-3 py-2 text-left font-medium transition-all ${
+                            className={`w-full cursor-pointer border-2 px-3 py-2 text-center transition-all ${
                                 selectedFilter === 'girl-group'
                                     ? 'border-pink-500 bg-pink-500 text-white'
                                     : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
                             }`}
-                        >
-                            Girl groups
+                            >
+                            Girl
                         </button>
 
                         <button
                             onClick={() => setSelectedFilter('both')}
-                            className={`w-full cursor-pointer border-2 px-3 py-2 text-left font-medium transition-all ${
+                            className={`w-full cursor-pointer border-2 px-3 py-2 text-center transition-all ${
                                 selectedFilter === 'both'
                                     ? 'border-pink-500 bg-pink-500 text-white'
                                     : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
