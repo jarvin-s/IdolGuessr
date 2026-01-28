@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
+import copy from 'copy-to-clipboard'
 import Image from 'next/image'
 import ChallengeResultsView from '@/components/challenge/ChallengeResultsView'
 import {
@@ -49,14 +50,14 @@ export default function ChallengeResultsPage() {
         void loadData()
     }, [challengeId])
 
-    const handleCopyLink = useCallback(async () => {
+    const handleCopyLink = useCallback(() => {
         const url = `${window.location.origin}/challenge/${challengeId}`
-        try {
-            await navigator.clipboard.writeText(url)
+        const success = copy(url)
+        if (success) {
             setCopied(true)
             setTimeout(() => setCopied(false), 2000)
-        } catch (err) {
-            console.error('Failed to copy:', err)
+        } else {
+            console.error('Failed to copy link')
         }
     }, [challengeId])
 
