@@ -838,9 +838,9 @@ export function useGameController() {
                     }
                     const guessNumber = 6 - remainingGuesses + 1
 
-                    // if (gameMode === 'daily') {
-                    //     saveGuessAttempt(normalizedGuess)
-                    // }
+                    if (gameMode === 'daily') {
+                        saveGuessAttempt(normalizedGuess)
+                    }
 
                     setIsAnimating(true)
 
