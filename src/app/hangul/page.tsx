@@ -187,6 +187,8 @@ export default function HangulPage() {
                     setShowInfo(false)
                     setShowHelp(true)
                 }}
+                onShowHistory={() => {}}
+                gameMode='hangul'
             />
 
             <WinModal

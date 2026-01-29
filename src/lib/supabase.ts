@@ -6,7 +6,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export interface DailyImage {
-  id: number  // int4 in database
+  id: number
   name: string
   alt_name?: string
   group_type?: string
@@ -19,6 +19,7 @@ export interface DailyImage {
   base64_group?: string
   base64_idol?: string
   hangul_name?: string
+  gen?: number
 }
 
 export interface HangulImage extends DailyImage {
@@ -215,21 +216,35 @@ export async function getMultipleRandomHangulImages(
 
 export async function getMultipleRandomUnlimitedImages(
   count: number,
-  groupFilter?: 'boy-group' | 'girl-group' | null
+  groupFilter?: 'boy-group' | 'girl-group' | null,
+  genFilter?: number[]
 ): Promise<DailyImage[]> {
   const seenIdols = getSeenIdols();
 
-  // console.log('[DB Request] Fetching unlimited idols:',
-  //   {
-  //     requested_count: count,
-  //     fetch_count: count * 3,
-  //     excluded_idols: seenIdols.length,
-  //     excluded_list: seenIdols,
-  //   });
+  const isFilteringByGen = genFilter && genFilter.length > 0 && genFilter.length < 3;
 
-  // Try to fetch with exclusions first (3x count to ensure we get enough after deduplication)
-  const fetchCount = count * 3;
-  const { data, error } = await supabase.rpc('get_multiple_random_unlimited', {
+  const passesFilters = (img: DailyImage): boolean => {
+    if (!img.group_category || !img.base64_group) {
+      return false;
+    }
+    if (groupFilter && img.group_category !== groupFilter) {
+      return false;
+    }
+    if (isFilteringByGen) {
+      if (img.gen === undefined || img.gen === null) {
+        return false;
+      }
+      if (!genFilter!.includes(img.gen)) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const fetchMultiplier = isFilteringByGen ? 20 : 3;
+  const fetchCount = count * fetchMultiplier;
+
+  const { data, error } = await supabase.rpc('get_multiple_random_unlimited_test', {
     excluded_buckets: seenIdols,
     row_count: fetchCount
   });
@@ -239,18 +254,15 @@ export async function getMultipleRandomUnlimitedImages(
     return [];
   }
 
-  // console.log('[DB Response] Received:', {
-  //   received_count: data?.length || 0,
-  //   idols: data?.map((img: DailyImage) => img.img_bucket).slice(0, 10) || [], // Show first 10
-  // });
-
   if (!data || data.length === 0) {
-    // console.log('[Prefetch] No unseen idols available, clearing seen history...');
-    clearSeenIdols();
+    if (!isFilteringByGen) {
+      clearSeenIdols();
+    }
 
-    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_unlimited', {
+    const retryFetchCount = isFilteringByGen ? fetchCount : count;
+    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_unlimited_test', {
       excluded_buckets: [],
-      row_count: count
+      row_count: retryFetchCount
     });
 
     if (retryError || !retryData) {
@@ -259,35 +271,20 @@ export async function getMultipleRandomUnlimitedImages(
     }
 
     const validRetryData = retryData.filter((img: DailyImage) => {
-      if (!img.group_category || !img.base64_group) {
-        console.warn('[Prefetch] Skipping image with missing data in retry:', {
-          name: img.name,
-          img_bucket: img.img_bucket,
-          has_group_category: !!img.group_category,
-          has_base64_group: !!img.base64_group,
-        });
-        return false;
-      }
-      if (groupFilter && img.group_category !== groupFilter) {
+      if (!passesFilters(img)) {
         return false;
       }
       return true;
     });
 
-    // console.log(`[Prefetch] After reset: fetched ${validRetryData.length} idols:`, validRetryData.map((img: DailyImage) => img.name));
     return validRetryData.slice(0, count);
   }
 
-  // Remove duplicates (same img_bucket), filter invalid data, and limit to requested count
   const uniqueImages: DailyImage[] = [];
   const seenBuckets = new Set<string>();
 
   for (const image of data) {
-    if (!image.group_category || !image.base64_group) {
-      continue;
-    }
-
-    if (groupFilter && image.group_category !== groupFilter) {
+    if (!passesFilters(image)) {
       continue;
     }
 
@@ -297,46 +294,36 @@ export async function getMultipleRandomUnlimitedImages(
     }
   }
 
-  // console.log(`[Prefetch] Fetched ${uniqueImages.length}/${count} unique unseen idols:`, uniqueImages.map(img => ({
-  //   name: img.name,
-  //   img_bucket: img.img_bucket,
-  //   group_category: img.group_category,
-  //   base64_group: img.base64_group,
-  // })));
-
-  // If we still don't have enough, clear and retry
   if (uniqueImages.length < count && seenIdols.length > 0) {
-    // console.log('[Prefetch] Insufficient unique images, clearing seen history...');
-    clearSeenIdols();
+    if (!isFilteringByGen || uniqueImages.length === 0) {
+      clearSeenIdols();
+    }
 
-    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_unlimited', {
+    const retryFetchCount = isFilteringByGen ? fetchCount : count;
+    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_unlimited_test', {
       excluded_buckets: [],
-      row_count: count
+      row_count: retryFetchCount
     });
 
     if (retryError || !retryData) {
-      console.error('get_multiple_random_unlimited retry error:', retryError);
-      return uniqueImages; // Return what we have
+      console.error('get_multiple_random_unlimited_test retry error:', retryError);
+      return uniqueImages;
     }
 
-    // Filter out invalid data from second retry
     const validRetryData = retryData.filter((img: DailyImage) => {
-      if (!img.group_category || !img.base64_group) {
-        // console.warn('[Prefetch] Skipping image with missing data in second retry:', {
-        //   name: img.name,
-        //   img_bucket: img.img_bucket,
-        //   has_group_category: !!img.group_category,
-        //   has_base64_group: !!img.base64_group,
-        // });
-        return false;
-      }
-      if (groupFilter && img.group_category !== groupFilter) {
+      if (!passesFilters(img)) {
         return false;
       }
       return true;
     });
 
-    return validRetryData.slice(0, count);
+    if (validRetryData.length > 0) {
+      const additionalNeeded = count - uniqueImages.length;
+      const additional = validRetryData.slice(0, additionalNeeded);
+      return [...uniqueImages, ...additional];
+    }
+
+    return uniqueImages;
   }
 
   return uniqueImages;
@@ -556,4 +543,231 @@ export async function getDailyCount(): Promise<number> {
     return 0;
   }
   return (count || 0) + 1;
+}
+
+export interface HistoryDailyImage extends DailyImage {
+  play_date: string;
+}
+
+export async function getDailyImageByDate(date: string): Promise<HistoryDailyImage | null> {
+  const startOfDay = `${date}T00:00:00`;
+  const endOfDay = `${date}T23:59:59`;
+
+  const { data, error } = await supabase
+    .from('dailies')
+    .select('*')
+    .gte('play_date', startOfDay)
+    .lte('play_date', endOfDay)
+    .single();
+
+  if (error) {
+    return null;
+  }
+
+  return data as HistoryDailyImage;
+}
+
+export async function getAvailableDailyDates(): Promise<{ dates: string[], firstDate: string | null, lastDate: string | null }> {
+  const now = new Date();
+  const gmtPlus1 = new Date(now.getTime() + (60 * 60 * 1000));
+  const today = gmtPlus1.toISOString().split('T')[0];
+  const endOfToday = `${today}T23:59:59`;
+
+  const { data, error } = await supabase
+    .from('dailies')
+    .select('play_date')
+    .lte('play_date', endOfToday)
+    .order('play_date', { ascending: true });
+
+  if (error) {
+    return { dates: [], firstDate: null, lastDate: null };
+  }
+
+  const dates = data?.map(d => {
+    const playDate = new Date(d.play_date);
+    const year = playDate.getFullYear();
+    const month = String(playDate.getMonth() + 1).padStart(2, '0');
+    const day = String(playDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }) || [];
+
+  return {
+    dates,
+    firstDate: dates.length > 0 ? dates[0] : null,
+    lastDate: dates.length > 0 ? dates[dates.length - 1] : null
+  };
+}
+
+// ============================================
+// Challenge Mode Types and Functions
+// ============================================
+
+export interface ChallengeIdol {
+  id: number
+  name: string
+  alt_name?: string
+  img_bucket: string
+  group_category: string
+  base64_group: string
+  group_name?: string
+}
+
+export interface Challenge {
+  id: string
+  idol_count: number
+  group_filter: string
+  created_at: string
+  expires_at: string
+  idols: ChallengeIdol[]
+}
+
+export interface ChallengeIdolResult {
+  idol_id: number
+  correct: boolean
+  guess_count: number
+  guesses: string[]
+}
+
+export interface ChallengeResult {
+  session_id: string
+  nickname: string | null
+  results: ChallengeIdolResult[]
+  total_correct: number
+  completed_at: string
+}
+
+export async function createChallenge(
+  sessionId: string,
+  idolCount: number,
+  groupFilter: 'boy-group' | 'girl-group' | 'both' = 'both'
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.rpc('create_challenge', {
+      p_session_id: sessionId,
+      p_idol_count: idolCount,
+      p_group_filter: groupFilter
+    })
+
+    if (error) {
+      console.error('Error creating challenge:', error)
+      return null
+    }
+
+    return data as string
+  } catch (error) {
+    console.error('Error creating challenge:', error)
+    return null
+  }
+}
+
+export async function getChallenge(challengeId: string): Promise<Challenge | null> {
+  try {
+    const { data, error } = await supabase.rpc('get_challenge', {
+      p_challenge_id: challengeId
+    })
+
+    if (error) {
+      console.error('Error getting challenge:', error)
+      return null
+    }
+
+    if (!data || data.length === 0) {
+      return null
+    }
+
+    const row = data[0]
+    return {
+      id: row.id,
+      idol_count: row.idol_count,
+      group_filter: row.group_filter,
+      created_at: row.created_at,
+      expires_at: row.expires_at,
+      idols: row.idols || []
+    }
+  } catch (error) {
+    console.error('Error getting challenge:', error)
+    return null
+  }
+}
+
+export async function submitChallengeResult(
+  challengeId: string,
+  sessionId: string,
+  nickname: string | null,
+  results: ChallengeIdolResult[],
+  totalCorrect: number
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.rpc('submit_challenge_result', {
+      p_challenge_id: challengeId,
+      p_session_id: sessionId,
+      p_nickname: nickname,
+      p_results: results,
+      p_total_correct: totalCorrect
+    })
+
+    if (error) {
+      console.error('Error submitting challenge result:', error)
+      return null
+    }
+
+    return data as string
+  } catch (error) {
+    console.error('Error submitting challenge result:', error)
+    return null
+  }
+}
+
+export async function getChallengeResults(challengeId: string): Promise<ChallengeResult[]> {
+  try {
+    const { data, error } = await supabase.rpc('get_challenge_results', {
+      p_challenge_id: challengeId
+    })
+
+    if (error) {
+      console.error('Error getting challenge results:', error)
+      return []
+    }
+
+    return (data || []).map((row: {
+      session_id: string
+      nickname: string | null
+      results: ChallengeIdolResult[]
+      total_correct: number
+      completed_at: string
+    }) => ({
+      session_id: row.session_id,
+      nickname: row.nickname,
+      results: row.results,
+      total_correct: row.total_correct,
+      completed_at: row.completed_at
+    }))
+  } catch (error) {
+    console.error('Error getting challenge results:', error)
+    return []
+  }
+}
+
+export async function checkChallengePlayed(
+  challengeId: string,
+  sessionId: string
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('challenge_results')
+      .select('id')
+      .eq('challenge_id', challengeId)
+      .eq('session_id', sessionId)
+      .maybeSingle()
+
+    if (error) {
+      console.error('Error checking if challenge played:', error)
+      return false
+    }
+
+    return data !== null
+  } catch (error) {
+    console.error('Error checking if challenge played:', error)
+    return false
+  }
 }

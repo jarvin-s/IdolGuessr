@@ -10,6 +10,8 @@ interface InfoModalProps {
     onClose: () => void
     onShowFeedback: () => void
     onShowHelp: () => void
+    onShowHistory: () => void
+    gameMode?: 'daily' | 'unlimited' | 'hangul'
 }
 
 export default function InfoModal({
@@ -17,6 +19,8 @@ export default function InfoModal({
     onClose,
     onShowFeedback,
     onShowHelp,
+    onShowHistory,
+    gameMode = 'daily',
 }: InfoModalProps) {
     const [showChangelog, setShowChangelog] = useState(false)
 
@@ -65,6 +69,14 @@ export default function InfoModal({
                             Changelog
                         </h1>
                         <div className='mt-4 space-y-4'>
+                            <ChangelogEntry
+                                version='1.4.0'
+                                date='January 29, 2025'
+                                changes={['Launched Challenge links',
+                                    'Added past idol history to Daily mode',
+                                    'Added Gen filter to Infinite mode'
+                                ]}
+                            />
                             <ChangelogEntry
                                 version='1.3.0'
                                 date='January 11, 2025'
@@ -164,9 +176,40 @@ export default function InfoModal({
                                 </div>
                                 <ChevronRightIcon />
                             </button>
+
+                            {gameMode === 'daily' && (
+                                <button
+                                    onClick={onShowHistory}
+                                    className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
+                                >
+                                    <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                                        <HistoryIcon />
+                                    </div>
+                                    <div className='text-left'>
+                                        <h3
+                                            className={`${proximaNovaBold.className} text-lg`}
+                                        >
+                                            Past idols
+                                        </h3>
+                                        <p className='text-sm text-gray-500'>
+                                            Play idols from previous days
+                                        </p>
+                                    </div>
+                                    <ChevronRightIcon />
+                                </button>
+                            )}
                         </div>
 
                         <div className='mt-6 flex justify-center gap-4 border-t border-gray-200 pt-4'>
+                            <a
+                                href='https://youtube.com/@idolguessr'
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='flex items-center justify-center transition-opacity hover:opacity-70'
+                                aria-label='Follow us on YouTube'
+                            >
+                                <YouTubeIcon />
+                            </a>
                             <a
                                 href='https://instagram.com/idolguessr.fun'
                                 target='_blank'
@@ -184,6 +227,15 @@ export default function InfoModal({
                                 aria-label='Follow us on TikTok'
                             >
                                 <TikTokIcon />
+                            </a>
+                            <a
+                                href='https://x.com/idolguessr'
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='flex items-center justify-center transition-opacity hover:opacity-70'
+                                aria-label='Follow us on Twitter'
+                            >
+                                <TwitterIcon />
                             </a>
                         </div>
                     </>
@@ -330,6 +382,53 @@ function TikTokIcon() {
             viewBox='0 0 24 24'
         >
             <path d='M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z' />
+        </svg>
+    )
+}
+
+function YouTubeIcon() {
+    return (
+        <svg
+            className='h-6 w-6 text-gray-600'
+            fill='currentColor'
+            viewBox='0 0 512 512'
+        >
+            <path fill='currentColor' d='M508.64 148.79c0-45-33.1-81.2-74-81.2C379.24 65 322.74 64 265 64h-18c-57.6 0-114.2 1-169.6 3.6C36.6 67.6 3.5 104 3.5 149C1 184.59-.06 220.19 0 255.79q-.15 53.4 3.4 106.9c0 45 33.1 81.5 73.9 81.5c58.2 2.7 117.9 3.9 178.6 3.8q91.2.3 178.6-3.8c40.9 0 74-36.5 74-81.5c2.4-35.7 3.5-71.3 3.4-107q.34-53.4-3.26-106.9M207 353.89v-196.5l145 98.2Z' />
+        </svg>
+    )
+}
+
+function HistoryIcon() {
+    return (
+        <svg
+            className='h-5 w-5 text-gray-600'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+            strokeWidth={2}
+        >
+            <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                d='M4 4v5h5'
+            />
+            <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                d='M4.51 9A9 9 0 1 0 6 6L4 9'
+            />
+        </svg>
+    )
+}
+
+function TwitterIcon() {
+    return (
+        <svg
+            className='h-6 w-6 text-gray-600'
+            fill='currentColor'
+            viewBox='0 0 24 24'
+        >
+            <path fill='currentColor' d='M22.46 6c-.77.35-1.6.58-2.46.69c.88-.53 1.56-1.37 1.88-2.38c-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29c0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15c0 1.49.75 2.81 1.91 3.56c-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.2 4.2 0 0 1-1.93.07a4.28 4.28 0 0 0 4 2.98a8.52 8.52 0 0 1-5.33 1.84q-.51 0-1.02-.06C3.44 20.29 5.7 21 8.12 21C16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56c.84-.6 1.56-1.36 2.14-2.23' />
         </svg>
     )
 }

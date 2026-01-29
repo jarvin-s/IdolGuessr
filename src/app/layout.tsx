@@ -7,11 +7,29 @@ const proximaNovaRegular = localFont({
     src: '../../public/fonts/proximanova_regular.ttf',
 })
 
+// const roboto = Roboto({
+//     weight: ['400', '700'],
+//     subsets: ['latin'],
+// })
+
 export const metadata: Metadata = {
     metadataBase: new URL('https://idolguessr.fun'),
     title: {
         default: 'IdolGuessr - K-pop Idol Guessing Game',
         template: `%s | IdolGuessr`,
+    },
+    robots: {
+        index: true,
+        follow: true,
+        nocache: false,
+        googleBot: {
+            index: true,
+            follow: true,
+            noimageindex: false,
+            'max-video-preview': -1,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+        },
     },
     description:
         'Guess The K-pop Idol - A fun web game where K-pop fans test their knowledge by guessing idols from pixelated photos.',
@@ -33,6 +51,9 @@ export const metadata: Metadata = {
         'guess the kpop idol',
         'kpop idol guesser',
         'kpop idol guessr',
+        'guess kpop idol',
+        'guess idol kpop',
+        'guess kpop'
     ],
     openGraph: {
         title: 'IdolGuessr - K-pop Idol Guessing Game',
