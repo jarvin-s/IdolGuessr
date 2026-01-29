@@ -52,6 +52,7 @@ export function useGameController() {
     const [groupFilter, setGroupFilter] = useState<
         'boy-group' | 'girl-group' | 'both'
     >('both')
+    const [genFilter, setGenFilter] = useState<number[]>([3, 4, 5])
     const [disabledLetters, setDisabledLetters] = useState<Set<string>>(
         new Set()
     )
@@ -88,7 +89,8 @@ export function useGameController() {
     const loadCurrentRef = useRef<(() => Promise<void>) | null>(null)
     const loadUnlimitedRefFunc = useRef<
         | ((
-            filterOverride?: 'boy-group' | 'girl-group' | 'both'
+            filterOverride?: 'boy-group' | 'girl-group' | 'both',
+            genFilterOverride?: number[]
         ) => Promise<void>)
         | null
     >(null)
@@ -192,12 +194,13 @@ export function useGameController() {
     const loadUnlimitedRef = useRef(false)
 
     const loadUnlimited = useCallback(
-        async (filterOverride?: 'boy-group' | 'girl-group' | 'both') => {
+        async (filterOverride?: 'boy-group' | 'girl-group' | 'both', genFilterOverride?: number[]) => {
             if (loadUnlimitedRef.current) return
             loadUnlimitedRef.current = true
 
             const filterForApi = filterOverride !== undefined ? filterOverride : groupFilter
             const currentFilter = filterForApi === 'both' ? null : filterForApi
+            const currentGenFilter = genFilterOverride !== undefined ? genFilterOverride : genFilter
             const currentStreak = unlimitedStats.stats.currentStreak
             const milestones = [1, 10, 25, 50, 75, 100]
             const lastMilestone =
@@ -216,7 +219,8 @@ export function useGameController() {
                     unlimitedStats.clearGameState()
                     const newImages = await getMultipleRandomUnlimitedImages(
                         5,
-                        currentFilter
+                        currentFilter,
+                        currentGenFilter
                     )
                     setIsLoading(false)
 
@@ -263,7 +267,8 @@ export function useGameController() {
                     unlimitedStats.clearGameState()
                     const newImages = await getMultipleRandomUnlimitedImages(
                         5,
-                        currentFilter
+                        currentFilter,
+                        currentGenFilter
                     )
                     setIsLoading(false)
 
@@ -345,7 +350,8 @@ export function useGameController() {
                         } else {
                             getMultipleRandomUnlimitedImages(
                                 5,
-                                currentFilter
+                                currentFilter,
+                                currentGenFilter
                             ).then((newImages) => {
                                 setPrefetchedImages(newImages)
                                 setCurrentImageIndex(0)
@@ -356,7 +362,7 @@ export function useGameController() {
                             })
                         }
                     } else {
-                        getMultipleRandomUnlimitedImages(5, currentFilter).then(
+                        getMultipleRandomUnlimitedImages(5, currentFilter, currentGenFilter).then(
                             (newImages) => {
                                 setPrefetchedImages(newImages)
                                 setCurrentImageIndex(0)
@@ -368,7 +374,7 @@ export function useGameController() {
                         )
                     }
                 } else {
-                    getMultipleRandomUnlimitedImages(5, currentFilter).then(
+                    getMultipleRandomUnlimitedImages(5, currentFilter, currentGenFilter).then(
                         (newImages) => {
                             setPrefetchedImages(newImages)
                             setCurrentImageIndex(0)
@@ -382,7 +388,8 @@ export function useGameController() {
                 setIsLoading(true)
                 const newImages = await getMultipleRandomUnlimitedImages(
                     5,
-                    currentFilter
+                    currentFilter,
+                    currentGenFilter
                 )
                 setIsLoading(false)
 
@@ -415,6 +422,7 @@ export function useGameController() {
             setShowConfetti,
             setShowWinModal,
             groupFilter,
+            genFilter,
         ]
     )
 
@@ -423,7 +431,8 @@ export function useGameController() {
     const handleGameModeChange = useCallback(
         (
             mode: 'daily' | 'unlimited',
-            filter?: 'boy-group' | 'girl-group' | 'both'
+            filter?: 'boy-group' | 'girl-group' | 'both',
+            genFilterParam?: number[]
         ) => {
             const shouldLoadAnyway =
                 pathname === '/infinite' && mode === 'unlimited' && !dailyImage
@@ -473,6 +482,11 @@ export function useGameController() {
             if (filter !== undefined) {
                 setGroupFilter(filter)
                 localStorage.setItem('idol-guessr-group-filter', filter)
+            }
+
+            if (genFilterParam !== undefined) {
+                setGenFilter(genFilterParam)
+                localStorage.setItem('idol-guessr-gen-filter', JSON.stringify(genFilterParam))
             }
 
             setDailyImage(null)
@@ -527,7 +541,7 @@ export function useGameController() {
                 setShowGameOver(false)
                 setDisabledLetters(new Set())
                 if (loadUnlimitedRefFunc.current) {
-                    void loadUnlimitedRefFunc.current(filter)
+                    void loadUnlimitedRefFunc.current(filter, genFilterParam)
                 }
             }
         },
@@ -556,9 +570,11 @@ export function useGameController() {
             overrideSkipsRemaining?: number,
             overrideHintUsed?: boolean,
             overrideHintUsedOnIdol?: string | null,
-            overrideGroupFilter?: 'boy-group' | 'girl-group' | 'both'
+            overrideGroupFilter?: 'boy-group' | 'girl-group' | 'both',
+            overrideGenFilter?: number[]
         ) => {
             const effectiveFilter = overrideGroupFilter ?? groupFilter
+            const effectiveGenFilter = overrideGenFilter ?? genFilter
             if (!gameWon && !gameLost) {
                 const hasGuesses = guesses.some(
                     (g) => g === 'incorrect' || g === 'correct'
@@ -684,7 +700,7 @@ export function useGameController() {
 
                 if (nextImageIndex >= prefetchedImages.length - 2) {
                     const apiFilter = effectiveFilter === 'both' ? null : effectiveFilter
-                    getMultipleRandomUnlimitedImages(5, apiFilter).then(
+                    getMultipleRandomUnlimitedImages(5, apiFilter, effectiveGenFilter).then(
                         (newImages) => {
                             setPrefetchedImages((prev) => [
                                 ...prev,
@@ -698,7 +714,7 @@ export function useGameController() {
                 }
             } else {
                 const apiFilter = effectiveFilter === 'both' ? null : effectiveFilter
-                getMultipleRandomUnlimitedImages(5, apiFilter).then(
+                getMultipleRandomUnlimitedImages(5, apiFilter, effectiveGenFilter).then(
                     (newImages) => {
                         if (newImages.length > 0) {
                             const basePrefetched = overrideGroupFilter ? [] : prefetchedImages
@@ -750,10 +766,11 @@ export function useGameController() {
             skipsRemaining,
             dailyImage,
             groupFilter,
+            genFilter,
         ]
     )
 
-    const handlePlayAgain = useCallback((overrideGroupFilter?: 'boy-group' | 'girl-group' | 'both') => {
+    const handlePlayAgain = useCallback((overrideGroupFilter?: 'boy-group' | 'girl-group' | 'both', overrideGenFilter?: number[]) => {
         setShowGameOver(false)
         unlimitedStats.clearGameState()
         clearSeenIdols()
@@ -763,9 +780,14 @@ export function useGameController() {
             localStorage.setItem('idol-guessr-group-filter', overrideGroupFilter)
         }
 
+        if (overrideGenFilter) {
+            setGenFilter(overrideGenFilter)
+            localStorage.setItem('idol-guessr-gen-filter', JSON.stringify(overrideGenFilter))
+        }
+
         setPrefetchedImages([])
         setCurrentImageIndex(0)
-        loadNextUnlimited(3, false, null, overrideGroupFilter)
+        loadNextUnlimited(3, false, null, overrideGroupFilter, overrideGenFilter)
     }, [loadNextUnlimited, unlimitedStats])
 
     const handleSkip = useCallback(() => {
@@ -816,9 +838,9 @@ export function useGameController() {
                     }
                     const guessNumber = 6 - remainingGuesses + 1
 
-                    if (gameMode === 'daily') {
-                        saveGuessAttempt(normalizedGuess)
-                    }
+                    // if (gameMode === 'daily') {
+                    //     saveGuessAttempt(normalizedGuess)
+                    // }
 
                     setIsAnimating(true)
 
@@ -1012,6 +1034,25 @@ export function useGameController() {
     const hasLoadedInitialRef = useRef(false)
 
     useEffect(() => {
+        // Helper to load gen filter from localStorage
+        const loadGenFilter = () => {
+            try {
+                const savedGenFilter = localStorage.getItem('idol-guessr-gen-filter')
+                if (savedGenFilter) {
+                    const parsed = JSON.parse(savedGenFilter)
+                    if (Array.isArray(parsed) && parsed.length > 0 && parsed.every((g: unknown) => typeof g === 'number' && [3, 4, 5].includes(g))) {
+                        setGenFilter(parsed)
+                    } else {
+                        setGenFilter([3, 4, 5])
+                    }
+                } else {
+                    setGenFilter([3, 4, 5])
+                }
+            } catch {
+                setGenFilter([3, 4, 5])
+            }
+        }
+
         // If we're on the infinite page, don't set mode here - let the page handle it
         // This prevents the hook from loading daily mode before the page can switch to unlimited
         if (pathname === '/infinite') {
@@ -1021,6 +1062,7 @@ export function useGameController() {
             } else {
                 setGroupFilter('both')
             }
+            loadGenFilter()
             return
         }
 
@@ -1036,6 +1078,7 @@ export function useGameController() {
         } else {
             setGroupFilter('both')
         }
+        loadGenFilter()
     }, [pathname])
 
     useEffect(() => {
@@ -1382,5 +1425,6 @@ export function useGameController() {
         unlimitedStatsData: unlimitedStats.stats,
         unlimitedStatsLoaded: unlimitedStats.isLoaded,
         groupFilter,
+        genFilter,
     }
 }

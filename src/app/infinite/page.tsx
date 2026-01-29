@@ -69,17 +69,39 @@ export default function InfinitePage() {
         guesses,
     } = useGameController()
 
-    const handleStart = (filter: GroupFilter) => {
-        // Start unlimited with selected filter, then lock UI by closing modal
-        handleGameModeChange('unlimited', filter)
+    const handleStart = (groupFilter: GroupFilter, genFilter: number[]) => {
+        // Start unlimited with selected filters, then lock UI by closing modal
+        // Save gen filter to localStorage
+        try {
+            localStorage.setItem('idol-guessr-group-filter', groupFilter)
+            localStorage.setItem('idol-guessr-gen-filter', JSON.stringify(genFilter))
+        } catch {
+            // Ignore localStorage errors
+        }
+        handleGameModeChange('unlimited', groupFilter, genFilter)
         setStartOpen(false)
     }
 
     useEffect(() => {
         try {
-            const savedFilter = localStorage.getItem('idol-guessr-group-filter')
-            if (savedFilter === 'boy-group' || savedFilter === 'girl-group' || savedFilter === 'both') {
-                handleGameModeChange('unlimited', savedFilter as GroupFilter)
+            const savedGroupFilter = localStorage.getItem('idol-guessr-group-filter')
+            const savedGenFilter = localStorage.getItem('idol-guessr-gen-filter')
+
+            // Parse gen filter with validation
+            let parsedGenFilter: number[] = [3, 4, 5]
+            if (savedGenFilter) {
+                try {
+                    const parsed = JSON.parse(savedGenFilter)
+                    if (Array.isArray(parsed) && parsed.length > 0 && parsed.every((g: unknown) => typeof g === 'number' && [3, 4, 5].includes(g))) {
+                        parsedGenFilter = parsed
+                    }
+                } catch {
+                    // Keep default
+                }
+            }
+
+            if (savedGroupFilter === 'boy-group' || savedGroupFilter === 'girl-group' || savedGroupFilter === 'both') {
+                handleGameModeChange('unlimited', savedGroupFilter as GroupFilter, parsedGenFilter)
                 setStartOpen(false)
             } else {
                 setStartOpen(true)
@@ -270,7 +292,9 @@ export default function InfinitePage() {
                 onConfirm={() => {
                     setShowFilterModal(false)
                 }}
-                onPlayAgain={handlePlayAgain}
+                onPlayAgain={(groupFilter, genFilter) => {
+                    handlePlayAgain(groupFilter, genFilter)
+                }}
             />
 
             {showConfetti && windowDimensions.width > 0 && (

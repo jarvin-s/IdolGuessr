@@ -6,7 +6,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export interface DailyImage {
-  id: number  // int4 in database
+  id: number
   name: string
   alt_name?: string
   group_type?: string
@@ -19,6 +19,7 @@ export interface DailyImage {
   base64_group?: string
   base64_idol?: string
   hangul_name?: string
+  gen?: number
 }
 
 export interface HangulImage extends DailyImage {
@@ -215,23 +216,46 @@ export async function getMultipleRandomHangulImages(
 
 export async function getMultipleRandomUnlimitedImages(
   count: number,
-  groupFilter?: 'boy-group' | 'girl-group' | null
+  groupFilter?: 'boy-group' | 'girl-group' | null,
+  genFilter?: number[]  // Array of generations to include: [3, 4, 5] or subset
 ): Promise<DailyImage[]> {
   const seenIdols = getSeenIdols();
 
-  // console.log('[DB Request] Fetching unlimited idols:',
-  //   {
-  //     requested_count: count,
-  //     fetch_count: count * 3,
-  //     excluded_idols: seenIdols.length,
-  //     excluded_list: seenIdols,
-  //   });
+  // Determine if we're filtering by gen (only when not all gens selected)
+  const isFilteringByGen = genFilter && genFilter.length > 0 && genFilter.length < 3;
 
-  // Try to fetch with exclusions first (3x count to ensure we get enough after deduplication)
-  const fetchCount = count * 3;
-  const { data, error } = await supabase.rpc('get_multiple_random_unlimited', {
+  console.log('[getMultipleRandomUnlimitedImages] Filters:', {
+    groupFilter,
+    genFilter,
+    isFilteringByGen
+  });
+
+  const passesFilters = (img: DailyImage): boolean => {
+    if (!img.group_category || !img.base64_group) {
+      return false;
+    }
+    if (groupFilter && img.group_category !== groupFilter) {
+      return false;
+    }
+    // Gen filter: only apply when filtering by specific gens (not all)
+    if (isFilteringByGen) {
+      // If image has no gen value, exclude it when filtering by gen
+      if (img.gen === undefined || img.gen === null) {
+        return false;
+      }
+      if (!genFilter!.includes(img.gen)) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // When filtering by gen, fetch more to compensate for filtered results
+  // const fetchMultiplier = isFilteringByGen ? 10 : 3;
+  // const fetchCount = count * fetchMultiplier;
+  const { data, error } = await supabase.rpc('get_multiple_random_unlimited_test', {
     excluded_buckets: seenIdols,
-    row_count: fetchCount
+    row_count: count
   });
 
   if (error) {
@@ -239,16 +263,19 @@ export async function getMultipleRandomUnlimitedImages(
     return [];
   }
 
-  // console.log('[DB Response] Received:', {
-  //   received_count: data?.length || 0,
-  //   idols: data?.map((img: DailyImage) => img.img_bucket).slice(0, 10) || [], // Show first 10
-  // });
+  console.log('[getMultipleRandomUnlimitedImages] Raw data from DB:', {
+    count: data?.length || 0,
+    sampleWithGen: data?.filter((img: DailyImage) => img.gen !== undefined && img.gen !== null).slice(0, 5).map((img: DailyImage) => ({
+      name: img.name,
+      gen: img.gen,
+      group_category: img.group_category
+    }))
+  });
 
   if (!data || data.length === 0) {
-    // console.log('[Prefetch] No unseen idols available, clearing seen history...');
     clearSeenIdols();
 
-    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_unlimited', {
+    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_unlimited_test', {
       excluded_buckets: [],
       row_count: count
     });
@@ -259,22 +286,12 @@ export async function getMultipleRandomUnlimitedImages(
     }
 
     const validRetryData = retryData.filter((img: DailyImage) => {
-      if (!img.group_category || !img.base64_group) {
-        console.warn('[Prefetch] Skipping image with missing data in retry:', {
-          name: img.name,
-          img_bucket: img.img_bucket,
-          has_group_category: !!img.group_category,
-          has_base64_group: !!img.base64_group,
-        });
-        return false;
-      }
-      if (groupFilter && img.group_category !== groupFilter) {
+      if (!passesFilters(img)) {
         return false;
       }
       return true;
     });
 
-    // console.log(`[Prefetch] After reset: fetched ${validRetryData.length} idols:`, validRetryData.map((img: DailyImage) => img.name));
     return validRetryData.slice(0, count);
   }
 
@@ -283,11 +300,7 @@ export async function getMultipleRandomUnlimitedImages(
   const seenBuckets = new Set<string>();
 
   for (const image of data) {
-    if (!image.group_category || !image.base64_group) {
-      continue;
-    }
-
-    if (groupFilter && image.group_category !== groupFilter) {
+    if (!passesFilters(image)) {
       continue;
     }
 
@@ -297,40 +310,28 @@ export async function getMultipleRandomUnlimitedImages(
     }
   }
 
-  // console.log(`[Prefetch] Fetched ${uniqueImages.length}/${count} unique unseen idols:`, uniqueImages.map(img => ({
-  //   name: img.name,
-  //   img_bucket: img.img_bucket,
-  //   group_category: img.group_category,
-  //   base64_group: img.base64_group,
-  // })));
+  console.log('[getMultipleRandomUnlimitedImages] After filtering:', {
+    uniqueImagesCount: uniqueImages.length,
+    requestedCount: count,
+    filteredImages: uniqueImages.map(img => ({ name: img.name, gen: img.gen }))
+  });
 
-  // If we still don't have enough, clear and retry
   if (uniqueImages.length < count && seenIdols.length > 0) {
-    // console.log('[Prefetch] Insufficient unique images, clearing seen history...');
     clearSeenIdols();
 
-    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_unlimited', {
+    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_unlimited_test', {
       excluded_buckets: [],
       row_count: count
     });
 
     if (retryError || !retryData) {
-      console.error('get_multiple_random_unlimited retry error:', retryError);
+      console.error('get_multiple_random_unlimited_test retry error:', retryError);
       return uniqueImages; // Return what we have
     }
 
     // Filter out invalid data from second retry
     const validRetryData = retryData.filter((img: DailyImage) => {
-      if (!img.group_category || !img.base64_group) {
-        // console.warn('[Prefetch] Skipping image with missing data in second retry:', {
-        //   name: img.name,
-        //   img_bucket: img.img_bucket,
-        //   has_group_category: !!img.group_category,
-        //   has_base64_group: !!img.base64_group,
-        // });
-        return false;
-      }
-      if (groupFilter && img.group_category !== groupFilter) {
+      if (!passesFilters(img)) {
         return false;
       }
       return true;

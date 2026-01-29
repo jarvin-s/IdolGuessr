@@ -71,8 +71,11 @@ export default function InfoModal({
                         <div className='mt-4 space-y-4'>
                             <ChangelogEntry
                                 version='1.4.0'
-                                date='January 15, 2025'
-                                changes={['Launched Challenge mode']}
+                                date='January 29, 2025'
+                                changes={['Launched Challenge links',
+                                    'Added past idol history to Daily mode',
+                                    'Added Gen filter to Infinite mode'
+                                ]}
                             />
                             <ChangelogEntry
                                 version='1.3.0'
