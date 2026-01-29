@@ -217,18 +217,11 @@ export async function getMultipleRandomHangulImages(
 export async function getMultipleRandomUnlimitedImages(
   count: number,
   groupFilter?: 'boy-group' | 'girl-group' | null,
-  genFilter?: number[]  // Array of generations to include: [3, 4, 5] or subset
+  genFilter?: number[]
 ): Promise<DailyImage[]> {
   const seenIdols = getSeenIdols();
 
-  // Determine if we're filtering by gen (only when not all gens selected)
   const isFilteringByGen = genFilter && genFilter.length > 0 && genFilter.length < 3;
-
-  console.log('[getMultipleRandomUnlimitedImages] Filters:', {
-    groupFilter,
-    genFilter,
-    isFilteringByGen
-  });
 
   const passesFilters = (img: DailyImage): boolean => {
     if (!img.group_category || !img.base64_group) {
@@ -237,9 +230,7 @@ export async function getMultipleRandomUnlimitedImages(
     if (groupFilter && img.group_category !== groupFilter) {
       return false;
     }
-    // Gen filter: only apply when filtering by specific gens (not all)
     if (isFilteringByGen) {
-      // If image has no gen value, exclude it when filtering by gen
       if (img.gen === undefined || img.gen === null) {
         return false;
       }
@@ -250,12 +241,12 @@ export async function getMultipleRandomUnlimitedImages(
     return true;
   };
 
-  // When filtering by gen, fetch more to compensate for filtered results
-  // const fetchMultiplier = isFilteringByGen ? 10 : 3;
-  // const fetchCount = count * fetchMultiplier;
+  const fetchMultiplier = isFilteringByGen ? 20 : 3;
+  const fetchCount = count * fetchMultiplier;
+
   const { data, error } = await supabase.rpc('get_multiple_random_unlimited_test', {
     excluded_buckets: seenIdols,
-    row_count: count
+    row_count: fetchCount
   });
 
   if (error) {
@@ -263,21 +254,15 @@ export async function getMultipleRandomUnlimitedImages(
     return [];
   }
 
-  console.log('[getMultipleRandomUnlimitedImages] Raw data from DB:', {
-    count: data?.length || 0,
-    sampleWithGen: data?.filter((img: DailyImage) => img.gen !== undefined && img.gen !== null).slice(0, 5).map((img: DailyImage) => ({
-      name: img.name,
-      gen: img.gen,
-      group_category: img.group_category
-    }))
-  });
-
   if (!data || data.length === 0) {
-    clearSeenIdols();
+    if (!isFilteringByGen) {
+      clearSeenIdols();
+    }
 
+    const retryFetchCount = isFilteringByGen ? fetchCount : count;
     const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_unlimited_test', {
       excluded_buckets: [],
-      row_count: count
+      row_count: retryFetchCount
     });
 
     if (retryError || !retryData) {
@@ -295,7 +280,6 @@ export async function getMultipleRandomUnlimitedImages(
     return validRetryData.slice(0, count);
   }
 
-  // Remove duplicates (same img_bucket), filter invalid data, and limit to requested count
   const uniqueImages: DailyImage[] = [];
   const seenBuckets = new Set<string>();
 
@@ -310,26 +294,22 @@ export async function getMultipleRandomUnlimitedImages(
     }
   }
 
-  console.log('[getMultipleRandomUnlimitedImages] After filtering:', {
-    uniqueImagesCount: uniqueImages.length,
-    requestedCount: count,
-    filteredImages: uniqueImages.map(img => ({ name: img.name, gen: img.gen }))
-  });
-
   if (uniqueImages.length < count && seenIdols.length > 0) {
-    clearSeenIdols();
+    if (!isFilteringByGen || uniqueImages.length === 0) {
+      clearSeenIdols();
+    }
 
+    const retryFetchCount = isFilteringByGen ? fetchCount : count;
     const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_unlimited_test', {
       excluded_buckets: [],
-      row_count: count
+      row_count: retryFetchCount
     });
 
     if (retryError || !retryData) {
       console.error('get_multiple_random_unlimited_test retry error:', retryError);
-      return uniqueImages; // Return what we have
+      return uniqueImages;
     }
 
-    // Filter out invalid data from second retry
     const validRetryData = retryData.filter((img: DailyImage) => {
       if (!passesFilters(img)) {
         return false;
@@ -337,7 +317,13 @@ export async function getMultipleRandomUnlimitedImages(
       return true;
     });
 
-    return validRetryData.slice(0, count);
+    if (validRetryData.length > 0) {
+      const additionalNeeded = count - uniqueImages.length;
+      const additional = validRetryData.slice(0, additionalNeeded);
+      return [...uniqueImages, ...additional];
+    }
+
+    return uniqueImages;
   }
 
   return uniqueImages;
