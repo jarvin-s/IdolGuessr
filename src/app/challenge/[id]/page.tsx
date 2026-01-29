@@ -73,7 +73,7 @@ export default function ChallengePlayPage() {
         return (
             <div className='fixed inset-0 flex items-center justify-center bg-white'>
                 <div className='text-center'>
-                    <div className='mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-pink-500 border-t-transparent' />
+                    <div className='mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-pink-600 border-t-transparent' />
                     <p className='text-gray-600'>Loading challenge...</p>
                 </div>
             </div>
@@ -90,7 +90,7 @@ export default function ChallengePlayPage() {
                     <p className='mb-6 text-gray-600'>{error}</p>
                     <button
                         onClick={() => router.push('/challenge')}
-                        className='cursor-pointer rounded-lg bg-pink-500 px-6 py-2 font-bold text-white transition-colors hover:bg-pink-600'
+                        className='cursor-pointer rounded-full bg-pink-600 px-6 py-2 font-bold text-white transition-colors hover:bg-pink-700'
                     >
                         Create new challenge
                     </button>
@@ -104,7 +104,7 @@ export default function ChallengePlayPage() {
         return (
             <div className='fixed inset-0 flex items-center justify-center bg-white'>
                 <div className='text-center'>
-                    <div className='mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-pink-500 border-t-transparent' />
+                    <div className='mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-pink-600 border-t-transparent' />
                     <p className='text-gray-600'>Loading results...</p>
                 </div>
             </div>

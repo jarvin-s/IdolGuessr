@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
+import copy from 'copy-to-clipboard'
 import Image from 'next/image'
 import ChallengeResultsView from '@/components/challenge/ChallengeResultsView'
 import {
@@ -49,14 +50,14 @@ export default function ChallengeResultsPage() {
         void loadData()
     }, [challengeId])
 
-    const handleCopyLink = useCallback(async () => {
+    const handleCopyLink = useCallback(() => {
         const url = `${window.location.origin}/challenge/${challengeId}`
-        try {
-            await navigator.clipboard.writeText(url)
+        const success = copy(url)
+        if (success) {
             setCopied(true)
             setTimeout(() => setCopied(false), 2000)
-        } catch (err) {
-            console.error('Failed to copy:', err)
+        } else {
+            console.error('Failed to copy link')
         }
     }, [challengeId])
 
@@ -68,7 +69,7 @@ export default function ChallengeResultsPage() {
         return (
             <div className='fixed inset-0 flex items-center justify-center bg-white'>
                 <div className='text-center'>
-                    <div className='mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-pink-500 border-t-transparent' />
+                    <div className='mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-pink-600 border-t-transparent' />
                     <p className='text-gray-600'>
                         Loading challenge results...
                     </p>
@@ -89,7 +90,7 @@ export default function ChallengeResultsPage() {
                     </p>
                     <button
                         onClick={() => router.push('/challenge')}
-                        className='cursor-pointer rounded-lg bg-pink-500 px-6 py-2 font-bold text-white transition-colors hover:bg-pink-600'
+                        className='cursor-pointer rounded-full bg-pink-600 px-6 py-2 font-bold text-white transition-colors hover:bg-pink-700'
                     >
                         Create new challenge
                     </button>
@@ -104,7 +105,7 @@ export default function ChallengeResultsPage() {
         <div className='min-h-screen bg-gradient-to-b from-pink-50 to-white'>
             {copied && (
                 <div className='fade-in-from-top fixed top-4 left-1/2 z-50 -translate-x-1/2'>
-                    <div className='rounded-full bg-pink-500 px-6 py-3'>
+                    <div className='rounded-full bg-pink-600 px-6 py-3'>
                         <p className='text-lg font-bold text-white'>
                             Link copied!
                         </p>
@@ -147,7 +148,7 @@ export default function ChallengeResultsPage() {
                             onClick={() =>
                                 router.push(`/challenge/${challengeId}`)
                             }
-                            className='cursor-pointer rounded-full bg-pink-500 px-6 py-2 font-bold text-white transition-colors hover:bg-pink-600'
+                            className='cursor-pointer rounded-full bg-pink-600 px-6 py-2 font-bold text-white transition-colors hover:bg-pink-700'
                         >
                             Play challenge
                         </button>
@@ -159,13 +160,13 @@ export default function ChallengeResultsPage() {
                     <div className='flex gap-2'>
                         <button
                             onClick={handleNewChallenge}
-                            className='flex-1 cursor-pointer rounded-full bg-pink-500 px-4 py-3 font-bold text-white hover:bg-pink-600'
+                            className='flex-1 cursor-pointer rounded-full bg-pink-600 px-4 py-3 font-bold text-white hover:bg-pink-700'
                         >
                             Play again?
                         </button>
                         <button
                             onClick={handleCopyLink}
-                            className='cursor-pointer rounded-full border-2 border-pink-500 px-4 py-3 font-bold text-pink-600 hover:bg-pink-200/30'
+                            className='cursor-pointer rounded-full border-2 border-pink-600 px-4 py-3 font-bold text-pink-600 hover:bg-pink-200/30'
                         >
                             {copied ? <CopiedIcon /> : <ShareIcon />}
                         </button>

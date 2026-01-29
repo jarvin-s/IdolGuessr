@@ -58,7 +58,7 @@ export default function GameHeader({
                     {isChallenge && (
                         <div className='flex items-center justify-end'>
                             <div className='rounded-full bg-gradient-to-r from-pink-500 to-pink-600 px-3.5 py-1.5'>
-                                <h1 className='text-sm font-bold tracking-widest text-white uppercase'>
+                                <h1 className='text-[12px] md:text-sm font-bold tracking-widest text-white uppercase'>
                                     Challenge
                                 </h1>
                             </div>
@@ -103,6 +103,7 @@ export default function GameHeader({
                         )}
 
                         {(gameMode === 'unlimited' || gameMode === 'hangul') &&
+                            !isChallenge &&
                             currentStreak !== undefined &&
                             currentStreak >= 5 && (
                                 <div className='flex items-center gap-1'>

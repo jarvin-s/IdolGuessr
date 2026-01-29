@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import copy from 'copy-to-clipboard'
 import ShareModal from './ShareModal'
 import { useShareImage } from '@/hooks/useShareImage'
 import { generateShareText } from '@/utils/shareText'
@@ -71,18 +72,17 @@ export default function ShareButton({
         }
     }
 
-    const handleCopyText = async () => {
+    const handleCopyText = () => {
         const textResult = generateShareText({ guessCount, isWin })
 
-        try {
-            await navigator.clipboard.writeText(textResult)
+        const success = copy(textResult)
+        if (success) {
             setCopyStatus('copied-text')
             setTimeout(() => {
-                setCopyStatus('copied-text')
+                setCopyStatus('idle')
                 setIsModalOpen(false)
             }, 2000)
-        } catch (error) {
-            console.error('Error copying text:', error)
+        } else {
             alert('Failed to copy text. Please try again.')
         }
     }

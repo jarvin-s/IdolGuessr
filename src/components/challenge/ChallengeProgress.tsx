@@ -13,16 +13,14 @@ export default function ChallengeProgress({
 
     return (
         <div className='w-full px-4 py-2'>
-            {/* Progress bar */}
             <div className='relative mb-2 h-2 w-full overflow-hidden rounded-full bg-gray-200'>
                 <div
-                    className='h-full bg-pink-500 transition-all duration-500'
+                    className='h-full bg-pink-600 transition-all duration-500'
                     style={{ width: `${progressPercent}%` }}
                 />
             </div>
 
-            {/* Stats */}
-            <div className='flex items-center justify-between text-sm'>
+            <div className='hidden md:flex items-center justify-between text-sm'>
                 <span className='text-xl text-black'>
                     Idol{' '}
                     <span className='font-bold'>

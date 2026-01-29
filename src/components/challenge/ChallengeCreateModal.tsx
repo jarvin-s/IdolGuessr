@@ -58,7 +58,7 @@ export default function ChallengeCreateModal({
                 <div className='mb-4 flex items-center justify-center gap-2'>
                     <ChallengeIcon />
                     <h2 className='text-xl font-bold uppercase md:text-2xl'>
-                        Challenge Mode
+                        Challenge mode
                     </h2>
                 </div>
 
@@ -100,7 +100,7 @@ export default function ChallengeCreateModal({
                                 onClick={() => setSelectedCount(count)}
                                 className={`cursor-pointer border-2 px-3 py-2 text-center font-bold transition-all ${
                                     selectedCount === count
-                                        ? 'border-pink-500 bg-pink-500 text-white'
+                                        ? 'border-pink-600 bg-pink-600 text-white'
                                         : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
                                 }`}
                             >
@@ -115,34 +115,34 @@ export default function ChallengeCreateModal({
                     <h3 className='mb-2 text-center text-lg font-bold uppercase'>
                         Group Type
                     </h3>
-                    <div className='space-y-2'>
+                    <div className='grid grid-cols-3 gap-2'>
                         <button
                             onClick={() => setSelectedFilter('boy-group')}
-                            className={`w-full cursor-pointer border-2 px-3 py-2 text-left font-medium transition-all ${
+                            className={`w-full cursor-pointer border-2 px-3 py-2 text-center transition-all ${
                                 selectedFilter === 'boy-group'
-                                    ? 'border-pink-500 bg-pink-500 text-white'
+                                    ? 'border-pink-600 bg-pink-600 text-white'
                                     : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
                             }`}
                         >
-                            Boy groups
+                            Boy
                         </button>
 
                         <button
                             onClick={() => setSelectedFilter('girl-group')}
-                            className={`w-full cursor-pointer border-2 px-3 py-2 text-left font-medium transition-all ${
+                            className={`w-full cursor-pointer border-2 px-3 py-2 text-center transition-all ${
                                 selectedFilter === 'girl-group'
-                                    ? 'border-pink-500 bg-pink-500 text-white'
+                                    ? 'border-pink-600 bg-pink-600 text-white'
                                     : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
                             }`}
-                        >
-                            Girl groups
+                            >
+                            Girl
                         </button>
 
                         <button
                             onClick={() => setSelectedFilter('both')}
-                            className={`w-full cursor-pointer border-2 px-3 py-2 text-left font-medium transition-all ${
+                            className={`w-full cursor-pointer border-2 px-3 py-2 text-center transition-all ${
                                 selectedFilter === 'both'
-                                    ? 'border-pink-500 bg-pink-500 text-white'
+                                    ? 'border-pink-600 bg-pink-600 text-white'
                                     : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
                             }`}
                         >
@@ -155,7 +155,7 @@ export default function ChallengeCreateModal({
                     <button
                         onClick={handleCreate}
                         disabled={isCreating}
-                        className='w-[200px] cursor-pointer rounded-full bg-pink-500 px-4 py-2 font-bold text-white transition-all hover:bg-pink-600 disabled:cursor-not-allowed disabled:opacity-50'
+                        className='w-[200px] cursor-pointer rounded-full bg-pink-600 px-4 py-2 font-bold text-white transition-all hover:bg-pink-700 disabled:cursor-not-allowed disabled:opacity-50'
                     >
                         {isCreating ? 'Creating...' : 'Create challenge'}
                     </button>

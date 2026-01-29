@@ -27,6 +27,8 @@ interface WinModalProps {
     guessDistribution: number[]
     gameMode?: 'daily' | 'unlimited' | 'hangul'
     onNextUnlimited?: () => void
+    isHistoryMode?: boolean
+    historyDate?: string
 }
 
 export default function WinModal({
@@ -42,7 +44,17 @@ export default function WinModal({
     guessDistribution,
     gameMode = 'daily',
     onNextUnlimited,
+    isHistoryMode = false,
+    historyDate,
 }: WinModalProps) {
+    const formatHistoryDate = (dateStr: string) => {
+        const date = new Date(dateStr + 'T00:00:00')
+        return date.toLocaleDateString('en-US', { 
+            month: 'long', 
+            day: 'numeric',
+            year: 'numeric'
+        })
+    }
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden'
@@ -84,8 +96,15 @@ export default function WinModal({
                 </button>
 
                 <div className='flex flex-col items-center p-6'>
+                    {isHistoryMode && historyDate && (
+                        <div className='mt-4 mb-2 rounded-full bg-pink-100 px-3 py-1'>
+                            <span className='text-sm font-medium text-pink-600'>
+                                {formatHistoryDate(historyDate)}
+                            </span>
+                        </div>
+                    )}
                     <h1
-                        className={`${proximaNovaBold.className} mt-8 mb-1 text-3xl font-extrabold text-black`}
+                        className={`${proximaNovaBold.className} ${isHistoryMode ? 'mt-2' : 'mt-8'} mb-1 text-3xl font-extrabold text-black`}
                     >
                         {isWin ? 'GOOD JOB!' : 'NICE TRY!'}
                     </h1>
@@ -121,7 +140,7 @@ export default function WinModal({
                         </div>
                     </div>
 
-                    {gameMode === 'daily' ? (
+                    {gameMode === 'daily' && !isHistoryMode ? (
                         <ShareButton
                             correctAnswer={idolName}
                             guessCount={guessCount}
@@ -129,6 +148,9 @@ export default function WinModal({
                             isWin={isWin}
                             className='mb-4'
                         />
+                    ) : isHistoryMode ? (
+                       <>
+                       </>
                     ) : (
                         <button
                             onClick={() => {
@@ -179,7 +201,7 @@ export default function WinModal({
                         </div>
                     )}
 
-                    {gameMode === 'daily' && (
+                    {gameMode === 'daily' && !isHistoryMode && (
                         <>
                             <div className='mb-8 w-full border-t border-gray-200' />
                             <div className='mb-8 w-full'>
