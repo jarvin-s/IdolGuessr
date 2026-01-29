@@ -98,7 +98,7 @@ export default function InfiniteStartModal({
                 <div className='mt-4 flex justify-center'>
                     <button
                         onClick={handleStart}
-                        className='w-[200px] cursor-pointer rounded-full bg-pink-500 px-4 py-1.5 text-white transition-all hover:bg-pink-600'
+                        className='w-[200px] cursor-pointer rounded-full bg-pink-600 px-4 py-1.5 text-white transition-all hover:bg-pink-700'
                     >
                         Start
                     </button>

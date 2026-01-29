@@ -120,7 +120,7 @@ export default function FilterModal({
                 <div className='mt-4 flex justify-center'>
                     <button
                         onClick={handleConfirm}
-                        className='w-full cursor-pointer rounded-full bg-pink-500 px-4 py-1.5 text-white transition-all hover:bg-pink-600 md:w-[150px]'
+                        className='w-full cursor-pointer rounded-full bg-pink-600 px-4 py-1.5 text-white transition-all hover:bg-pink-700 md:w-[150px]'
                     >
                         Start
                     </button>

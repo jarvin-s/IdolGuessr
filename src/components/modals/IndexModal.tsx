@@ -102,12 +102,12 @@ export default function IndexModal({
                         </button>
                     </div>
                     <div className='relative flex flex-row items-center justify-center'>
-                        <span className='absolute -top-2 -right-2 z-10 rounded-full bg-pink-500 px-1.5 py-0.5 text-xs font-bold text-white'>
+                        <span className='absolute -top-2 -right-2 z-10 rounded-full bg-pink-600 px-1.5 py-0.5 text-xs font-bold text-white'>
                             NEW
                         </span>
                         <button
                             onClick={handleChallenge}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border border-pink-500 bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb]'
+                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border border-pink-600 bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb]'
                         >
                             <ChallengeIcon />
                             Challenge

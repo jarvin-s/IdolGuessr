@@ -50,7 +50,7 @@ export default function HangulStartModal({
                         onClick={() => setSelectedFilter('boy-group')}
                         className={`w-full cursor-pointer border-2 px-3 py-2 text-left font-medium transition-all ${
                             selectedFilter === 'boy-group'
-                                ? 'border-pink-500 bg-pink-500 text-white'
+                                ? 'border-black bg-black text-white'
                                 : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                     >
@@ -61,7 +61,7 @@ export default function HangulStartModal({
                         onClick={() => setSelectedFilter('girl-group')}
                         className={`w-full cursor-pointer border-2 px-3 py-2 text-left font-medium transition-all ${
                             selectedFilter === 'girl-group'
-                                ? 'border-pink-500 bg-pink-500 text-white'
+                                ? 'border-black bg-black text-white'
                                 : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                     >
@@ -72,7 +72,7 @@ export default function HangulStartModal({
                         onClick={() => setSelectedFilter('both')}
                         className={`w-full cursor-pointer border-2 px-3 py-2 text-left font-medium transition-all ${
                             selectedFilter === 'both'
-                                ? 'border-pink-500 bg-pink-500 text-white'
+                                ? 'border-black bg-black text-white'
                                 : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                     >
@@ -83,7 +83,7 @@ export default function HangulStartModal({
                 <div className='mt-4 flex justify-center'>
                     <button
                         onClick={handleStart}
-                        className='w-[200px] cursor-pointer rounded-full bg-pink-500 px-4 py-1.5 text-white transition-all hover:bg-pink-600'
+                        className='w-[200px] cursor-pointer rounded-full bg-pink-600 px-4 py-1.5 text-white transition-all hover:bg-pink-700'
                     >
                         Start
                     </button>

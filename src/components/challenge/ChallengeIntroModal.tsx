@@ -37,7 +37,7 @@ export default function ChallengeIntroModal({
 
                 <button
                     onClick={onStart}
-                    className='w-full cursor-pointer rounded-full bg-pink-500 py-3 font-bold text-white uppercase transition-colors hover:bg-pink-600'
+                    className='w-full cursor-pointer rounded-full bg-pink-600 py-3 font-bold text-white uppercase transition-colors hover:bg-pink-700'
                 >
                     Start challenge!
                 </button>

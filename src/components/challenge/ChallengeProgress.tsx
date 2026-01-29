@@ -15,7 +15,7 @@ export default function ChallengeProgress({
         <div className='w-full px-4 py-2'>
             <div className='relative mb-2 h-2 w-full overflow-hidden rounded-full bg-gray-200'>
                 <div
-                    className='h-full bg-pink-500 transition-all duration-500'
+                    className='h-full bg-pink-600 transition-all duration-500'
                     style={{ width: `${progressPercent}%` }}
                 />
             </div>
