@@ -70,16 +70,14 @@ export default function InfoModal({
                         </h1>
                         <div className='mt-4 space-y-4'>
                             <ChangelogEntry
-                                version='1.4.0'
-                                date='January 29, 2025'
+                                date='January 29, 2026'
                                 changes={['Launched Challenge links',
                                     'Added past idol history to Daily mode',
                                     'Added Gen filter to Infinite mode'
                                 ]}
                             />
                             <ChangelogEntry
-                                version='1.3.0'
-                                date='January 11, 2025'
+                                date='January 11, 2026'
                                 changes={[
                                     'Launched Hangul mode',
                                     'Added Info screen',
@@ -87,19 +85,16 @@ export default function InfoModal({
                                 ]}
                             />
                             <ChangelogEntry
-                                version='1.2.0'
                                 date='December 11, 2025'
                                 changes={[
                                     'Added group filters to Infinite mode',
                                 ]}
                             />
                             <ChangelogEntry
-                                version='1.1.0'
                                 date='November 1, 2025'
                                 changes={['Launched Infinite mode']}
                             />
                             <ChangelogEntry
-                                version='1.0.0'
                                 date='October 21, 2025'
                                 changes={['Initial release']}
                             />
@@ -246,18 +241,15 @@ export default function InfoModal({
 }
 
 function ChangelogEntry({
-    version,
     date,
     changes,
 }: {
-    version: string
     date: string
     changes: string[]
 }) {
     return (
         <div className='border-l-2 border-gray-200 pl-4'>
             <div className='flex items-center gap-2'>
-                <span className='font-bold text-black'>v{version}</span>
                 <span className='text-sm text-gray-400'>{date}</span>
             </div>
             <ul className='mt-2 space-y-1'>
