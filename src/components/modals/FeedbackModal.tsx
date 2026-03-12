@@ -134,7 +134,7 @@ export default function FeedbackModal({
                             <button
                                 type='submit'
                                 disabled={isSubmitting || !feedbackForm.message.trim()}
-                                className='w-full cursor-pointer rounded-md bg-black px-4 py-2 font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400'
+                                className='w-full cursor-pointer rounded-full bg-pink-500 px-4 py-2 font-medium text-white transition-colors hover:bg-pink-600 disabled:cursor-not-allowed disabled:bg-pink-400'
                             >
                                 {isSubmitting ? 'Submitting...' : 'Submit feedback'}
                             </button>
