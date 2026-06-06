@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
-import { getDailyCount } from '@/lib/supabase'
+import { getDailyCount, getTodayDailyGuessCount } from '@/lib/supabase'
 
 interface IndexModalProps {
     isOpen: boolean
@@ -19,6 +19,7 @@ export default function IndexModal({
 }: IndexModalProps) {
     const [isClosing, setIsClosing] = useState(false)
     const [dailyCount, setDailyCount] = useState<number | null>(null)
+    const [todayGuessCount, setTodayGuessCount] = useState<number | null>(null)
 
     useEffect(() => {
         if (isOpen) {
@@ -26,6 +27,9 @@ export default function IndexModal({
             getDailyCount()
                 .then(setDailyCount)
                 .catch(() => setDailyCount(0))
+            getTodayDailyGuessCount()
+                .then(setTodayGuessCount)
+                .catch(() => setTodayGuessCount(0))
         }
     }, [isOpen])
 
@@ -120,6 +124,13 @@ export default function IndexModal({
                     })}
                 </h1>
                 <p className='text-lg'>Daily #{dailyCount ?? ''}</p>
+                {todayGuessCount !== null && (
+                    <p className='text-base italic'>
+                        <span className='text-pink-600'>{todayGuessCount.toLocaleString()}{' '}</span>
+                        {todayGuessCount === 1 ? 'person' : 'people'}{' '}
+                        guessed today&apos;s idol already
+                    </p>
+                )}
             </div>
         </div>
     )

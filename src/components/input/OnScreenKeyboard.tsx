@@ -6,13 +6,16 @@ interface OnScreenKeyboardProps {
     onKeyPress: (key: string) => void
     className?: string
     disabledLetters?: Set<string>
+    allowNumbers?: boolean
 }
 
 export default function OnScreenKeyboard({
     onKeyPress,
     className = '',
     disabledLetters = new Set(),
+    allowNumbers = false,
 }: OnScreenKeyboardProps) {
+    const numberRowKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
     const topRowKeys = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P']
     const middleRowKeys = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L']
     const bottomRowKeys = ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
@@ -73,6 +76,21 @@ export default function OnScreenKeyboard({
                 userSelect: 'none'
             }}
         >
+            {allowNumbers && (
+                <div className='mb-1 flex gap-1'>
+                    {numberRowKeys.map((key) => (
+                        <button
+                            key={key}
+                            data-key={key}
+                            className='flex h-12 flex-1 touch-none items-center justify-center rounded text-sm font-semibold transition-colors bg-gray-300 text-black hover:bg-gray-400 active:bg-gray-500'
+                            onPointerDown={handlePress(key)}
+                        >
+                            {key}
+                        </button>
+                    ))}
+                </div>
+            )}
+
             <div className='mb-1 flex gap-1'>
                 {topRowKeys.map((key) => {
                     const isDisabled = disabledLetters.has(key)

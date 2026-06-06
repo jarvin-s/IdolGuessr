@@ -145,6 +145,7 @@ export default function HangulPage() {
 
                     <OnScreenKeyboard
                         onKeyPress={handleKeyPress}
+                        allowNumbers
                         className='flex-shrink-0 pb-4'
                     />
                 </div>

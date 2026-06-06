@@ -545,6 +545,23 @@ export async function getDailyCount(): Promise<number> {
   return (count || 0) + 1;
 }
 
+export async function getTodayDailyGuessCount(): Promise<number> {
+  const daily = await getDailyImage();
+  if (!daily) return 0;
+
+  const { count, error } = await supabase
+    .from('guess_tracking')
+    .select('*', { count: 'exact', head: true })
+    .eq('image_id', daily.id)
+    .eq('is_correct', true);
+
+  if (error) {
+    console.error('Error getting today daily guess count:', error);
+    return 0;
+  }
+  return count ?? 0;
+}
+
 export interface HistoryDailyImage extends DailyImage {
   play_date: string;
 }
