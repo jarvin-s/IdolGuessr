@@ -70,6 +70,12 @@ export default function InfoModal({
                         </h1>
                         <div className='mt-4 space-y-4'>
                             <ChangelogEntry
+                                date='June 9, 2026'
+                                changes={['Fixed a bug in the hangul mode where users could not type numbers',
+                                    'Added today\'s player count',
+                                ]}
+                            />
+                            <ChangelogEntry
                                 date='January 29, 2026'
                                 changes={['Launched Challenge links',
                                     'Added past idol history to Daily mode',
