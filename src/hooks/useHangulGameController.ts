@@ -527,7 +527,7 @@ export function useHangulGameController() {
                         setCurrentGuess((prev) => prev.slice(0, -1))
                     }
                 }
-            } else {
+            } else if (/^[A-Z0-9]$/.test(key)) {
                 if (
                     guesses.some((g) => g === 'empty') &&
                     !isAnimating &&
@@ -565,14 +565,14 @@ export function useHangulGameController() {
                 return
             }
             const key = event.key.toUpperCase()
-            if (key === 'ENTER' || key === 'BACKSPACE' || /^[A-Z]$/.test(key)) {
+            if (key === 'ENTER' || key === 'BACKSPACE' || /^[A-Z0-9]$/.test(key)) {
                 event.preventDefault()
             }
             if (key === 'ENTER') {
                 handleKeyPress('ENTER')
             } else if (key === 'BACKSPACE') {
                 handleKeyPress('✕')
-            } else if (/^[A-Z]$/.test(key)) {
+            } else if (/^[A-Z0-9]$/.test(key)) {
                 handleKeyPress(key)
             }
         }
