@@ -36,11 +36,31 @@ export interface CurrentDaily {
   server_now: string;
 }
 
-export interface Feedback {
+export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
+export type TicketCategory = 'general' | 'bug' | 'feature' | 'improvement'
+
+export interface FeedbackTicket {
+  id: string;
+  category: TicketCategory;
+  subject: string;
+  status: TicketStatus;
+  created_at: string;
+  updated_at: string;
+  last_user_message_at: string | null;
+  last_admin_message_at: string | null;
+}
+
+export interface FeedbackMessage {
   id: number;
-  message: string;
-  category: string;
-  created_at?: string;
+  ticket_id: string;
+  sender: 'user' | 'admin';
+  body: string;
+  created_at: string;
+}
+
+export interface FeedbackThread {
+  ticket: FeedbackTicket;
+  messages: FeedbackMessage[];
 }
 
 export async function getDailyImage(): Promise<CurrentDaily | null> {
@@ -329,16 +349,112 @@ export async function getMultipleRandomUnlimitedImages(
   return uniqueImages;
 }
 
-export async function insertNewFeedback(feedback: Feedback): Promise<void> {
-  const { error } = await supabase.from('feedback').insert({
-    message: feedback.message,
-    category: feedback.category,
-    created_at: new Date().toISOString(),
+export async function createFeedbackTicket(
+  category: TicketCategory,
+  message: string,
+): Promise<{ id: string; access_token: string }> {
+  const { data, error } = await supabase.rpc('create_feedback_ticket', {
+    p_category: category,
+    p_message: message,
   })
-  if (error) {
-    // console.log('insert_new_feedback error:', error.message)
-    return
+  if (error) throw error
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) throw new Error('Ticket was not created')
+  return row
+}
+
+export async function getMyFeedbackTickets(
+  tickets: { id: string; token: string }[],
+): Promise<FeedbackTicket[]> {
+  if (tickets.length === 0) return []
+  const { data, error } = await supabase.rpc('get_my_feedback_tickets', {
+    p_tickets: tickets,
+  })
+  if (error) throw error
+  return (data ?? []) as FeedbackTicket[]
+}
+
+export async function getFeedbackThread(ticketId: string, token: string): Promise<FeedbackThread> {
+  const { data, error } = await supabase.rpc('get_feedback_thread', {
+    p_ticket_id: ticketId,
+    p_token: token,
+  })
+  if (error) throw error
+  return data as FeedbackThread
+}
+
+export async function addFeedbackMessage(ticketId: string, token: string, body: string): Promise<void> {
+  const { error } = await supabase.rpc('add_feedback_message', {
+    p_ticket_id: ticketId,
+    p_token: token,
+    p_body: body,
+  })
+  if (error) throw error
+}
+
+export async function signInAdmin(email: string, password: string): Promise<void> {
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) throw error
+}
+
+export async function signOutAdmin(): Promise<void> {
+  const { error } = await supabase.auth.signOut()
+  if (error) throw error
+}
+
+export async function checkIsAdmin(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('is_admin')
+  if (error) throw error
+  return data === true
+}
+
+export async function adminListTickets(status?: TicketStatus | 'all'): Promise<FeedbackTicket[]> {
+  let query = supabase
+    .from('feedback_tickets')
+    .select('id, category, subject, status, created_at, updated_at, last_user_message_at, last_admin_message_at')
+    .order('updated_at', { ascending: false })
+  if (status && status !== 'all') query = query.eq('status', status)
+  const { data, error } = await query
+  if (error) throw error
+  return (data ?? []) as FeedbackTicket[]
+}
+
+export async function adminGetThread(ticketId: string): Promise<FeedbackThread> {
+  const [ticketRes, messagesRes] = await Promise.all([
+    supabase
+      .from('feedback_tickets')
+      .select('id, category, subject, status, created_at, updated_at, last_user_message_at, last_admin_message_at')
+      .eq('id', ticketId)
+      .single(),
+    supabase
+      .from('feedback_messages')
+      .select('id, ticket_id, sender, body, created_at')
+      .eq('ticket_id', ticketId)
+      .order('created_at', { ascending: true }),
+  ])
+  if (ticketRes.error) throw ticketRes.error
+  if (messagesRes.error) throw messagesRes.error
+  return {
+    ticket: ticketRes.data as FeedbackTicket,
+    messages: (messagesRes.data ?? []) as FeedbackMessage[],
   }
+}
+
+export async function adminReply(ticketId: string, body: string): Promise<void> {
+  const { error } = await supabase.from('feedback_messages').insert({
+    ticket_id: ticketId,
+    sender: 'admin',
+    body,
+  })
+  if (error) throw error
+}
+
+export async function adminSetStatus(ticketId: string, status: TicketStatus): Promise<void> {
+  const { error } = await supabase
+    .from('feedback_tickets')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', ticketId)
+  if (error) throw error
 }
 
 export function getImageUrl(

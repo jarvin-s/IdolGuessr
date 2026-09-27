@@ -1,6 +1,17 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import localFont from 'next/font/local'
-import { insertNewFeedback } from '@/lib/supabase'
+import {
+    addFeedbackMessage,
+    getFeedbackThread,
+    getMyFeedbackTickets,
+    type FeedbackThread,
+    type FeedbackTicket,
+} from '@/lib/supabase'
+import { getStoredTickets, getTicketToken, hasUnread, markSeen, type StoredTicket } from '@/utils/feedbackTickets'
+import { useTicketLiveUpdates } from '@/hooks/useTicketLiveUpdates'
+import NewTicketForm from '@/components/feedback/NewTicketForm'
+import TicketList from '@/components/feedback/TicketList'
+import TicketThread from '@/components/feedback/TicketThread'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -12,49 +23,119 @@ interface FeedbackModalProps {
     onBack: () => void
 }
 
+type View = 'new' | 'submitted' | 'list' | 'thread'
+
 export default function FeedbackModal({
     isOpen,
     onClose,
     onBack,
 }: FeedbackModalProps) {
-    const [feedbackForm, setFeedbackForm] = useState({
-        category: 'general',
-        message: '',
-    })
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const [submitted, setSubmitted] = useState(false)
+    const [view, setView] = useState<View>('new')
+    const [tickets, setTickets] = useState<FeedbackTicket[]>([])
+    const [ticketsLoading, setTicketsLoading] = useState(false)
+    const [ticketsError, setTicketsError] = useState<string | null>(null)
+    const [thread, setThread] = useState<FeedbackThread | null>(null)
+    const [threadError, setThreadError] = useState<string | null>(null)
+    const [, setSeenVersion] = useState(0)
+    const [storedTickets, setStoredTickets] = useState<StoredTicket[]>([])
+    const threadRef = useRef<FeedbackThread | null>(null)
+    threadRef.current = thread
+
+    const loadTickets = useCallback(async () => {
+        const stored = getStoredTickets()
+        setStoredTickets(stored)
+        if (stored.length === 0) {
+            setTickets([])
+            return
+        }
+        setTicketsLoading(true)
+        setTicketsError(null)
+        try {
+            const data = await getMyFeedbackTickets(stored.map(({ id, token }) => ({ id, token })))
+            setTickets(data)
+        } catch (err) {
+            console.error('Error loading tickets:', err)
+            setTicketsError('Could not load your tickets.')
+        } finally {
+            setTicketsLoading(false)
+        }
+    }, [])
+
+    const openThread = useCallback(async (ticketId: string) => {
+        const token = getTicketToken(ticketId)
+        if (!token) return
+        setThreadError(null)
+        setView('thread')
+        try {
+            const data = await getFeedbackThread(ticketId, token)
+            setThread(data)
+            markSeen(ticketId, data.ticket.last_admin_message_at)
+            setSeenVersion((v) => v + 1)
+        } catch (err) {
+            console.error('Error loading ticket:', err)
+            setThreadError('Could not load this ticket.')
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!isOpen) return
+        const stored = getStoredTickets()
+        setView(stored.length > 0 ? 'list' : 'new')
+        setThread(null)
+        loadTickets()
+    }, [isOpen, loadTickets])
+
+    const handleLiveUpdate = useCallback(
+        async (ticketId: string) => {
+            loadTickets()
+            if (threadRef.current?.ticket.id !== ticketId) return
+            const token = getTicketToken(ticketId)
+            if (!token) return
+            try {
+                const data = await getFeedbackThread(ticketId, token)
+                if (threadRef.current?.ticket.id !== ticketId) return
+                setThread(data)
+                markSeen(ticketId, data.ticket.last_admin_message_at)
+                setSeenVersion((v) => v + 1)
+            } catch (err) {
+                console.error('Error refreshing ticket:', err)
+            }
+        },
+        [loadTickets],
+    )
+
+    useTicketLiveUpdates(storedTickets, handleLiveUpdate, isOpen)
 
     if (!isOpen) return null
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!feedbackForm.message.trim()) return
-        setIsSubmitting(true)
-        try {
-            await insertNewFeedback({
-                id: 0,
-                message: feedbackForm.message.trim(),
-                category: feedbackForm.category,
-            })
-            setSubmitted(true)
-            setTimeout(() => {
-                setFeedbackForm({ category: 'general', message: '' })
-                setSubmitted(false)
-                onBack()
-            }, 2000)
-        } catch (error) {
-            console.error('Error submitting feedback:', error)
-        } finally {
-            setIsSubmitting(false)
+    const unreadCount = tickets.filter(hasUnread).length
+
+    const handleBack = () => {
+        if (view === 'thread') {
+            setThread(null)
+            setView('list')
+            loadTickets()
+            return
         }
+        onBack()
+    }
+
+    const handleSend = async (body: string) => {
+        if (!thread) return
+        const token = getTicketToken(thread.ticket.id)
+        if (!token) return
+        await addFeedbackMessage(thread.ticket.id, token, body)
+        const updated = await getFeedbackThread(thread.ticket.id, token)
+        setThread(updated)
+        markSeen(updated.ticket.id, updated.ticket.last_admin_message_at)
     }
 
     return (
         <div className='bg-opacity-50 fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='relative maxh-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6'>
+            <div className='relative flex max-h-[90vh] w-full max-w-md flex-col overflow-y-auto rounded-lg bg-white p-6'>
                 <div className='mb-6 flex items-center justify-between'>
                     <button
-                        onClick={onBack}
+                        onClick={handleBack}
                         className='flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full bg-gray-100 px-3 transition-colors hover:bg-gray-200'
                         aria-label='Go back'
                     >
@@ -72,77 +153,118 @@ export default function FeedbackModal({
                     </button>
                 </div>
 
-                {submitted ? (
+                {view === 'thread' ? (
+                    <>
+                        <h1 className={`${proximaNovaBold.className} mb-3 text-xl break-words uppercase`}>
+                            {thread?.ticket.subject ?? 'Ticket'}
+                        </h1>
+                        {threadError ? (
+                            <p className='py-6 text-center text-sm text-red-600'>{threadError}</p>
+                        ) : thread ? (
+                            <div className='flex h-[55vh] flex-col'>
+                                <TicketThread
+                                    thread={thread}
+                                    viewer='user'
+                                    onSend={handleSend}
+                                    canReply={thread.ticket.status !== 'closed'}
+                                    closedNotice='This ticket has been closed. Open a new ticket if you need more help.'
+                                />
+                            </div>
+                        ) : (
+                            <p className='py-6 text-center text-sm text-gray-500'>Loading ticket...</p>
+                        )}
+                    </>
+                ) : view === 'submitted' ? (
                     <div className='text-center'>
                         <h1 className={`${proximaNovaBold.className} text-2xl text-green-600 uppercase`}>
                             Thank you!
                         </h1>
                         <p className='mt-2 text-black'>Your feedback has been submitted successfully.</p>
+                        <p className='mt-1 text-sm text-gray-600'>You can follow replies under My tickets.</p>
+                        <button
+                            onClick={() => {
+                                setView('list')
+                                loadTickets()
+                            }}
+                            className='mt-6 w-full cursor-pointer rounded-full bg-pink-500 px-4 py-2 font-medium text-white transition-colors hover:bg-pink-600'
+                        >
+                            View my tickets
+                        </button>
                     </div>
                 ) : (
                     <>
                         <h1 className={`${proximaNovaBold.className} text-2xl uppercase`}>
-                            Submit your feedback
+                            Feedback
                         </h1>
                         <p className='mt-2 text-gray-600'>
-                            We&apos;re always looking for ways to improve the game. Please share your thoughts with us.
+                            We&apos;re always looking for ways to improve the game. Share your thoughts or report a bug, and we&apos;ll get back to you here.
                         </p>
 
-                        <form onSubmit={handleSubmit} className='mt-6 space-y-4'>
-                            <div>
-                                <label htmlFor='feedback-category' className={`${proximaNovaBold.className} mb-1 block uppercase`}>
-                                    Category
-                                </label>
-                                <select
-                                    id='feedback-category'
-                                    value={feedbackForm.category}
-                                    onChange={(e) =>
-                                        setFeedbackForm((prev) => ({
-                                            ...prev,
-                                            category: e.target.value,
-                                        }))
-                                    }
-                                    className='w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none'
-                                >
-                                    <option value='general'>General</option>
-                                    <option value='bug'>Bug Report</option>
-                                    <option value='feature'>Feature Request</option>
-                                    <option value='improvement'>Improvement</option>
-                                </select>
-                            </div>
+                        <div className='mt-4 flex rounded-full bg-gray-100 p-1'>
+                            <TabButton active={view === 'new'} onClick={() => setView('new')}>
+                                New ticket
+                            </TabButton>
+                            <TabButton
+                                active={view === 'list'}
+                                onClick={() => {
+                                    setView('list')
+                                    loadTickets()
+                                }}
+                            >
+                                My tickets
+                                {unreadCount > 0 && (
+                                    <span className='ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-500 px-1.5 text-xs text-white'>
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </TabButton>
+                        </div>
 
-                            <div>
-                                <label htmlFor='feedback-message' className={`${proximaNovaBold.className} mb-1 block uppercase`}>
-                                    Message
-                                </label>
-                                <textarea
-                                    id='feedback-message'
-                                    value={feedbackForm.message}
-                                    onChange={(e) =>
-                                        setFeedbackForm((prev) => ({
-                                            ...prev,
-                                            message: e.target.value,
-                                        }))
-                                    }
-                                    rows={4}
-                                    className='w-full resize-none rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none'
-                                    placeholder='Tell us what you think...'
-                                    required
+                        {view === 'new' ? (
+                            <NewTicketForm
+                                onCreated={() => {
+                                    setView('submitted')
+                                    loadTickets()
+                                }}
+                            />
+                        ) : (
+                            <div className='mt-6'>
+                                <TicketList
+                                    tickets={tickets}
+                                    isLoading={ticketsLoading}
+                                    error={ticketsError}
+                                    isUnread={hasUnread}
+                                    onSelect={(ticket) => openThread(ticket.id)}
+                                    emptyMessage='You have no tickets yet.'
                                 />
                             </div>
-
-                            <button
-                                type='submit'
-                                disabled={isSubmitting || !feedbackForm.message.trim()}
-                                className='w-full cursor-pointer rounded-full bg-pink-500 px-4 py-2 font-medium text-white transition-colors hover:bg-pink-600 disabled:cursor-not-allowed disabled:bg-pink-400'
-                            >
-                                {isSubmitting ? 'Submitting...' : 'Submit feedback'}
-                            </button>
-                        </form>
+                        )}
                     </>
                 )}
             </div>
         </div>
+    )
+}
+
+function TabButton({
+    active,
+    onClick,
+    children,
+}: {
+    active: boolean
+    onClick: () => void
+    children: React.ReactNode
+}) {
+    return (
+        <button
+            type='button'
+            onClick={onClick}
+            className={`flex flex-1 cursor-pointer items-center justify-center rounded-full px-3 py-1.5 text-sm transition-colors ${
+                active ? 'bg-white font-medium text-black shadow-sm' : 'text-gray-600 hover:text-black'
+            }`}
+        >
+            {children}
+        </button>
     )
 }
 
@@ -153,5 +275,3 @@ function ArrowLeftIcon() {
         </svg>
     )
 }
-
-

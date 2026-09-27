@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import localFont from 'next/font/local'
+import { useFeedbackUnread } from '@/hooks/useFeedbackUnread'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -23,6 +24,7 @@ export default function InfoModal({
     gameMode = 'daily',
 }: InfoModalProps) {
     const [showChangelog, setShowChangelog] = useState(false)
+    const feedbackUnread = useFeedbackUnread(isOpen)
 
     if (!isOpen) return null
 
@@ -142,8 +144,13 @@ export default function InfoModal({
                                 onClick={onShowFeedback}
                                 className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
                             >
-                                <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                                <div className='relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
                                     <FeedbackIcon />
+                                    {feedbackUnread > 0 && (
+                                        <span className='absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-500 px-1 text-xs text-white'>
+                                            {feedbackUnread}
+                                        </span>
+                                    )}
                                 </div>
                                 <div className='text-left'>
                                     <h3
@@ -152,7 +159,9 @@ export default function InfoModal({
                                         Send feedback
                                     </h3>
                                     <p className='text-sm text-gray-500'>
-                                        Report bugs or suggest features
+                                        {feedbackUnread > 0
+                                            ? 'You have new replies to your tickets'
+                                            : 'Report bugs or suggest features'}
                                     </p>
                                 </div>
                                 <ChevronRightIcon />
