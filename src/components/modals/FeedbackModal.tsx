@@ -197,7 +197,7 @@ export default function FeedbackModal({
                             Feedback
                         </h1>
                         <p className='mt-2 text-gray-600'>
-                            We&apos;re always looking for ways to improve the game. Share your thoughts or report a bug, and we&apos;ll get back to you here.
+                            Share your thoughts or report a bug, and we&apos;ll get back to you here.
                         </p>
 
                         <div className='mt-4 flex rounded-full bg-gray-100 p-1'>
