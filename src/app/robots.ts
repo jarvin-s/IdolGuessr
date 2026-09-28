@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
         rules: {
             userAgent: '*',
             allow: ["/", "/infinite", "/hangul", "/challenge"],
-            disallow: []
+            disallow: ["/admin"]
         },
         sitemap: 'https://idolguessr.fun/sitemap.xml'
     }
