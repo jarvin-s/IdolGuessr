@@ -19,7 +19,12 @@ import {
 } from '@/lib/supabase'
 import TicketList from '@/components/feedback/TicketList'
 import TicketThread from '@/components/feedback/TicketThread'
-import { CATEGORY_LABELS, STATUS_LABELS } from '@/components/feedback/ticketUi'
+import {
+    CATEGORY_LABELS,
+    STATUS_LABELS,
+    formatTicketNumber,
+    resolveTicketNumber,
+} from '@/components/feedback/ticketUi'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -217,6 +222,8 @@ function AdminDashboard() {
     )
 
     const awaitingReply = tickets.filter(needsReply).length
+    const activeTicketNumber = thread ? resolveTicketNumber(thread.ticket, tickets) : null
+    const activeTicketNumberLabel = formatTicketNumber(activeTicketNumber)
 
     const selectTicket = (ticket: FeedbackTicket) => {
         selectedIdRef.current = ticket.id
@@ -286,6 +293,7 @@ function AdminDashboard() {
                 <div className='max-h-[70vh] overflow-y-auto'>
                     <TicketList
                         tickets={visibleTickets}
+                        allTicketsForNumbering={tickets}
                         isLoading={isLoading}
                         error={error}
                         isUnread={needsReply}
@@ -307,6 +315,11 @@ function AdminDashboard() {
                     <>
                         <div className='mb-3 flex flex-wrap items-start justify-between gap-2'>
                             <h2 className={`${proximaNovaBold.className} min-w-0 flex-1 text-lg break-words`}>
+                                {activeTicketNumberLabel && (
+                                    <span className='mr-2 font-mono text-base font-normal text-gray-500'>
+                                        {activeTicketNumberLabel}
+                                    </span>
+                                )}
                                 {thread.ticket.subject}
                             </h2>
                             <div className='flex flex-wrap gap-2'>
@@ -324,6 +337,7 @@ function AdminDashboard() {
                                 viewer='admin'
                                 onSend={handleReply}
                                 canReply
+                                ticketNumber={activeTicketNumber}
                             />
                         </div>
                     </>
