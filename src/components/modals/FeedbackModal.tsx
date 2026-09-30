@@ -12,6 +12,7 @@ import { useTicketLiveUpdates } from '@/hooks/useTicketLiveUpdates'
 import NewTicketForm from '@/components/feedback/NewTicketForm'
 import TicketList from '@/components/feedback/TicketList'
 import TicketThread from '@/components/feedback/TicketThread'
+import { formatTicketNumber, resolveTicketNumber } from '@/components/feedback/ticketUi'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -109,6 +110,10 @@ export default function FeedbackModal({
     if (!isOpen) return null
 
     const unreadCount = tickets.filter(hasUnread).length
+    const activeTicketNumber = thread
+        ? resolveTicketNumber(thread.ticket, tickets)
+        : null
+    const activeTicketNumberLabel = formatTicketNumber(activeTicketNumber)
 
     const handleBack = () => {
         if (view === 'thread') {
@@ -132,7 +137,7 @@ export default function FeedbackModal({
 
     return (
         <div className='bg-opacity-50 fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='relative flex max-h-[90vh] w-full max-w-md flex-col overflow-y-auto rounded-lg bg-white p-6'>
+            <div className='relative flex max-h-[90dvh] w-full min-w-0 max-w-md flex-col overflow-y-auto rounded-lg bg-white p-4 sm:p-6'>
                 <div className='mb-6 flex items-center justify-between'>
                     <button
                         onClick={handleBack}
@@ -156,6 +161,11 @@ export default function FeedbackModal({
                 {view === 'thread' ? (
                     <>
                         <h1 className={`${proximaNovaBold.className} mb-3 text-xl break-words uppercase`}>
+                            {activeTicketNumberLabel && (
+                                <span className='mr-2 font-mono text-base text-gray-500 normal-case'>
+                                    {activeTicketNumberLabel}
+                                </span>
+                            )}
                             {thread?.ticket.subject ?? 'Ticket'}
                         </h1>
                         {threadError ? (
@@ -168,6 +178,7 @@ export default function FeedbackModal({
                                     onSend={handleSend}
                                     canReply={thread.ticket.status !== 'closed'}
                                     closedNotice='This ticket has been closed. Open a new ticket if you need more help.'
+                                    ticketNumber={activeTicketNumber}
                                 />
                             </div>
                         ) : (

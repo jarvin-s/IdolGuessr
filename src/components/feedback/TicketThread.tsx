@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FeedbackThread } from '@/lib/supabase'
-import { CATEGORY_LABELS, StatusPill, formatTicketDate } from './ticketUi'
+import { CATEGORY_LABELS, StatusPill, formatTicketDate, formatTicketNumber } from './ticketUi'
 
 const MAX_LENGTH = 2000
 
@@ -10,9 +10,17 @@ interface TicketThreadProps {
     onSend: (body: string) => Promise<void>
     canReply: boolean
     closedNotice?: string
+    ticketNumber?: number | null
 }
 
-export default function TicketThread({ thread, viewer, onSend, canReply, closedNotice }: TicketThreadProps) {
+export default function TicketThread({
+    thread,
+    viewer,
+    onSend,
+    canReply,
+    closedNotice,
+    ticketNumber,
+}: TicketThreadProps) {
     const [reply, setReply] = useState('')
     const [isSending, setIsSending] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -22,10 +30,9 @@ export default function TicketThread({ thread, viewer, onSend, canReply, closedN
         bottomRef.current?.scrollIntoView({ block: 'end' })
     }, [thread.messages.length])
 
-    const handleSend = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const submitReply = async () => {
         const trimmed = reply.trim()
-        if (!trimmed) return
+        if (!trimmed || isSending) return
         setIsSending(true)
         setError(null)
         try {
@@ -39,11 +46,29 @@ export default function TicketThread({ thread, viewer, onSend, canReply, closedN
         }
     }
 
+    const handleSend = (e: React.FormEvent) => {
+        e.preventDefault()
+        void submitReply()
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault()
+            void submitReply()
+        }
+    }
+
     const { ticket, messages } = thread
+    const ticketNumberLabel = formatTicketNumber(ticketNumber ?? ticket.ticket_number)
 
     return (
         <div className='flex min-h-0 flex-1 flex-col'>
             <div className='mb-3 flex flex-wrap items-center gap-2 text-xs text-gray-500'>
+                {ticketNumberLabel && (
+                    <span className='rounded-full bg-gray-200 px-2 py-0.5 font-mono font-medium text-gray-700'>
+                        {ticketNumberLabel}
+                    </span>
+                )}
                 <StatusPill status={ticket.status} />
                 <span>{CATEGORY_LABELS[ticket.category] ?? ticket.category}</span>
                 <span>Opened {formatTicketDate(ticket.created_at)}</span>
@@ -76,10 +101,11 @@ export default function TicketThread({ thread, viewer, onSend, canReply, closedN
                     <textarea
                         value={reply}
                         onChange={(e) => setReply(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         rows={3}
                         maxLength={MAX_LENGTH}
-                        placeholder='Write a reply...'
-                        className='w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none'
+                        placeholder='Write a reply... (Enter to send, Shift+Enter for new line)'
+                        className='w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-base focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none sm:text-sm'
                     />
                     {error && <p className='text-sm text-red-600'>{error}</p>}
                     <button

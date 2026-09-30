@@ -1,16 +1,12 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
+// @ts-expect-error - no types for globals.css
 import './globals.css'
 import { Analytics } from '@vercel/analytics/next'
 
 const proximaNovaRegular = localFont({
     src: '../../public/fonts/proximanova_regular.ttf',
 })
-
-// const roboto = Roboto({
-//     weight: ['400', '700'],
-//     subsets: ['latin'],
-// })
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://idolguessr.fun'),
@@ -53,7 +49,8 @@ export const metadata: Metadata = {
         'kpop idol guessr',
         'guess kpop idol',
         'guess idol kpop',
-        'guess kpop'
+        'guess kpop',
+        'kpop guess idol',
     ],
     openGraph: {
         title: 'IdolGuessr - K-pop Idol Guessing Game',

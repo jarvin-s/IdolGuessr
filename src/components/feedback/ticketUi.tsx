@@ -1,4 +1,4 @@
-import type { TicketCategory, TicketStatus } from '@/lib/supabase'
+import type { FeedbackTicket, TicketCategory, TicketStatus } from '@/lib/supabase'
 
 export const CATEGORY_LABELS: Record<TicketCategory, string> = {
     general: 'General',
@@ -37,4 +37,29 @@ export function formatTicketDate(iso: string): string {
         hour: '2-digit',
         minute: '2-digit',
     })
+}
+
+export function buildTicketNumberMap(tickets: FeedbackTicket[]): Map<string, number> {
+    const sorted = [...tickets].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    )
+    const map = new Map<string, number>()
+    sorted.forEach((ticket, index) => {
+        map.set(ticket.id, index + 1)
+    })
+    return map
+}
+
+export function resolveTicketNumber(
+    ticket: FeedbackTicket,
+    tickets?: FeedbackTicket[],
+): number | null {
+    if (ticket.ticket_number != null) return ticket.ticket_number
+    if (!tickets?.length) return null
+    return buildTicketNumberMap(tickets).get(ticket.id) ?? null
+}
+
+export function formatTicketNumber(number: number | null | undefined): string | null {
+    if (number == null || number <= 0) return null
+    return `#${number}`
 }
