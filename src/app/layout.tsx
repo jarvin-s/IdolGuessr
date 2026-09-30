@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
-// @ts-expect-error - no types for globals.css
 import './globals.css'
 import { Analytics } from '@vercel/analytics/next'
 
