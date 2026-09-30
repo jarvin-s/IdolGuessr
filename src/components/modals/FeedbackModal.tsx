@@ -137,7 +137,7 @@ export default function FeedbackModal({
 
     return (
         <div className='bg-opacity-50 fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='relative flex max-h-[90vh] w-full max-w-md flex-col overflow-y-auto rounded-lg bg-white p-6'>
+            <div className='relative flex max-h-[90dvh] w-full min-w-0 max-w-md flex-col overflow-y-auto rounded-lg bg-white p-4 sm:p-6'>
                 <div className='mb-6 flex items-center justify-between'>
                     <button
                         onClick={handleBack}
