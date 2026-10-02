@@ -7,12 +7,21 @@ import {
     type FeedbackThread,
     type FeedbackTicket,
 } from '@/lib/supabase'
-import { getStoredTickets, getTicketToken, hasUnread, markSeen, type StoredTicket } from '@/utils/feedbackTickets'
+import {
+    getStoredTickets,
+    getTicketToken,
+    hasUnread,
+    markSeen,
+    type StoredTicket,
+} from '@/utils/feedbackTickets'
 import { useTicketLiveUpdates } from '@/hooks/useTicketLiveUpdates'
 import NewTicketForm from '@/components/feedback/NewTicketForm'
 import TicketList from '@/components/feedback/TicketList'
 import TicketThread from '@/components/feedback/TicketThread'
-import { formatTicketNumber, resolveTicketNumber } from '@/components/feedback/ticketUi'
+import {
+    formatTicketNumber,
+    resolveTicketNumber,
+} from '@/components/feedback/ticketUi'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -52,7 +61,9 @@ export default function FeedbackModal({
         setTicketsLoading(true)
         setTicketsError(null)
         try {
-            const data = await getMyFeedbackTickets(stored.map(({ id, token }) => ({ id, token })))
+            const data = await getMyFeedbackTickets(
+                stored.map(({ id, token }) => ({ id, token }))
+            )
             setTickets(data)
         } catch (err) {
             console.error('Error loading tickets:', err)
@@ -102,7 +113,7 @@ export default function FeedbackModal({
                 console.error('Error refreshing ticket:', err)
             }
         },
-        [loadTickets],
+        [loadTickets]
     )
 
     useTicketLiveUpdates(storedTickets, handleLiveUpdate, isOpen)
@@ -137,7 +148,7 @@ export default function FeedbackModal({
 
     return (
         <div className='bg-opacity-50 fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='relative flex max-h-[90dvh] w-full min-w-0 max-w-md flex-col overflow-y-auto rounded-lg bg-white p-4 sm:p-6'>
+            <div className='relative flex max-h-[90dvh] w-full max-w-md min-w-0 flex-col overflow-y-auto rounded-lg bg-white p-4 sm:p-6'>
                 <div className='mb-6 flex items-center justify-between'>
                     <button
                         onClick={handleBack}
@@ -152,15 +163,27 @@ export default function FeedbackModal({
                         className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200'
                         aria-label='Close Feedback'
                     >
-                        <svg className='h-4 w-4 text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                        <svg
+                            className='h-4 w-4 text-gray-600'
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'
+                        >
+                            <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M6 18L18 6M6 6l12 12'
+                            />
                         </svg>
                     </button>
                 </div>
 
                 {view === 'thread' ? (
                     <>
-                        <h1 className={`${proximaNovaBold.className} mb-3 text-xl break-words uppercase`}>
+                        <h1
+                            className={`${proximaNovaBold.className} mb-3 text-xl break-words uppercase`}
+                        >
                             {activeTicketNumberLabel && (
                                 <span className='mr-2 font-mono text-base text-gray-500 normal-case'>
                                     {activeTicketNumberLabel}
@@ -169,7 +192,9 @@ export default function FeedbackModal({
                             {thread?.ticket.subject ?? 'Ticket'}
                         </h1>
                         {threadError ? (
-                            <p className='py-6 text-center text-sm text-red-600'>{threadError}</p>
+                            <p className='py-6 text-center text-sm text-red-600'>
+                                {threadError}
+                            </p>
                         ) : thread ? (
                             <div className='flex h-[55vh] flex-col'>
                                 <TicketThread
@@ -182,16 +207,24 @@ export default function FeedbackModal({
                                 />
                             </div>
                         ) : (
-                            <p className='py-6 text-center text-sm text-gray-500'>Loading ticket...</p>
+                            <p className='py-6 text-center text-sm text-gray-500'>
+                                Loading ticket...
+                            </p>
                         )}
                     </>
                 ) : view === 'submitted' ? (
                     <div className='text-center'>
-                        <h1 className={`${proximaNovaBold.className} text-2xl text-green-600 uppercase`}>
+                        <h1
+                            className={`${proximaNovaBold.className} text-2xl text-green-600 uppercase`}
+                        >
                             Thank you!
                         </h1>
-                        <p className='mt-2 text-black'>Your feedback has been submitted successfully.</p>
-                        <p className='mt-1 text-sm text-gray-600'>You can follow replies under My tickets.</p>
+                        <p className='mt-2 text-black'>
+                            Your feedback has been submitted successfully.
+                        </p>
+                        <p className='mt-1 text-sm text-gray-600'>
+                            You can follow replies under My tickets.
+                        </p>
                         <button
                             onClick={() => {
                                 setView('list')
@@ -204,15 +237,21 @@ export default function FeedbackModal({
                     </div>
                 ) : (
                     <>
-                        <h1 className={`${proximaNovaBold.className} text-2xl uppercase`}>
+                        <h1
+                            className={`${proximaNovaBold.className} text-2xl uppercase`}
+                        >
                             Feedback
                         </h1>
                         <p className='mt-2 text-gray-600'>
-                            Share your thoughts or report a bug, and we&apos;ll get back to you here.
+                            All feedback is welcome! Fill in the form to open a
+                            ticket and we&apos;ll get back to you there.
                         </p>
 
                         <div className='mt-4 flex rounded-full bg-gray-100 p-1'>
-                            <TabButton active={view === 'new'} onClick={() => setView('new')}>
+                            <TabButton
+                                active={view === 'new'}
+                                onClick={() => setView('new')}
+                            >
                                 New ticket
                             </TabButton>
                             <TabButton
@@ -271,7 +310,9 @@ function TabButton({
             type='button'
             onClick={onClick}
             className={`flex flex-1 cursor-pointer items-center justify-center rounded-full px-3 py-1.5 text-sm transition-colors ${
-                active ? 'bg-white font-medium text-black shadow-sm' : 'text-gray-600 hover:text-black'
+                active
+                    ? 'bg-white font-medium text-black shadow-sm'
+                    : 'text-gray-600 hover:text-black'
             }`}
         >
             {children}
@@ -281,8 +322,18 @@ function TabButton({
 
 function ArrowLeftIcon() {
     return (
-        <svg className='h-4 w-4 text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10 19l-7-7m0 0l7-7m-7 7h18' />
+        <svg
+            className='h-4 w-4 text-gray-600'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+        >
+            <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M10 19l-7-7m0 0l7-7m-7 7h18'
+            />
         </svg>
     )
 }
