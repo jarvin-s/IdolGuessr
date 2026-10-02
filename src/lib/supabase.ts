@@ -41,6 +41,7 @@ export type TicketCategory = 'general' | 'bug' | 'feature' | 'improvement'
 
 export interface FeedbackTicket {
   id: string;
+  ticket_number?: number | null;
   category: TicketCategory;
   subject: string;
   status: TicketStatus;

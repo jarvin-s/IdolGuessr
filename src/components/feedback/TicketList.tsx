@@ -1,5 +1,11 @@
 import type { FeedbackTicket } from '@/lib/supabase'
-import { CATEGORY_LABELS, StatusPill, formatTicketDate } from './ticketUi'
+import {
+    CATEGORY_LABELS,
+    StatusPill,
+    formatTicketDate,
+    formatTicketNumber,
+    resolveTicketNumber,
+} from './ticketUi'
 
 interface TicketListProps {
     tickets: FeedbackTicket[]
@@ -9,6 +15,7 @@ interface TicketListProps {
     onSelect: (ticket: FeedbackTicket) => void
     emptyMessage?: string
     selectedId?: string | null
+    allTicketsForNumbering?: FeedbackTicket[]
 }
 
 export default function TicketList({
@@ -19,7 +26,9 @@ export default function TicketList({
     onSelect,
     emptyMessage = 'No tickets yet.',
     selectedId,
+    allTicketsForNumbering,
 }: TicketListProps) {
+    const numberingTickets = allTicketsForNumbering ?? tickets
     if (isLoading && tickets.length === 0) {
         return <p className='py-6 text-center text-sm text-gray-500'>Loading tickets...</p>
     }
@@ -35,6 +44,7 @@ export default function TicketList({
             {tickets.map((ticket) => {
                 const unread = isUnread(ticket)
                 const selected = ticket.id === selectedId
+                const ticketNumberLabel = formatTicketNumber(resolveTicketNumber(ticket, numberingTickets))
                 return (
                     <li key={ticket.id}>
                         <button
@@ -49,6 +59,11 @@ export default function TicketList({
                             />
                             <div className='min-w-0 flex-1'>
                                 <p className={`truncate text-sm ${unread ? 'font-semibold text-black' : 'text-gray-800'}`}>
+                                    {ticketNumberLabel && (
+                                        <span className='mr-2 font-mono text-xs text-gray-500'>
+                                            {ticketNumberLabel}
+                                        </span>
+                                    )}
                                     {ticket.subject}
                                 </p>
                                 <div className='mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500'>
