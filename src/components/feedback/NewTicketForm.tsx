@@ -27,7 +27,10 @@ export default function NewTicketForm({ onCreated }: NewTicketFormProps) {
         setIsSubmitting(true)
         setError(null)
         try {
-            const { id, access_token } = await createFeedbackTicket(category, trimmed)
+            const { id, access_token } = await createFeedbackTicket(
+                category,
+                trimmed
+            )
             addStoredTicket(id, access_token)
             setMessage('')
             setCategory('general')
@@ -43,25 +46,35 @@ export default function NewTicketForm({ onCreated }: NewTicketFormProps) {
     return (
         <form onSubmit={handleSubmit} className='mt-6 space-y-4'>
             <div>
-                <label htmlFor='feedback-category' className={`${proximaNovaBold.className} mb-1 block uppercase`}>
+                <label
+                    htmlFor='feedback-category'
+                    className={`${proximaNovaBold.className} mb-1 block uppercase`}
+                >
                     Category
                 </label>
                 <select
                     id='feedback-category'
                     value={category}
-                    onChange={(e) => setCategory(e.target.value as TicketCategory)}
+                    onChange={(e) =>
+                        setCategory(e.target.value as TicketCategory)
+                    }
                     className='w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none'
                 >
-                    {(Object.keys(CATEGORY_LABELS) as TicketCategory[]).map((key) => (
-                        <option key={key} value={key}>
-                            {CATEGORY_LABELS[key]}
-                        </option>
-                    ))}
+                    {(Object.keys(CATEGORY_LABELS) as TicketCategory[]).map(
+                        (key) => (
+                            <option key={key} value={key}>
+                                {CATEGORY_LABELS[key]}
+                            </option>
+                        )
+                    )}
                 </select>
             </div>
 
             <div>
-                <label htmlFor='feedback-message' className={`${proximaNovaBold.className} mb-1 block uppercase`}>
+                <label
+                    htmlFor='feedback-message'
+                    className={`${proximaNovaBold.className} mb-1 block uppercase`}
+                >
                     Message
                 </label>
                 <textarea
@@ -86,8 +99,9 @@ export default function NewTicketForm({ onCreated }: NewTicketFormProps) {
                 {isSubmitting ? 'Submitting...' : 'Submit feedback'}
             </button>
 
-            <p className='text-center text-xs text-gray-500'>
-                Tickets are saved in this browser. Clearing your site data will remove access to them.
+            <p className='text-center text-sm text-gray-500'>
+                Tickets are saved in this browser. Clearing your site data will
+                remove access to them.
             </p>
         </form>
     )

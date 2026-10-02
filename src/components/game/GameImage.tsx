@@ -3,6 +3,11 @@ import StreakPopup from './StreakPopup'
 import GameOverModal from './GameOverModal'
 import Image from 'next/image'
 import { useEffect, useState, useRef } from 'react'
+import localFont from 'next/font/local'
+
+const proximanovaBold = localFont({
+    src: '../../../public/fonts/proximanova_bold.otf',
+})
 
 interface GameImageProps {
     isLoading: boolean
@@ -296,20 +301,22 @@ export default function GameImage({
                         />
                     )}
 
-                <div className='pointer-events-none absolute inset-0 z-[200] mb-4 flex items-end justify-center px-4 md:px-10'>
-                    <div className='flex h-12 w-full items-center justify-evenly rounded-md bg-black'>
-                        <h1 className='text-xl font-bold text-white uppercase'>
+                <div className='pointer-events-none absolute inset-x-0 bottom-2 z-[200] flex justify-center px-2 md:bottom-4 md:px-10'>
+                    <div className='inline-flex max-w-full items-center gap-2 rounded-md border border-gray-300/60 bg-zinc-900/70 px-6 py-2.5 md:h-12 md:gap-4 md:px-4 md:py-0'>
+                        <h1
+                            className={`${proximanovaBold.className} text-xl leading-none text-white uppercase`}
+                        >
                             Guess {6 - remainingGuesses}/6
                         </h1>
-                        <div className='flex gap-2.5'>
+                        <div className='flex gap-1 md:gap-2.5'>
                             {guesses.map((guess, index) => (
                                 <div
                                     key={index}
-                                    className={`h-4 w-4 rounded-full ${
+                                    className={`h-3 w-3 rounded-full md:h-4 md:w-4 ${
                                         guess === 'correct'
                                             ? 'bg-green-400'
                                             : guess === 'incorrect'
-                                              ? 'bg-red-400/75'
+                                              ? 'bg-red-400'
                                               : 'bg-white'
                                     }`}
                                 />

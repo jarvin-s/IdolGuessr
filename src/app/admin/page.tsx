@@ -19,7 +19,12 @@ import {
 } from '@/lib/supabase'
 import TicketList from '@/components/feedback/TicketList'
 import TicketThread from '@/components/feedback/TicketThread'
-import { CATEGORY_LABELS, STATUS_LABELS } from '@/components/feedback/ticketUi'
+import {
+    CATEGORY_LABELS,
+    STATUS_LABELS,
+    formatTicketNumber,
+    resolveTicketNumber,
+} from '@/components/feedback/ticketUi'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -69,10 +74,12 @@ export default function AdminPage() {
     }, [userId])
 
     return (
-        <main className='min-h-screen bg-gray-50 p-4 sm:p-8'>
-            <div className='mx-auto max-w-6xl'>
-                <header className='mb-6 flex items-center justify-between'>
-                    <h1 className={`${proximaNovaBold.className} text-2xl uppercase`}>Feedback tickets</h1>
+        <main className='min-h-screen overflow-x-hidden bg-gray-50 p-3 sm:p-8'>
+            <div className='mx-auto w-full min-w-0 max-w-6xl'>
+                <header className='mb-4 flex items-center justify-between gap-3 sm:mb-6'>
+                    <h1 className={`${proximaNovaBold.className} text-xl uppercase sm:text-2xl`}>
+                        Feedback tickets
+                    </h1>
                     {session && (
                         <div className='flex items-center gap-3 text-sm text-gray-600'>
                             <span className='hidden sm:inline'>{session.user.email}</span>
@@ -128,7 +135,7 @@ function LoginForm() {
                 placeholder='Email'
                 autoComplete='email'
                 required
-                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none'
+                className='w-full rounded-md border border-gray-300 px-3 py-2 text-base focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none'
             />
             <input
                 type='password'
@@ -137,7 +144,7 @@ function LoginForm() {
                 placeholder='Password'
                 autoComplete='current-password'
                 required
-                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none'
+                className='w-full rounded-md border border-gray-300 px-3 py-2 text-base focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none'
             />
             {error && <p className='text-sm text-red-600'>{error}</p>}
             <button
@@ -217,6 +224,8 @@ function AdminDashboard() {
     )
 
     const awaitingReply = tickets.filter(needsReply).length
+    const activeTicketNumber = thread ? resolveTicketNumber(thread.ticket, tickets) : null
+    const activeTicketNumberLabel = formatTicketNumber(activeTicketNumber)
 
     const selectTicket = (ticket: FeedbackTicket) => {
         selectedIdRef.current = ticket.id
@@ -224,6 +233,15 @@ function AdminDashboard() {
         setThread(null)
         loadThread(ticket.id)
     }
+
+    const clearSelection = () => {
+        selectedIdRef.current = null
+        setSelectedId(null)
+        setThread(null)
+        setThreadError(null)
+    }
+
+    const showThreadOnMobile = selectedId !== null
 
     const handleReply = async (body: string) => {
         if (!thread) return
@@ -246,13 +264,15 @@ function AdminDashboard() {
     }
 
     return (
-        <div className='grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]'>
-            <section className='rounded-lg bg-white p-4 shadow-sm'>
-                <div className='mb-3 flex flex-wrap items-center gap-2'>
+        <div className='grid min-w-0 gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]'>
+            <section
+                className={`min-w-0 rounded-lg bg-white p-3 shadow-sm sm:p-4 ${showThreadOnMobile ? 'hidden md:block' : ''}`}
+            >
+                <div className='mb-3 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center'>
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value as TicketStatus | 'all')}
-                        className='rounded-md border border-gray-300 px-2 py-1.5 text-sm'
+                        className='w-full rounded-md border border-gray-300 px-2 py-2 text-base sm:w-auto sm:py-1.5 sm:text-sm'
                     >
                         <option value='all'>All statuses</option>
                         {(Object.keys(STATUS_LABELS) as TicketStatus[]).map((key) => (
@@ -264,7 +284,7 @@ function AdminDashboard() {
                     <select
                         value={categoryFilter}
                         onChange={(e) => setCategoryFilter(e.target.value as TicketCategory | 'all')}
-                        className='rounded-md border border-gray-300 px-2 py-1.5 text-sm'
+                        className='w-full rounded-md border border-gray-300 px-2 py-2 text-base sm:w-auto sm:py-1.5 sm:text-sm'
                     >
                         <option value='all'>All categories</option>
                         {(Object.keys(CATEGORY_LABELS) as TicketCategory[]).map((key) => (
@@ -275,7 +295,7 @@ function AdminDashboard() {
                     </select>
                     <button
                         onClick={loadTickets}
-                        className='ml-auto cursor-pointer rounded-full bg-gray-100 px-3 py-1.5 text-sm transition-colors hover:bg-gray-200'
+                        className='cursor-pointer rounded-full bg-gray-100 px-3 py-2 text-base transition-colors hover:bg-gray-200 sm:ml-auto sm:py-1.5 sm:text-sm'
                     >
                         Refresh
                     </button>
@@ -283,9 +303,10 @@ function AdminDashboard() {
                 <p className='mb-3 text-xs text-gray-500'>
                     {awaitingReply} ticket{awaitingReply === 1 ? '' : 's'} awaiting your reply (marked with a dot)
                 </p>
-                <div className='max-h-[70vh] overflow-y-auto'>
+                <div className='max-h-[calc(100dvh-14rem)] overflow-y-auto md:max-h-[70vh]'>
                     <TicketList
                         tickets={visibleTickets}
+                        allTicketsForNumbering={tickets}
                         isLoading={isLoading}
                         error={error}
                         isUnread={needsReply}
@@ -296,17 +317,39 @@ function AdminDashboard() {
                 </div>
             </section>
 
-            <section className='flex min-h-[60vh] flex-col rounded-lg bg-white p-4 shadow-sm'>
+            <section
+                className={`flex min-w-0 flex-col rounded-lg bg-white p-3 shadow-sm sm:p-4 ${
+                    showThreadOnMobile
+                        ? 'min-h-[calc(100dvh-8rem)] md:min-h-[60vh]'
+                        : 'hidden md:min-h-[60vh] md:flex'
+                }`}
+            >
+                {showThreadOnMobile && (
+                    <button
+                        type='button'
+                        onClick={clearSelection}
+                        className='mb-3 flex cursor-pointer items-center gap-2 self-start rounded-full bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200 md:hidden'
+                    >
+                        ← Back to tickets
+                    </button>
+                )}
                 {!selectedId ? (
-                    <p className='m-auto text-sm text-gray-500'>Select a ticket to view the conversation.</p>
+                    <p className='m-auto hidden text-sm text-gray-500 md:block'>
+                        Select a ticket to view the conversation.
+                    </p>
                 ) : threadError && !thread ? (
                     <p className='m-auto text-sm text-red-600'>{threadError}</p>
                 ) : !thread ? (
                     <p className='m-auto text-sm text-gray-500'>Loading ticket...</p>
                 ) : (
                     <>
-                        <div className='mb-3 flex flex-wrap items-start justify-between gap-2'>
-                            <h2 className={`${proximaNovaBold.className} min-w-0 flex-1 text-lg break-words`}>
+                        <div className='mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between'>
+                            <h2 className={`${proximaNovaBold.className} min-w-0 flex-1 text-base break-words sm:text-lg`}>
+                                {activeTicketNumberLabel && (
+                                    <span className='mr-2 font-mono text-base font-normal text-gray-500'>
+                                        {activeTicketNumberLabel}
+                                    </span>
+                                )}
                                 {thread.ticket.subject}
                             </h2>
                             <div className='flex flex-wrap gap-2'>
@@ -318,12 +361,13 @@ function AdminDashboard() {
                             </div>
                         </div>
                         {threadError && <p className='mb-2 text-sm text-red-600'>{threadError}</p>}
-                        <div className='flex h-[60vh] flex-col'>
+                        <div className='flex min-h-0 flex-1 flex-col md:h-[60vh]'>
                             <TicketThread
                                 thread={thread}
                                 viewer='admin'
                                 onSend={handleReply}
                                 canReply
+                                ticketNumber={activeTicketNumber}
                             />
                         </div>
                     </>

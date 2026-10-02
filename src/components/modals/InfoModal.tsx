@@ -158,8 +158,8 @@ export default function InfoModal({
                                         </span>
                                     )}
                                 </div>
-                                <span className='absolute -top-2 -right-2 z-10 rounded-full bg-pink-500 px-1.5 py-0.5 text-xs font-bold text-white'>
-                                    NEW!
+                                <span className='absolute -top-2 -right-2 z-10 rounded-full bg-pink-500 px-2.5 py-0.5 text-xs text-white'>
+                                    UPDATED
                                 </span>
                                 <div className='text-left'>
                                     <h3
