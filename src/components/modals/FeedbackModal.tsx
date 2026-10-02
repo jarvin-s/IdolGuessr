@@ -27,6 +27,26 @@ const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
 })
 
+const FEEDBACK_INTRO_SEEN_KEY = 'idol-guessr-feedback-tickets-intro-seen'
+
+function hasSeenFeedbackIntro(): boolean {
+    if (typeof window === 'undefined') return true
+    try {
+        return localStorage.getItem(FEEDBACK_INTRO_SEEN_KEY) === '1'
+    } catch {
+        return true
+    }
+}
+
+function markFeedbackIntroSeen(): void {
+    if (typeof window === 'undefined') return
+    try {
+        localStorage.setItem(FEEDBACK_INTRO_SEEN_KEY, '1')
+    } catch {
+        // ignore
+    }
+}
+
 interface FeedbackModalProps {
     isOpen: boolean
     onClose: () => void
@@ -48,6 +68,7 @@ export default function FeedbackModal({
     const [threadError, setThreadError] = useState<string | null>(null)
     const [, setSeenVersion] = useState(0)
     const [storedTickets, setStoredTickets] = useState<StoredTicket[]>([])
+    const [showIntroPopup, setShowIntroPopup] = useState(false)
     const threadRef = useRef<FeedbackThread | null>(null)
     threadRef.current = thread
 
@@ -94,8 +115,14 @@ export default function FeedbackModal({
         const stored = getStoredTickets()
         setView(stored.length > 0 ? 'list' : 'new')
         setThread(null)
+        setShowIntroPopup(!hasSeenFeedbackIntro())
         loadTickets()
     }, [isOpen, loadTickets])
+
+    const dismissIntroPopup = () => {
+        markFeedbackIntroSeen()
+        setShowIntroPopup(false)
+    }
 
     const handleLiveUpdate = useCallback(
         async (ticketId: string) => {
@@ -290,6 +317,34 @@ export default function FeedbackModal({
                             </div>
                         )}
                     </>
+                )}
+
+                {showIntroPopup && (
+                    <div
+                        className='absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-black/50 p-4'
+                        role='dialog'
+                        aria-labelledby='feedback-intro-title'
+                        aria-modal='true'
+                    >
+                        <div className='w-full max-w-sm rounded-lg bg-white p-6 shadow-lg'>
+                            <h2
+                                id='feedback-intro-title'
+                                className={`${proximaNovaBold.className} text-xl uppercase`}
+                            >
+                                Heads up!
+                            </h2>
+                            <p className='mt-3 text-base text-black'>
+                                You can now open a support ticket! Simply fill in the form and submit your feedback and you should see your ticket, I&apos;ll try to respond as fast as I can. :)
+                            </p>
+                            <button
+                                type='button'
+                                onClick={dismissIntroPopup}
+                                className='mt-5 w-full cursor-pointer rounded-full bg-pink-500 px-4 py-2 font-medium text-white transition-colors hover:bg-pink-600'
+                            >
+                                Got it
+                            </button>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>
