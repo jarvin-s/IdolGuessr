@@ -1,10 +1,22 @@
 import { useState, useRef, useEffect } from 'react'
+import {
+    DIFFICULTIES,
+    DIFFICULTY_DESCRIPTIONS,
+    DIFFICULTY_LABELS,
+    getDifficultyConfig,
+    loadSavedDifficulty,
+    type InfiniteDifficulty,
+} from '@/utils/difficulty'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 
 interface InfiniteStartModalProps {
     isOpen: boolean
-    onStart: (groupFilter: GroupFilter, genFilter: number[]) => void
+    onStart: (
+        groupFilter: GroupFilter,
+        genFilter: number[],
+        difficulty: InfiniteDifficulty
+    ) => void
 }
 
 const GROUP_OPTIONS: { value: GroupFilter; label: string }[] = [
@@ -26,11 +38,15 @@ export default function InfiniteStartModal({
     const [selectedGroupFilter, setSelectedGroupFilter] =
         useState<GroupFilter>('both')
     const [selectedGens, setSelectedGens] = useState<number[]>([3, 4, 5])
+    const [selectedDifficulty, setSelectedDifficulty] =
+        useState<InfiniteDifficulty>(() => loadSavedDifficulty())
     const [groupDropdownOpen, setGroupDropdownOpen] = useState(false)
     const [genDropdownOpen, setGenDropdownOpen] = useState(false)
+    const [difficultyDropdownOpen, setDifficultyDropdownOpen] = useState(false)
 
     const groupDropdownRef = useRef<HTMLDivElement>(null)
     const genDropdownRef = useRef<HTMLDivElement>(null)
+    const difficultyDropdownRef = useRef<HTMLDivElement>(null)
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -47,6 +63,12 @@ export default function InfiniteStartModal({
             ) {
                 setGenDropdownOpen(false)
             }
+            if (
+                difficultyDropdownRef.current &&
+                !difficultyDropdownRef.current.contains(event.target as Node)
+            ) {
+                setDifficultyDropdownOpen(false)
+            }
         }
 
         document.addEventListener('mousedown', handleClickOutside)
@@ -58,7 +80,7 @@ export default function InfiniteStartModal({
 
     const handleStart = () => {
         if (selectedGens.length === 0) return // Require at least one gen
-        onStart(selectedGroupFilter, selectedGens)
+        onStart(selectedGroupFilter, selectedGens, selectedDifficulty)
     }
 
     const toggleGen = (gen: number) => {
@@ -102,7 +124,8 @@ export default function InfiniteStartModal({
                         <li className='flex items-start gap-2'>
                             <span>•</span>
                             <span>
-                                Guess the (pixelated) idol&apos;s name in 6
+                                Guess the (pixelated) idol&apos;s name in{' '}
+                                {getDifficultyConfig(selectedDifficulty).maxGuesses}{' '}
                                 tries.
                             </span>
                         </li>
@@ -126,6 +149,57 @@ export default function InfiniteStartModal({
                     </h2>
                 </div>
 
+                <div className='mb-4'>
+                    <label className='mb-1 block text-sm font-medium text-gray-700'>
+                        Difficulty
+                    </label>
+                    <div ref={difficultyDropdownRef} className='relative'>
+                        <button
+                            type='button'
+                            onClick={() => {
+                                setDifficultyDropdownOpen(!difficultyDropdownOpen)
+                                setGroupDropdownOpen(false)
+                                setGenDropdownOpen(false)
+                            }}
+                            className='flex w-full cursor-pointer items-center justify-between border-2 border-gray-200 bg-white px-3 py-2 text-left font-medium transition-all hover:border-gray-300'
+                        >
+                            <span>{DIFFICULTY_LABELS[selectedDifficulty]}</span>
+                            <ChevronDownIcon
+                                className={`h-5 w-5 transition-transform ${difficultyDropdownOpen ? 'rotate-180' : ''}`}
+                            />
+                        </button>
+                        {difficultyDropdownOpen && (
+                            <div className='absolute z-10 mt-1 w-full border-2 border-gray-200 bg-white shadow-lg'>
+                                {DIFFICULTIES.map((option) => (
+                                    <button
+                                        key={option}
+                                        type='button'
+                                        onClick={() => {
+                                            setSelectedDifficulty(option)
+                                            setDifficultyDropdownOpen(false)
+                                        }}
+                                        className={`w-full cursor-pointer px-3 py-2 text-left transition-all hover:bg-gray-50 ${
+                                            selectedDifficulty === option
+                                                ? 'bg-gray-100'
+                                                : ''
+                                        }`}
+                                    >
+                                        <span className='block font-medium'>
+                                            {DIFFICULTY_LABELS[option]}
+                                        </span>
+                                        <span className='block text-xs text-gray-500'>
+                                            {DIFFICULTY_DESCRIPTIONS[option]}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    <p className='mt-1 text-xs text-gray-500'>
+                        {DIFFICULTY_DESCRIPTIONS[selectedDifficulty]}
+                    </p>
+                </div>
+
                 {/* Group Type Dropdown */}
                 <div className='mb-4'>
                     <label className='mb-1 block text-sm font-medium text-gray-700'>
@@ -137,6 +211,7 @@ export default function InfiniteStartModal({
                             onClick={() => {
                                 setGroupDropdownOpen(!groupDropdownOpen)
                                 setGenDropdownOpen(false)
+                                setDifficultyDropdownOpen(false)
                             }}
                             className='flex w-full cursor-pointer items-center justify-between border-2 border-gray-200 bg-white px-3 py-2 text-left font-medium transition-all hover:border-gray-300'
                         >
@@ -180,6 +255,7 @@ export default function InfiniteStartModal({
                             onClick={() => {
                                 setGenDropdownOpen(!genDropdownOpen)
                                 setGroupDropdownOpen(false)
+                                setDifficultyDropdownOpen(false)
                             }}
                             className='flex w-full cursor-pointer items-center justify-between border-2 border-gray-200 bg-white px-3 py-2 text-left font-medium transition-all hover:border-gray-300'
                         >

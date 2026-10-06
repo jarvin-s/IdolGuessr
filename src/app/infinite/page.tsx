@@ -16,6 +16,11 @@ import InfiniteStartModal from '@/components/modals/InfiniteStartModal'
 import FilterModal from '@/components/filters/FilterModal'
 import { useGameController } from '@/hooks/useGameController'
 import { getImageUrl } from '@/lib/supabase'
+import {
+    loadSavedDifficulty,
+    saveDifficulty,
+    type InfiniteDifficulty,
+} from '@/utils/difficulty'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 
@@ -49,14 +54,19 @@ export default function InfinitePage() {
         showWinModal,
         setShowWinModal,
         stats,
-        statsLoaded,
+        unlimitedStatsData,
+        unlimitedStatsLoaded,
+        difficulty,
         todayCompletionData,
         loadGuessAttempts,
         skipsRemaining,
-        hintUsed,
-        setHintUsed,
+        hintsRemaining,
+        maxGuesses,
+        maxHints,
+        maxSkips,
         hintUsedOnIdol,
         setHintUsedOnIdol,
+        consumeHint,
         showStreakPopup,
         streakMilestone,
         setShowStreakPopup,
@@ -69,16 +79,19 @@ export default function InfinitePage() {
         guesses,
     } = useGameController()
 
-    const handleStart = (groupFilter: GroupFilter, genFilter: number[]) => {
-        // Start unlimited with selected filters, then lock UI by closing modal
-        // Save gen filter to localStorage
+    const handleStart = (
+        groupFilter: GroupFilter,
+        genFilter: number[],
+        difficulty: InfiniteDifficulty
+    ) => {
         try {
             localStorage.setItem('idol-guessr-group-filter', groupFilter)
             localStorage.setItem('idol-guessr-gen-filter', JSON.stringify(genFilter))
+            saveDifficulty(difficulty)
         } catch {
             // Ignore localStorage errors
         }
-        handleGameModeChange('unlimited', groupFilter, genFilter)
+        handleGameModeChange('unlimited', groupFilter, genFilter, difficulty)
         setStartOpen(false)
     }
 
@@ -100,8 +113,10 @@ export default function InfinitePage() {
                 }
             }
 
+            const savedDifficulty = loadSavedDifficulty()
+
             if (savedGroupFilter === 'boy-group' || savedGroupFilter === 'girl-group' || savedGroupFilter === 'both') {
-                handleGameModeChange('unlimited', savedGroupFilter as GroupFilter, parsedGenFilter)
+                handleGameModeChange('unlimited', savedGroupFilter as GroupFilter, parsedGenFilter, savedDifficulty)
                 setStartOpen(false)
             } else {
                 setStartOpen(true)
@@ -146,16 +161,22 @@ export default function InfinitePage() {
                             gameWon={gameWon}
                             gameLost={gameLost}
                             gameMode={'unlimited'}
+                            maxGuesses={maxGuesses}
+                            maxHints={maxHints}
+                            maxSkips={maxSkips}
                             onPass={
-                                !gameWon && !gameLost && skipsRemaining > 0
+                                !gameWon &&
+                                !gameLost &&
+                                maxSkips > 0 &&
+                                skipsRemaining > 0
                                     ? handleSkip
                                     : undefined
                             }
                             skipsRemaining={skipsRemaining}
-                            hintUsed={hintUsed}
+                            hintsRemaining={hintsRemaining}
                             hintUsedOnIdol={hintUsedOnIdol}
                             onHintUse={() => {
-                                setHintUsed(true)
+                                consumeHint()
                                 if (dailyImage?.img_bucket)
                                     setHintUsedOnIdol(dailyImage.img_bucket)
                             }}
@@ -191,9 +212,10 @@ export default function InfinitePage() {
             <StatsModal
                 isOpen={showStats}
                 onClose={() => setShowStats(false)}
-                stats={stats}
-                statsLoaded={statsLoaded}
+                stats={unlimitedStatsData}
+                statsLoaded={unlimitedStatsLoaded}
                 gameMode={'unlimited'}
+                difficulty={difficulty}
             />
 
             <HelpModal
@@ -261,7 +283,9 @@ export default function InfinitePage() {
                           )
                         : ''
                 }
-                guessCount={6 - guesses.filter((g) => g === 'empty').length}
+                guessCount={
+                    maxGuesses - guesses.filter((g) => g === 'empty').length
+                }
                 isWin={gameWon}
                 guessAttempts={
                     todayCompletionData?.guessAttempts || loadGuessAttempts()
@@ -292,8 +316,8 @@ export default function InfinitePage() {
                 onConfirm={() => {
                     setShowFilterModal(false)
                 }}
-                onPlayAgain={(groupFilter, genFilter) => {
-                    handlePlayAgain(groupFilter, genFilter)
+                onPlayAgain={(groupFilter, genFilter, difficulty) => {
+                    handlePlayAgain(groupFilter, genFilter, difficulty)
                 }}
             />
 
