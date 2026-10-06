@@ -72,6 +72,10 @@ export default function InfoModal({
                         </h1>
                         <div className='mt-4 space-y-4'>
                             <ChangelogEntry
+                                date='October 6, 2026'
+                                changes={['Added difficulty levels to Infinite mode']}
+                            />
+                            <ChangelogEntry
                                 date='September 28, 2026'
                                 changes={['Added ticketing feedback system']}
                             />
