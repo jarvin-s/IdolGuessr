@@ -1,7 +1,8 @@
 'use client'
 
 import Image from 'next/image'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import type { InfiniteDifficulty } from '@/utils/difficulty'
 
 export interface DailyCompletion {
     date: string
@@ -46,7 +47,9 @@ export interface UnlimitedGameState {
     encodedIdolName: string
     encodedAltName?: string
     groupName?: string
+    difficulty?: InfiniteDifficulty
     hintUsed?: boolean
+    hintsRemaining?: number
     hintUsedOnIdol?: string
     skipsRemaining?: number
     guesses: Array<'correct' | 'incorrect' | 'empty'>
@@ -304,38 +307,59 @@ export function useUserStats() {
     }
 }
 
-export function useUnlimitedStats() {
+function unlimitedStatsKey(difficulty: InfiniteDifficulty): string {
+    return difficulty === 'normal'
+        ? 'idol-guessr-unlimited-stats'
+        : `idol-guessr-unlimited-stats-${difficulty}`
+}
+
+function unlimitedGameStateKey(difficulty: InfiniteDifficulty): string {
+    return difficulty === 'normal'
+        ? 'idol-guessr-unlimited-game-state'
+        : `idol-guessr-unlimited-game-state-${difficulty}`
+}
+
+export function loadUnlimitedStats(difficulty: InfiniteDifficulty): UnlimitedStats {
+    if (typeof window === 'undefined') return defaultUnlimitedStats
+    try {
+        const saved = localStorage.getItem(unlimitedStatsKey(difficulty))
+        return saved ? { ...defaultUnlimitedStats, ...JSON.parse(saved) } : defaultUnlimitedStats
+    } catch {
+        return defaultUnlimitedStats
+    }
+}
+
+export function useUnlimitedStats(difficulty: InfiniteDifficulty = 'normal') {
     const [stats, setStats] = useState<UnlimitedStats>(defaultUnlimitedStats)
     const [isLoaded, setIsLoaded] = useState(false)
+    const statsKey = unlimitedStatsKey(difficulty)
+    const gameStateKey = unlimitedGameStateKey(difficulty)
+    const loadedKeyRef = useRef<string | null>(null)
+    const gameStateKeyRef = useRef(gameStateKey)
+    gameStateKeyRef.current = gameStateKey
 
     useEffect(() => {
-        const loadStats = () => {
-            try {
-                const savedStats = localStorage.getItem('idol-guessr-unlimited-stats')
-                if (savedStats) {
-                    setStats(JSON.parse(savedStats))
-                } else {
-                    setStats(defaultUnlimitedStats)
-                }
-            } catch (error) {
-                console.error('Error loading unlimited stats:', error)
-                setStats(defaultUnlimitedStats)
-            } finally {
-                setIsLoaded(true)
-            }
+        setIsLoaded(false)
+        try {
+            const savedStats = localStorage.getItem(statsKey)
+            setStats(savedStats ? JSON.parse(savedStats) : defaultUnlimitedStats)
+        } catch (error) {
+            console.error('Error loading unlimited stats:', error)
+            setStats(defaultUnlimitedStats)
+        } finally {
+            loadedKeyRef.current = statsKey
+            setIsLoaded(true)
         }
-        loadStats()
-    }, [])
+    }, [statsKey])
 
     useEffect(() => {
-        if (isLoaded) {
-            try {
-                localStorage.setItem('idol-guessr-unlimited-stats', JSON.stringify(stats))
-            } catch (error) {
-                console.error('Error saving unlimited stats:', error)
-            }
+        if (!isLoaded || loadedKeyRef.current !== statsKey) return
+        try {
+            localStorage.setItem(statsKey, JSON.stringify(stats))
+        } catch (error) {
+            console.error('Error saving unlimited stats:', error)
         }
-    }, [stats, isLoaded])
+    }, [stats, isLoaded, statsKey])
 
     const updateStats = (won: boolean, incrementTotalGames: boolean = true, preserveStreak: boolean = false) => {
         setStats((prevStats) => {
@@ -356,19 +380,25 @@ export function useUnlimitedStats() {
         })
     }
 
-    const saveGameState = useCallback((gameState: UnlimitedGameState) => {
+    const saveGameState = useCallback((gameState: UnlimitedGameState, forDifficulty?: InfiniteDifficulty) => {
         if (typeof window === 'undefined') return
         try {
-            localStorage.setItem('idol-guessr-unlimited-game-state', JSON.stringify(gameState))
+            const key = forDifficulty
+                ? unlimitedGameStateKey(forDifficulty)
+                : gameStateKeyRef.current
+            localStorage.setItem(key, JSON.stringify(gameState))
         } catch (error) {
             console.error('Error saving unlimited game state:', error)
         }
     }, [])
 
-    const loadGameState = useCallback((): UnlimitedGameState | null => {
+    const loadGameState = useCallback((forDifficulty?: InfiniteDifficulty): UnlimitedGameState | null => {
         if (typeof window === 'undefined') return null
         try {
-            const savedState = localStorage.getItem('idol-guessr-unlimited-game-state')
+            const key = forDifficulty
+                ? unlimitedGameStateKey(forDifficulty)
+                : gameStateKeyRef.current
+            const savedState = localStorage.getItem(key)
             if (savedState) {
                 return JSON.parse(savedState) as UnlimitedGameState
             }
@@ -378,10 +408,13 @@ export function useUnlimitedStats() {
         return null
     }, [])
 
-    const clearGameState = useCallback(() => {
+    const clearGameState = useCallback((forDifficulty?: InfiniteDifficulty) => {
         if (typeof window === 'undefined') return
         try {
-            localStorage.removeItem('idol-guessr-unlimited-game-state')
+            const key = forDifficulty
+                ? unlimitedGameStateKey(forDifficulty)
+                : gameStateKeyRef.current
+            localStorage.removeItem(key)
         } catch (error) {
             console.error('Error clearing unlimited game state:', error)
         }
@@ -481,9 +514,10 @@ interface UserStatsProps {
     isLoaded: boolean
     className?: string
     gameMode?: 'daily' | 'unlimited' | 'hangul'
+    subHeader?: React.ReactNode
 }
 
-export default function UserStats({ stats, isLoaded, className = '', gameMode = 'daily' }: UserStatsProps) {
+export default function UserStats({ stats, isLoaded, className = '', gameMode = 'daily', subHeader }: UserStatsProps) {
     if (!isLoaded) {
         return (
             <div className={`animate-pulse ${className}`}>
@@ -514,6 +548,7 @@ export default function UserStats({ stats, isLoaded, className = '', gameMode = 
                     {getTitle()}
                 </h2>
             </div>
+            {subHeader}
             <div className='mb-6 flex flex-row justify-center gap-4'>
                 <div className='text-center'>
                     <div className='mb-2.5 text-2xl font-bold text-gray-900'>{stats.totalGames}</div>

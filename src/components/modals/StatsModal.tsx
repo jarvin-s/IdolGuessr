@@ -1,4 +1,10 @@
-import UserStats from '../stats/UserStats'
+import { useEffect, useState } from 'react'
+import UserStats, { loadUnlimitedStats } from '../stats/UserStats'
+import {
+    DIFFICULTIES,
+    DIFFICULTY_LABELS,
+    type InfiniteDifficulty,
+} from '@/utils/difficulty'
 
 interface StatsModalProps {
     isOpen: boolean
@@ -7,6 +13,7 @@ interface StatsModalProps {
     stats: any
     statsLoaded: boolean
     gameMode?: 'daily' | 'unlimited' | 'hangul'
+    difficulty?: InfiniteDifficulty
 }
 
 export default function StatsModal({
@@ -15,8 +22,41 @@ export default function StatsModal({
     stats,
     statsLoaded,
     gameMode = 'daily',
+    difficulty = 'normal',
 }: StatsModalProps) {
+    const [selectedDifficulty, setSelectedDifficulty] =
+        useState<InfiniteDifficulty>(difficulty)
+
+    useEffect(() => {
+        if (isOpen) setSelectedDifficulty(difficulty)
+    }, [isOpen, difficulty])
+
     if (!isOpen) return null
+
+    const isUnlimited = gameMode === 'unlimited'
+    const shownStats =
+        isUnlimited && selectedDifficulty !== difficulty
+            ? loadUnlimitedStats(selectedDifficulty)
+            : stats
+
+    const difficultyTabs = isUnlimited ? (
+        <div className='mb-6 flex rounded-full bg-gray-100 p-1'>
+            {DIFFICULTIES.map((option) => (
+                <button
+                    key={option}
+                    type='button'
+                    onClick={() => setSelectedDifficulty(option)}
+                    className={`flex-1 cursor-pointer rounded-full px-2 py-1.5 text-xs transition-colors sm:text-sm ${
+                        selectedDifficulty === option
+                            ? 'bg-white font-medium text-black shadow-sm'
+                            : 'text-gray-600 hover:text-black'
+                    }`}
+                >
+                    {DIFFICULTY_LABELS[option]}
+                </button>
+            ))}
+        </div>
+    ) : null
 
     return (
         <div className='bg-opacity-50 fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
@@ -44,10 +84,11 @@ export default function StatsModal({
                 </div>
 
                 <UserStats
-                    stats={stats}
+                    stats={shownStats}
                     isLoaded={statsLoaded}
                     className='border-0 shadow-none'
                     gameMode={gameMode}
+                    subHeader={difficultyTabs}
                 />
             </div>
         </div>

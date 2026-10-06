@@ -25,7 +25,11 @@ interface GameImageProps {
     gameMode: 'daily' | 'unlimited'
     onPass?: () => void
     skipsRemaining?: number
+    maxSkips?: number
     hintUsed?: boolean
+    hintsRemaining?: number
+    maxHints?: number
+    maxGuesses?: number
     hintUsedOnIdol?: string | null
     onHintUse?: () => void
     showStreakPopup?: boolean
@@ -46,7 +50,10 @@ export default function GameImage({
     gameMode,
     onPass,
     skipsRemaining = 3,
-    hintUsed = false,
+    maxSkips = 3,
+    hintsRemaining = 0,
+    maxHints = 0,
+    maxGuesses = 6,
     hintUsedOnIdol = null,
     onHintUse,
     showStreakPopup,
@@ -73,31 +80,62 @@ export default function GameImage({
                 setGroupNameRevealed(false)
             } else {
                 setGroupNameRevealed(
-                    hintUsed && hintUsedOnIdol === dailyImage.img_bucket
+                    hintUsedOnIdol === dailyImage.img_bucket
                 )
             }
             const timer = setTimeout(() => setIsEntering(false), 50)
             return () => clearTimeout(timer)
         }
-    }, [dailyImage?.img_bucket, hintUsed, hintUsedOnIdol])
+    }, [dailyImage?.img_bucket, hintUsedOnIdol])
 
     useEffect(() => {
-        if (
-            hintUsed &&
-            hintUsedOnIdol &&
-            dailyImage?.img_bucket === hintUsedOnIdol
-        ) {
+        if (hintUsedOnIdol && dailyImage?.img_bucket === hintUsedOnIdol) {
             setGroupNameRevealed(true)
         }
-    }, [hintUsed, hintUsedOnIdol, dailyImage?.img_bucket])
+    }, [hintUsedOnIdol, dailyImage?.img_bucket])
+
+    const isChallenger = maxGuesses <= 3
+    const roundEnded = gameWon || gameLost || remainingGuesses === 0
+    const [clearReady, setClearReady] = useState(false)
+
+    const clearUrl =
+        dailyImage && isChallenger && roundEnded
+            ? getImageUrl(
+                  dailyImage.group_type || '',
+                  dailyImage.img_bucket,
+                  'clear',
+                  gameMode,
+                  dailyImage.group_category,
+                  dailyImage.base64_group
+              )
+            : null
+
+    useEffect(() => {
+        setClearReady(false)
+        if (!clearUrl) return
+        let cancelled = false
+        const img = new window.Image()
+        const reveal = () => {
+            requestAnimationFrame(() => {
+                if (!cancelled) setClearReady(true)
+            })
+        }
+        img.onload = reveal
+        img.onerror = reveal
+        img.src = clearUrl
+        return () => {
+            cancelled = true
+        }
+    }, [clearUrl])
 
     const getImageNumber = (): number | 'clear' => {
-        if (
-            gameWon ||
-            gameLost ||
-            remainingGuesses === 0 ||
-            remainingGuesses === 1
-        ) {
+        if (isChallenger) {
+            const guessesUsed = maxGuesses - remainingGuesses
+            if (!roundEnded) return guessesUsed + 1
+            if (clearReady) return 'clear'
+            return Math.min(Math.max(guessesUsed, 1), maxGuesses)
+        }
+        if (roundEnded || remainingGuesses === 1) {
             return 'clear'
         }
         if (remainingGuesses === 6) return 1
@@ -114,13 +152,19 @@ export default function GameImage({
         gameMode === 'daily' ||
         (dailyImage.group_category && dailyImage.base64_group)
 
+    const imageSlots: Array<number | 'clear'> = isChallenger
+        ? roundEnded
+            ? [1, 2, 3, 'clear']
+            : [1, 2, 3]
+        : [1, 2, 3, 4, 5, 'clear']
+
     const allImageUrls =
         dailyImage && hasValidData
-            ? [1, 2, 3, 4, 5, 'clear'].map((num) =>
+            ? imageSlots.map((num) =>
                   getImageUrl(
                       dailyImage.group_type || '',
                       dailyImage.img_bucket,
-                      num as number | 'clear',
+                      num,
                       gameMode,
                       dailyImage.group_category,
                       dailyImage.base64_group
@@ -147,12 +191,9 @@ export default function GameImage({
                         key={dailyImage.img_bucket}
                     >
                         {allImageUrls.map((url, index) => {
-                            const imageNum = index === 5 ? 'clear' : index + 1
+                            const imageNum = imageSlots[index]
                             const isVisible = imageNumber === imageNum
-                            const currentIndex =
-                                typeof imageNumber === 'number'
-                                    ? imageNumber - 1
-                                    : 5
+                            const currentIndex = imageSlots.indexOf(imageNumber)
                             const isPastImage = index < currentIndex
                             return (
                                 <div
@@ -196,62 +237,58 @@ export default function GameImage({
                 {gameMode === 'unlimited' && !gameWon && !gameLost && (
                     <>
                         <div className='absolute top-3 left-3 z-10 flex items-center gap-2'>
-                            {dailyImage?.group_name && (
+                            {maxHints > 0 && dailyImage?.group_name && (
                                 <button
                                     onClick={() => {
+                                        const revealedHere =
+                                            hintUsedOnIdol ===
+                                            dailyImage.img_bucket
                                         if (
                                             dailyImage?.img_bucket &&
-                                            !(
-                                                hintUsed &&
-                                                hintUsedOnIdol ===
-                                                    dailyImage.img_bucket
-                                            )
+                                            !revealedHere &&
+                                            hintsRemaining > 0
                                         ) {
                                             setGroupNameRevealed(true)
                                             onHintUse?.()
                                         }
                                     }}
                                     className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all md:text-sm ${
-                                        hintUsed &&
+                                        hintsRemaining <= 0 &&
                                         hintUsedOnIdol !== dailyImage.img_bucket
                                             ? 'cursor-not-allowed bg-gray-200 text-gray-500'
                                             : 'text-black hover:scale-105 active:scale-95'
                                     }`}
                                     style={{
                                         backgroundColor:
-                                            hintUsed &&
+                                            hintsRemaining <= 0 &&
                                             hintUsedOnIdol !==
                                                 dailyImage.img_bucket
                                                 ? 'rgb(229, 229, 229)'
                                                 : 'rgb(255, 249, 127)',
                                         border: '1px solid #00000012',
                                         cursor:
-                                            hintUsed &&
+                                            hintsRemaining <= 0 &&
                                             hintUsedOnIdol !==
                                                 dailyImage.img_bucket
                                                 ? 'not-allowed'
                                                 : 'pointer',
                                     }}
                                     disabled={
-                                        hintUsed &&
+                                        hintsRemaining <= 0 &&
                                         hintUsedOnIdol !== dailyImage.img_bucket
                                     }
                                 >
                                     <HintButton />
-                                    {hintUsed &&
-                                    hintUsedOnIdol !== dailyImage.img_bucket
-                                        ? 'HINT (0)'
-                                        : hintUsed &&
-                                            hintUsedOnIdol ===
-                                                dailyImage.img_bucket
-                                          ? dailyImage.group_name
-                                          : groupNameRevealed
-                                            ? dailyImage.group_name
-                                            : 'HINT (1)'}
+                                    {hintUsedOnIdol === dailyImage.img_bucket ||
+                                    groupNameRevealed
+                                        ? dailyImage.group_name
+                                        : hintsRemaining <= 0
+                                          ? 'HINT (0)'
+                                          : `HINT (${hintsRemaining})`}
                                 </button>
                             )}
                         </div>
-                        {onPass && (
+                        {maxSkips > 0 && onPass && (
                             <div className='absolute top-3 right-3 z-10'>
                                 <button
                                     onClick={() => {
@@ -306,7 +343,7 @@ export default function GameImage({
                         <h1
                             className={`${proximanovaBold.className} text-xl leading-none text-white uppercase`}
                         >
-                            Guess {6 - remainingGuesses}/6
+                            Guess {maxGuesses - remainingGuesses}/{maxGuesses}
                         </h1>
                         <div className='flex gap-1 md:gap-2.5'>
                             {guesses.map((guess, index) => (

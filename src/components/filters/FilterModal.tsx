@@ -1,15 +1,24 @@
 import { useState, useEffect, useRef } from 'react'
+import {
+    DIFFICULTIES,
+    DIFFICULTY_DESCRIPTIONS,
+    DIFFICULTY_LABELS,
+    loadSavedDifficulty,
+    type InfiniteDifficulty,
+} from '@/utils/difficulty'
 
 interface FilterModalProps {
     isOpen: boolean
     onClose: () => void
     onConfirm: (
         groupFilter: 'boy-group' | 'girl-group' | 'both',
-        genFilter: number[]
+        genFilter: number[],
+        difficulty: InfiniteDifficulty
     ) => void
     onPlayAgain?: (
         groupFilter: 'boy-group' | 'girl-group' | 'both',
-        genFilter: number[]
+        genFilter: number[],
+        difficulty: InfiniteDifficulty
     ) => void
 }
 
@@ -38,11 +47,15 @@ export default function FilterModal({
         'boy-group' | 'girl-group' | 'both'
     >('both')
     const [selectedGens, setSelectedGens] = useState<number[]>([3, 4, 5])
+    const [selectedDifficulty, setSelectedDifficulty] =
+        useState<InfiniteDifficulty>('normal')
     const [groupDropdownOpen, setGroupDropdownOpen] = useState(false)
     const [genDropdownOpen, setGenDropdownOpen] = useState(false)
+    const [difficultyDropdownOpen, setDifficultyDropdownOpen] = useState(false)
 
     const groupDropdownRef = useRef<HTMLDivElement>(null)
     const genDropdownRef = useRef<HTMLDivElement>(null)
+    const difficultyDropdownRef = useRef<HTMLDivElement>(null)
 
     // Load saved filters when modal opens
     useEffect(() => {
@@ -83,14 +96,18 @@ export default function FilterModal({
                 } else {
                     setSelectedGens([3, 4, 5])
                 }
+
+                setSelectedDifficulty(loadSavedDifficulty())
             } catch {
                 setSelectedGroupFilter('both')
                 setSelectedGens([3, 4, 5])
+                setSelectedDifficulty('normal')
             }
 
             // Reset dropdown states
             setGroupDropdownOpen(false)
             setGenDropdownOpen(false)
+            setDifficultyDropdownOpen(false)
         }
     }, [isOpen])
 
@@ -109,6 +126,12 @@ export default function FilterModal({
             ) {
                 setGenDropdownOpen(false)
             }
+            if (
+                difficultyDropdownRef.current &&
+                !difficultyDropdownRef.current.contains(event.target as Node)
+            ) {
+                setDifficultyDropdownOpen(false)
+            }
         }
 
         document.addEventListener('mousedown', handleClickOutside)
@@ -122,18 +145,22 @@ export default function FilterModal({
         if (selectedGens.length === 0) return // Require at least one gen
 
         try {
-            localStorage.setItem('idol-guessr-group-filter', selectedGroupFilter)
+            localStorage.setItem(
+                'idol-guessr-group-filter',
+                selectedGroupFilter
+            )
             localStorage.setItem(
                 'idol-guessr-gen-filter',
                 JSON.stringify(selectedGens)
             )
+            localStorage.setItem('idol-guessr-difficulty', selectedDifficulty)
         } catch {
             // Ignore localStorage errors
         }
 
-        onConfirm(selectedGroupFilter, selectedGens)
+        onConfirm(selectedGroupFilter, selectedGens, selectedDifficulty)
         if (onPlayAgain) {
-            onPlayAgain(selectedGroupFilter, selectedGens)
+            onPlayAgain(selectedGroupFilter, selectedGens, selectedDifficulty)
         }
     }
 
@@ -190,6 +217,62 @@ export default function FilterModal({
                     </h2>
                 </div>
 
+                <div className='mb-4'>
+                    <label className='mb-1 block text-sm font-medium text-gray-700'>
+                        Difficulty
+                    </label>
+                    <div ref={difficultyDropdownRef} className='relative'>
+                        <button
+                            type='button'
+                            onClick={() => {
+                                setDifficultyDropdownOpen(
+                                    !difficultyDropdownOpen
+                                )
+                                setGroupDropdownOpen(false)
+                                setGenDropdownOpen(false)
+                            }}
+                            className='flex w-full cursor-pointer items-center justify-between border border-pink-500 bg-white px-3 py-2 text-left font-medium transition-all'
+                        >
+                            <span>{DIFFICULTY_LABELS[selectedDifficulty]}</span>
+                            <ChevronDownIcon
+                                className={`h-5 w-5 transition-transform ${difficultyDropdownOpen ? 'rotate-180' : ''}`}
+                            />
+                        </button>
+                        <span className='absolute -top-2 -right-2 z-10 rounded-full bg-pink-500 px-2.5 py-0.5 text-xs text-white'>
+                            NEW
+                        </span>
+                        {difficultyDropdownOpen && (
+                            <div className='absolute z-10 mt-1 w-full border-2 border-gray-200 bg-white shadow-lg'>
+                                {DIFFICULTIES.map((option) => (
+                                    <button
+                                        key={option}
+                                        type='button'
+                                        onClick={() => {
+                                            setSelectedDifficulty(option)
+                                            setDifficultyDropdownOpen(false)
+                                        }}
+                                        className={`w-full cursor-pointer px-3 py-2 text-left transition-all hover:bg-gray-50 ${
+                                            selectedDifficulty === option
+                                                ? 'bg-gray-100'
+                                                : ''
+                                        }`}
+                                    >
+                                        <span className='block font-medium'>
+                                            {DIFFICULTY_LABELS[option]}
+                                        </span>
+                                        <span className='block text-xs text-gray-500'>
+                                            {DIFFICULTY_DESCRIPTIONS[option]}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    <p className='mt-1 text-xs text-gray-500'>
+                        {DIFFICULTY_DESCRIPTIONS[selectedDifficulty]}
+                    </p>
+                </div>
+
                 {/* Group Type Dropdown */}
                 <div className='mb-4'>
                     <label className='mb-1 block text-sm font-medium text-gray-700'>
@@ -201,6 +284,7 @@ export default function FilterModal({
                             onClick={() => {
                                 setGroupDropdownOpen(!groupDropdownOpen)
                                 setGenDropdownOpen(false)
+                                setDifficultyDropdownOpen(false)
                             }}
                             className='flex w-full cursor-pointer items-center justify-between border-2 border-gray-200 bg-white px-3 py-2 text-left font-medium transition-all hover:border-gray-300'
                         >
@@ -244,6 +328,7 @@ export default function FilterModal({
                             onClick={() => {
                                 setGenDropdownOpen(!genDropdownOpen)
                                 setGroupDropdownOpen(false)
+                                setDifficultyDropdownOpen(false)
                             }}
                             className='flex w-full cursor-pointer items-center justify-between border-2 border-gray-200 bg-white px-3 py-2 text-left font-medium transition-all hover:border-gray-300'
                         >

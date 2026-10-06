@@ -526,6 +526,7 @@ export interface GuessTrackingData {
 export interface UnlimitedGameData {
   session_id: string
   streak: number
+  difficulty: 'easy' | 'normal' | 'hard' | 'challenger'
 }
 
 export interface HangulGameData {
@@ -600,7 +601,8 @@ export function resetGuessTimer(): void {
 }
 
 export async function trackUnlimitedGame(
-  streak: number
+  streak: number,
+  difficulty: UnlimitedGameData['difficulty'] = 'normal'
 ): Promise<void> {
   if (streak < 1) {
     return
@@ -609,7 +611,8 @@ export async function trackUnlimitedGame(
   try {
     const gameData: UnlimitedGameData = {
       session_id: getOrCreateSessionId(),
-      streak: streak
+      streak: streak,
+      difficulty,
     }
 
     const { error } = await supabase.from('unlimited_game_tracking').insert(gameData)
