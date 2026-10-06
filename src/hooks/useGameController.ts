@@ -34,7 +34,9 @@ function restoredHints(
     return hintCount
 }
 
-const idolNamesSet = new Set(idolNames.map((name: string) => name.toUpperCase()))
+const idolNamesSet = new Set(
+    idolNames.map((name: string) => name.toUpperCase())
+)
 
 export function useGameController() {
     const pathname = usePathname()
@@ -62,8 +64,11 @@ export function useGameController() {
     const [showGameOver, setShowGameOver] = useState(false)
     const isSwitchingModeRef = useRef(false)
     const [difficulty, setDifficulty] = useState<InfiniteDifficulty>('normal')
-    const { maxGuesses, hints: hintCount, skips: skipCount } =
-        getDifficultyConfig(difficulty)
+    const {
+        maxGuesses,
+        hints: hintCount,
+        skips: skipCount,
+    } = getDifficultyConfig(difficulty)
     const [skipsRemaining, setSkipsRemaining] = useState(skipCount)
     const [hintsRemaining, setHintsRemaining] = useState(hintCount)
     const [hintUsedOnIdol, setHintUsedOnIdol] = useState<string | null>(null)
@@ -108,10 +113,10 @@ export function useGameController() {
     const loadCurrentRef = useRef<(() => Promise<void>) | null>(null)
     const loadUnlimitedRefFunc = useRef<
         | ((
-            filterOverride?: 'boy-group' | 'girl-group' | 'both',
-            genFilterOverride?: number[],
-            difficultyOverride?: InfiniteDifficulty
-        ) => Promise<void>)
+              filterOverride?: 'boy-group' | 'girl-group' | 'both',
+              genFilterOverride?: number[],
+              difficultyOverride?: InfiniteDifficulty
+          ) => Promise<void>)
         | null
     >(null)
 
@@ -222,9 +227,11 @@ export function useGameController() {
             if (loadUnlimitedRef.current) return
             loadUnlimitedRef.current = true
 
-            const filterForApi = filterOverride !== undefined ? filterOverride : groupFilter
+            const filterForApi =
+                filterOverride !== undefined ? filterOverride : groupFilter
             const currentFilter = filterForApi === 'both' ? null : filterForApi
-            const currentGenFilter = genFilterOverride !== undefined ? genFilterOverride : genFilter
+            const currentGenFilter =
+                genFilterOverride !== undefined ? genFilterOverride : genFilter
             const activeDifficulty = difficultyOverride ?? difficulty
             const activeConfig = getDifficultyConfig(activeDifficulty)
             const currentStreak = unlimitedStats.stats.currentStreak
@@ -233,7 +240,8 @@ export function useGameController() {
                 milestones.filter((m) => m <= currentStreak).pop() || 0
             lastStreakMilestoneRef.current = lastMilestone
 
-            const savedGameState = unlimitedStats.loadGameState(activeDifficulty)
+            const savedGameState =
+                unlimitedStats.loadGameState(activeDifficulty)
             const savedDifficulty = savedGameState?.difficulty ?? 'normal'
             const savedMatchesDifficulty =
                 !!savedGameState && savedDifficulty === activeDifficulty
@@ -322,11 +330,16 @@ export function useGameController() {
                     return
                 }
 
-                const savedGuesses: Array<'correct' | 'incorrect' | 'empty'> = Array.isArray(savedGameState.guesses) && savedGameState.guesses.length === activeConfig.maxGuesses
-                    ? savedGameState.guesses as Array<'correct' | 'incorrect' | 'empty'>
-                    : emptyGuesses(activeConfig.maxGuesses)
+                const savedGuesses: Array<'correct' | 'incorrect' | 'empty'> =
+                    Array.isArray(savedGameState.guesses) &&
+                    savedGameState.guesses.length === activeConfig.maxGuesses
+                        ? (savedGameState.guesses as Array<
+                              'correct' | 'incorrect' | 'empty'
+                          >)
+                        : emptyGuesses(activeConfig.maxGuesses)
 
-                const hasWon = savedGameState.guesses?.includes('correct') || false
+                const hasWon =
+                    savedGameState.guesses?.includes('correct') || false
                 const hasLost =
                     savedGameState.guesses?.filter((g) => g === 'incorrect')
                         .length === activeConfig.maxGuesses || false
@@ -373,11 +386,13 @@ export function useGameController() {
                         )
 
                     if (allImagesValid) {
-                        const filteredPrefetched = currentFilter !== null
-                            ? savedGameState.prefetchedImages.filter(
-                                (img) => img.group_category === currentFilter
-                            )
-                            : savedGameState.prefetchedImages
+                        const filteredPrefetched =
+                            currentFilter !== null
+                                ? savedGameState.prefetchedImages.filter(
+                                      (img) =>
+                                          img.group_category === currentFilter
+                                  )
+                                : savedGameState.prefetchedImages
 
                         if (filteredPrefetched.length > 0) {
                             setPrefetchedImages(filteredPrefetched)
@@ -399,27 +414,30 @@ export function useGameController() {
                             })
                         }
                     } else {
-                        getMultipleRandomUnlimitedImages(5, currentFilter, currentGenFilter).then(
-                            (newImages) => {
-                                setPrefetchedImages(newImages)
-                                setCurrentImageIndex(0)
-                                newImages.forEach((img) => {
-                                    if (img.img_bucket)
-                                        addSeenIdol(img.img_bucket)
-                                })
-                            }
-                        )
-                    }
-                } else {
-                    getMultipleRandomUnlimitedImages(5, currentFilter, currentGenFilter).then(
-                        (newImages) => {
+                        getMultipleRandomUnlimitedImages(
+                            5,
+                            currentFilter,
+                            currentGenFilter
+                        ).then((newImages) => {
                             setPrefetchedImages(newImages)
                             setCurrentImageIndex(0)
                             newImages.forEach((img) => {
                                 if (img.img_bucket) addSeenIdol(img.img_bucket)
                             })
-                        }
-                    )
+                        })
+                    }
+                } else {
+                    getMultipleRandomUnlimitedImages(
+                        5,
+                        currentFilter,
+                        currentGenFilter
+                    ).then((newImages) => {
+                        setPrefetchedImages(newImages)
+                        setCurrentImageIndex(0)
+                        newImages.forEach((img) => {
+                            if (img.img_bucket) addSeenIdol(img.img_bucket)
+                        })
+                    })
                 }
             } else {
                 setIsLoading(true)
@@ -478,7 +496,8 @@ export function useGameController() {
                 mode === 'unlimited' && nextDifficulty !== difficulty
             const shouldLoadAnyway =
                 pathname === '/infinite' && mode === 'unlimited' && !dailyImage
-            if (mode === gameMode && !shouldLoadAnyway && !difficultyChanged) return
+            if (mode === gameMode && !shouldLoadAnyway && !difficultyChanged)
+                return
             if (isSwitchingModeRef.current) return
             isSwitchingModeRef.current = true
 
@@ -529,7 +548,10 @@ export function useGameController() {
 
             if (genFilterParam !== undefined) {
                 setGenFilter(genFilterParam)
-                localStorage.setItem('idol-guessr-gen-filter', JSON.stringify(genFilterParam))
+                localStorage.setItem(
+                    'idol-guessr-gen-filter',
+                    JSON.stringify(genFilterParam)
+                )
             }
 
             if (difficultyParam !== undefined) {
@@ -699,7 +721,10 @@ export function useGameController() {
                 currentImageIndex: nextImageIndex,
             })
 
-            if (prefetchedImages.length > currentImageIndex && !overrideGroupFilter) {
+            if (
+                prefetchedImages.length > currentImageIndex &&
+                !overrideGroupFilter
+            ) {
                 const row = prefetchedImages[currentImageIndex]
                 const nextImageIndex = currentImageIndex + 1
                 guessesLoadedRef.current = true
@@ -727,16 +752,15 @@ export function useGameController() {
                             activeConfig.maxGuesses <= 3
                                 ? [1, 2, 3]
                                 : [1, 2, 3, 4, 5, 'clear']
-                        const imagesToPreload = preloadSlots.map(
-                            (num) =>
-                                getImageUrl(
-                                    nextRow.group_type || '',
-                                    nextRow.img_bucket,
-                                    num as number | 'clear',
-                                    'unlimited',
-                                    nextRow.group_category,
-                                    nextRow.base64_group
-                                )
+                        const imagesToPreload = preloadSlots.map((num) =>
+                            getImageUrl(
+                                nextRow.group_type || '',
+                                nextRow.img_bucket,
+                                num as number | 'clear',
+                                'unlimited',
+                                nextRow.group_category,
+                                nextRow.base64_group
+                            )
                         )
                         imagesToPreload.forEach((url) => {
                             const img = new window.Image()
@@ -746,57 +770,61 @@ export function useGameController() {
                 }
 
                 if (nextImageIndex >= prefetchedImages.length - 2) {
-                    const apiFilter = effectiveFilter === 'both' ? null : effectiveFilter
-                    getMultipleRandomUnlimitedImages(5, apiFilter, effectiveGenFilter).then(
-                        (newImages) => {
-                            setPrefetchedImages((prev) => [
-                                ...prev,
-                                ...newImages,
-                            ])
-                            newImages.forEach((img) => {
-                                if (img.img_bucket) addSeenIdol(img.img_bucket)
-                            })
-                        }
-                    )
+                    const apiFilter =
+                        effectiveFilter === 'both' ? null : effectiveFilter
+                    getMultipleRandomUnlimitedImages(
+                        5,
+                        apiFilter,
+                        effectiveGenFilter
+                    ).then((newImages) => {
+                        setPrefetchedImages((prev) => [...prev, ...newImages])
+                        newImages.forEach((img) => {
+                            if (img.img_bucket) addSeenIdol(img.img_bucket)
+                        })
+                    })
                 }
             } else {
-                const apiFilter = effectiveFilter === 'both' ? null : effectiveFilter
-                getMultipleRandomUnlimitedImages(5, apiFilter, effectiveGenFilter).then(
-                    (newImages) => {
-                        if (newImages.length > 0) {
-                            const basePrefetched = overrideGroupFilter ? [] : prefetchedImages
-                            const updatedPrefetched = [
-                                ...basePrefetched,
-                                ...newImages,
-                            ]
-                            setPrefetchedImages(updatedPrefetched)
-                            const row = newImages[0]
-                            const nextImageIndex = basePrefetched.length
-                            guessesLoadedRef.current = true
-                            justLoadedGuessesRef.current = true
-                            setDailyImage(row)
-                            if (row.name)
-                                setCorrectAnswer(row.name.toUpperCase())
-                            setCurrentImageIndex(nextImageIndex + 1)
-                            setTimeout(() => {
-                                justLoadedGuessesRef.current = false
-                            }, 300)
+                const apiFilter =
+                    effectiveFilter === 'both' ? null : effectiveFilter
+                getMultipleRandomUnlimitedImages(
+                    5,
+                    apiFilter,
+                    effectiveGenFilter
+                ).then((newImages) => {
+                    if (newImages.length > 0) {
+                        const basePrefetched = overrideGroupFilter
+                            ? []
+                            : prefetchedImages
+                        const updatedPrefetched = [
+                            ...basePrefetched,
+                            ...newImages,
+                        ]
+                        setPrefetchedImages(updatedPrefetched)
+                        const row = newImages[0]
+                        const nextImageIndex = basePrefetched.length
+                        guessesLoadedRef.current = true
+                        justLoadedGuessesRef.current = true
+                        setDailyImage(row)
+                        if (row.name) setCorrectAnswer(row.name.toUpperCase())
+                        setCurrentImageIndex(nextImageIndex + 1)
+                        setTimeout(() => {
+                            justLoadedGuessesRef.current = false
+                        }, 300)
 
-                            unlimitedStats.saveGameState(
-                                buildGameState(
-                                    row,
-                                    nextImageIndex + 1,
-                                    updatedPrefetched
-                                ),
-                                activeDifficulty
-                            )
+                        unlimitedStats.saveGameState(
+                            buildGameState(
+                                row,
+                                nextImageIndex + 1,
+                                updatedPrefetched
+                            ),
+                            activeDifficulty
+                        )
 
-                            newImages.forEach((img) => {
-                                if (img.img_bucket) addSeenIdol(img.img_bucket)
-                            })
-                        }
+                        newImages.forEach((img) => {
+                            if (img.img_bucket) addSeenIdol(img.img_bucket)
+                        })
                     }
-                )
+                })
             }
         },
         [
@@ -817,45 +845,54 @@ export function useGameController() {
         ]
     )
 
-    const handlePlayAgain = useCallback((
-        overrideGroupFilter?: 'boy-group' | 'girl-group' | 'both',
-        overrideGenFilter?: number[],
-        overrideDifficulty?: InfiniteDifficulty
-    ) => {
-        setShowGameOver(false)
-        const nextDifficulty = overrideDifficulty ?? difficulty
-        const nextConfig = getDifficultyConfig(nextDifficulty)
-        unlimitedStats.clearGameState(difficulty)
-        if (nextDifficulty !== difficulty) {
-            unlimitedStats.clearGameState(nextDifficulty)
-            setDifficulty(nextDifficulty)
-            saveDifficulty(nextDifficulty)
-        }
-        clearSeenIdols()
+    const handlePlayAgain = useCallback(
+        (
+            overrideGroupFilter?: 'boy-group' | 'girl-group' | 'both',
+            overrideGenFilter?: number[],
+            overrideDifficulty?: InfiniteDifficulty
+        ) => {
+            setShowGameOver(false)
+            const nextDifficulty = overrideDifficulty ?? difficulty
+            const nextConfig = getDifficultyConfig(nextDifficulty)
+            unlimitedStats.clearGameState(difficulty)
+            if (nextDifficulty !== difficulty) {
+                unlimitedStats.clearGameState(nextDifficulty)
+                setDifficulty(nextDifficulty)
+                saveDifficulty(nextDifficulty)
+            }
+            clearSeenIdols()
 
-        if (overrideGroupFilter) {
-            setGroupFilter(overrideGroupFilter)
-            localStorage.setItem('idol-guessr-group-filter', overrideGroupFilter)
-        }
+            if (overrideGroupFilter) {
+                setGroupFilter(overrideGroupFilter)
+                localStorage.setItem(
+                    'idol-guessr-group-filter',
+                    overrideGroupFilter
+                )
+            }
 
-        if (overrideGenFilter) {
-            setGenFilter(overrideGenFilter)
-            localStorage.setItem('idol-guessr-gen-filter', JSON.stringify(overrideGenFilter))
-        }
+            if (overrideGenFilter) {
+                setGenFilter(overrideGenFilter)
+                localStorage.setItem(
+                    'idol-guessr-gen-filter',
+                    JSON.stringify(overrideGenFilter)
+                )
+            }
 
-        setHintsRemaining(nextConfig.hints)
-        setSkipsRemaining(nextConfig.skips)
-        setHintUsedOnIdol(null)
-        setPrefetchedImages([])
-        setCurrentImageIndex(0)
-        loadNextUnlimited(
-            nextConfig.skips,
-            nextConfig.hints,
-            overrideGroupFilter,
-            overrideGenFilter,
-            nextDifficulty
-        )
-    }, [loadNextUnlimited, unlimitedStats, difficulty])
+            setHintsRemaining(nextConfig.hints)
+            setSkipsRemaining(nextConfig.skips)
+            setHintUsedOnIdol(null)
+            setPrefetchedImages([])
+            setCurrentImageIndex(0)
+            loadNextUnlimited(
+                nextConfig.skips,
+                nextConfig.hints,
+                overrideGroupFilter,
+                overrideGenFilter,
+                nextDifficulty
+            )
+        },
+        [loadNextUnlimited, unlimitedStats, difficulty]
+    )
 
     const handleSkip = useCallback(() => {
         if (skipsRemaining > 0) {
@@ -936,58 +973,55 @@ export function useGameController() {
 
                         setTimeout(() => {
                             setIsAnimating(false)
-                            setGuesses((prev) => {
-                                const newGuesses = [...prev]
-                                const emptyIndex = newGuesses.findIndex(
-                                    (g) => g === 'empty'
-                                )
-                                if (emptyIndex === -1) return prev
-                                newGuesses[emptyIndex] = 'incorrect'
-                                const remainingAfterThis = newGuesses.filter(
-                                    (g) => g === 'empty'
-                                ).length
-                                if (remainingAfterThis === 0) {
-                                    setTimeout(() => {
-                                        setGameLost(true)
-                                        if (gameMode === 'daily') {
-                                            handleGameLoss()
-                                            if (dailyImage?.id) {
-                                                const allGuesses = loadGuessAttempts()
-                                                void trackDailyGameEnd(dailyImage.id, allGuesses, false)
-                                            }
-                                            setTimeout(() => {
-                                                setShowWinModal(true)
-                                            }, 2000)
-                                        } else {
-                                            const currentStreak =
-                                                unlimitedStats.stats
-                                                    .currentStreak
-                                            if (
-                                                currentStreak >= 1 &&
-                                                !hasTrackedCurrentGame.current
-                                            ) {
-                                                void trackUnlimitedGame(
-                                                    currentStreak,
-                                                    difficulty
-                                                )
-                                                hasTrackedCurrentGame.current = true
-                                            }
-                                            unlimitedStats.updateStats(
-                                                false,
-                                                true
-                                            )
-                                            unlimitedStats.clearGameState()
-                                            lastStreakMilestoneRef.current = 0
-                                            clearSeenIdols()
-                                        }
-                                    }, 300)
-                                } else {
+                            const emptyIndex = guesses.findIndex(
+                                (g) => g === 'empty'
+                            )
+                            if (emptyIndex === -1) return
+                            const newGuesses = [...guesses]
+                            newGuesses[emptyIndex] = 'incorrect'
+                            setGuesses(newGuesses)
+                            const remainingAfterThis = newGuesses.filter(
+                                (g) => g === 'empty'
+                            ).length
+                            if (remainingAfterThis === 0) {
+                                setTimeout(() => {
+                                    setGameLost(true)
                                     if (gameMode === 'daily') {
-                                        saveProgress(newGuesses)
+                                        handleGameLoss()
+                                        if (dailyImage?.id) {
+                                            const allGuesses =
+                                                loadGuessAttempts()
+                                            void trackDailyGameEnd(
+                                                dailyImage.id,
+                                                allGuesses,
+                                                false
+                                            )
+                                        }
+                                        setTimeout(() => {
+                                            setShowWinModal(true)
+                                        }, 2000)
+                                    } else {
+                                        const currentStreak =
+                                            unlimitedStats.stats.currentStreak
+                                        if (
+                                            currentStreak >= 1 &&
+                                            !hasTrackedCurrentGame.current
+                                        ) {
+                                            void trackUnlimitedGame(
+                                                currentStreak,
+                                                difficulty
+                                            )
+                                            hasTrackedCurrentGame.current = true
+                                        }
+                                        unlimitedStats.updateStats(false, true)
+                                        unlimitedStats.clearGameState()
+                                        lastStreakMilestoneRef.current = 0
+                                        clearSeenIdols()
                                     }
-                                }
-                                return newGuesses
-                            })
+                                }, 300)
+                            } else if (gameMode === 'daily') {
+                                saveProgress(newGuesses)
+                            }
                         }, 500)
                     } else {
                         const emptyIndex = guesses.findIndex(
@@ -1009,7 +1043,11 @@ export function useGameController() {
                             handleGameWin(guessNumber)
                             if (dailyImage?.id) {
                                 const allGuesses = loadGuessAttempts()
-                                void trackDailyGameEnd(dailyImage.id, allGuesses, true)
+                                void trackDailyGameEnd(
+                                    dailyImage.id,
+                                    allGuesses,
+                                    true
+                                )
                             }
                             setTimeout(() => setShowWinModal(true), 2000)
                         } else {
@@ -1110,10 +1148,19 @@ export function useGameController() {
         // Helper to load gen filter from localStorage
         const loadGenFilter = () => {
             try {
-                const savedGenFilter = localStorage.getItem('idol-guessr-gen-filter')
+                const savedGenFilter = localStorage.getItem(
+                    'idol-guessr-gen-filter'
+                )
                 if (savedGenFilter) {
                     const parsed = JSON.parse(savedGenFilter)
-                    if (Array.isArray(parsed) && parsed.length > 0 && parsed.every((g: unknown) => typeof g === 'number' && [3, 4, 5].includes(g))) {
+                    if (
+                        Array.isArray(parsed) &&
+                        parsed.length > 0 &&
+                        parsed.every(
+                            (g: unknown) =>
+                                typeof g === 'number' && [3, 4, 5].includes(g)
+                        )
+                    ) {
                         setGenFilter(parsed)
                     } else {
                         setGenFilter([3, 4, 5])
@@ -1130,8 +1177,14 @@ export function useGameController() {
         // This prevents the hook from loading daily mode before the page can switch to unlimited
         if (pathname === '/infinite') {
             const savedFilter = localStorage.getItem('idol-guessr-group-filter')
-            if (savedFilter === 'boy-group' || savedFilter === 'girl-group' || savedFilter === 'both') {
-                setGroupFilter(savedFilter as 'boy-group' | 'girl-group' | 'both')
+            if (
+                savedFilter === 'boy-group' ||
+                savedFilter === 'girl-group' ||
+                savedFilter === 'both'
+            ) {
+                setGroupFilter(
+                    savedFilter as 'boy-group' | 'girl-group' | 'both'
+                )
             } else {
                 setGroupFilter('both')
             }
@@ -1146,7 +1199,11 @@ export function useGameController() {
             hasLoadedInitialRef.current = true
         }
         const savedFilter = localStorage.getItem('idol-guessr-group-filter')
-        if (savedFilter === 'boy-group' || savedFilter === 'girl-group' || savedFilter === 'both') {
+        if (
+            savedFilter === 'boy-group' ||
+            savedFilter === 'girl-group' ||
+            savedFilter === 'both'
+        ) {
             setGroupFilter(savedFilter as 'boy-group' | 'girl-group' | 'both')
         } else {
             setGroupFilter('both')
@@ -1268,11 +1325,18 @@ export function useGameController() {
                         }
                         return
                     }
-                    const savedGuesses: Array<'correct' | 'incorrect' | 'empty'> = Array.isArray(savedGameState.guesses) && savedGameState.guesses.length === maxGuesses
-                        ? savedGameState.guesses as Array<'correct' | 'incorrect' | 'empty'>
-                        : emptyGuesses(maxGuesses)
+                    const savedGuesses: Array<
+                        'correct' | 'incorrect' | 'empty'
+                    > =
+                        Array.isArray(savedGameState.guesses) &&
+                        savedGameState.guesses.length === maxGuesses
+                            ? (savedGameState.guesses as Array<
+                                  'correct' | 'incorrect' | 'empty'
+                              >)
+                            : emptyGuesses(maxGuesses)
 
-                    const hasWon = savedGameState.guesses?.includes('correct') || false
+                    const hasWon =
+                        savedGameState.guesses?.includes('correct') || false
                     const hasLost =
                         savedGameState.guesses?.filter((g) => g === 'incorrect')
                             .length === maxGuesses || false
@@ -1383,7 +1447,7 @@ export function useGameController() {
             currentImageBucketRef.current === dailyImage.img_bucket &&
             !justLoadedGuessesRef.current
         ) {
-            const allEmpty = guesses.every(g => g === 'empty')
+            const allEmpty = guesses.every((g) => g === 'empty')
             if (allEmpty) {
                 return
             }
@@ -1484,7 +1548,9 @@ export function useGameController() {
         hintUsedOnIdol,
         setHintUsedOnIdol,
         consumeHint: () => {
-            setHintsRemaining((current) => (current > 0 ? current - 1 : current))
+            setHintsRemaining((current) =>
+                current > 0 ? current - 1 : current
+            )
         },
         showStreakPopup,
         streakMilestone,
