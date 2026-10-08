@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Link from 'next/link'
 import localFont from 'next/font/local'
 import { useFeedbackUnread } from '@/hooks/useFeedbackUnread'
 
@@ -73,7 +74,9 @@ export default function InfoModal({
                         <div className='mt-4 space-y-4'>
                             <ChangelogEntry
                                 date='October 6, 2026'
-                                changes={['Added difficulty levels to Infinite mode']}
+                                changes={[
+                                    'Added difficulty levels to Infinite mode',
+                                ]}
                             />
                             <ChangelogEntry
                                 date='September 28, 2026'
@@ -149,6 +152,26 @@ export default function InfoModal({
                                 </div>
                                 <ChevronRightIcon />
                             </button>
+
+                            <Link
+                                href='/faq'
+                                className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
+                            >
+                                <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                                    <FaqIcon />
+                                </div>
+                                <div className='text-left'>
+                                    <h3
+                                        className={`${proximaNovaBold.className} text-lg`}
+                                    >
+                                        FAQ
+                                    </h3>
+                                    <p className='text-sm text-gray-500'>
+                                        Answers to common questions
+                                    </p>
+                                </div>
+                                <ChevronRightIcon />
+                            </Link>
 
                             <button
                                 onClick={onShowFeedback}
@@ -323,6 +346,24 @@ function HelpIcon() {
                 strokeLinejoin='round'
                 strokeWidth='2'
                 d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3m.08 4h.01'
+            />
+        </svg>
+    )
+}
+
+function FaqIcon() {
+    return (
+        <svg
+            className='h-5 w-5 text-gray-600'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+        >
+            <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M4 6h16M4 12h16M4 18h10'
             />
         </svg>
     )
