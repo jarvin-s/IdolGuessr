@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import localFont from 'next/font/local'
+import GmtPlus2Clock from '@/components/faq/GmtPlus2Clock'
 import {
     DIFFICULTIES,
     DIFFICULTY_DESCRIPTIONS,
@@ -64,11 +65,14 @@ const sections: FaqSection[] = [
             {
                 question: 'When does the daily idol change?',
                 plainAnswer:
-                    'There is a new idol once a day. The countdown at the top of the Daily page shows how long until the next one.',
+                    'There is a new idol once a day at 12:00 AM GMT+2 (Europe/Amsterdam). The countdown at the top of the Daily page shows how long until the next one.',
                 answer: (
                     <p>
-                        There is a new idol once a day. The countdown at the top
-                        of the Daily page shows how long until the next one.
+                        There is a new idol once a day at 00:00 GMT+2
+                        (Europe/Amsterdam). The countdown at the top of the
+                        Daily page shows how long until the next one.
+                        <br />
+                        Current time in GMT+2: <GmtPlus2Clock />
                     </p>
                 ),
             },
