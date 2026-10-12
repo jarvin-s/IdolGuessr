@@ -132,8 +132,8 @@ export default function InfinitePage() {
     }, [])
 
     return (
-        <div className='fixed inset-0 flex flex-col justify-center overflow-hidden bg-white'>
-            <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:shadow-lg'>
+        <div className='fixed inset-0 flex flex-col justify-center overflow-hidden bg-white dark:bg-zinc-950'>
+            <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:dark:border-zinc-700 sm:shadow-lg'>
                 <GameHeader
                     timer={timer}
                     onShowStats={() => setShowStats(true)}

@@ -69,7 +69,7 @@ export default function HangulDisplay({
             <div className='relative h-full w-full overflow-hidden rounded-lg bg-gradient-to-br from-purple-500 to-pink-700'>
                 {isLoading ? (
                     <div className='flex h-full w-full items-center justify-center'>
-                        <div className='text-gray-400'>Loading...</div>
+                        <div className='text-gray-400 dark:text-zinc-500'>Loading...</div>
                     </div>
                 ) : hangulImage ? (
                     <div
@@ -99,7 +99,7 @@ export default function HangulDisplay({
                     </div>
                 ) : (
                     <div className='flex h-full w-full items-center justify-center'>
-                        <div className='text-gray-400'>No data available</div>
+                        <div className='text-gray-400 dark:text-zinc-500'>No data available</div>
                     </div>
                 )}
 
@@ -115,7 +115,7 @@ export default function HangulDisplay({
                                 }}
                                 className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all md:text-sm ${
                                     imageRevealed || !hasGroupHint
-                                        ? 'cursor-not-allowed bg-gray-200 text-gray-500'
+                                        ? 'cursor-not-allowed bg-gray-200 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'
                                         : 'text-black hover:scale-105 active:scale-95'
                                 }`}
                                 style={{
@@ -153,8 +153,8 @@ export default function HangulDisplay({
                                 }}
                                 className={`relative flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-transform md:text-sm ${
                                     skipsRemaining === 0
-                                        ? 'cursor-not-allowed bg-gray-200 text-gray-500'
-                                        : 'cursor-pointer bg-white text-black hover:scale-105 hover:bg-gray-100 active:scale-95'
+                                        ? 'cursor-not-allowed bg-gray-200 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'
+                                        : 'cursor-pointer bg-white dark:bg-zinc-900 text-black dark:text-zinc-100 hover:scale-105 hover:bg-gray-100 dark:hover:bg-zinc-700 active:scale-95'
                                 }`}
                                 style={{ border: '1px solid #00000012' }}
                                 disabled={skipsRemaining === 0}

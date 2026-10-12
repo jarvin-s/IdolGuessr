@@ -23,7 +23,7 @@ export default function GmtPlus2Clock() {
     }, [])
 
     return (
-        <span className='font-medium text-gray-900 tabular-nums'>
+        <span className='font-medium text-gray-900 dark:text-zinc-100 tabular-nums'>
             {time ?? '--:--:--'}
         </span>
     )

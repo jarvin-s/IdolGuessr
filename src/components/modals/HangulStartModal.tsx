@@ -20,7 +20,7 @@ export default function HangulStartModal({
 
     return (
         <div className='fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='modal-fade-in relative w-full max-w-sm rounded-md bg-white p-10'>
+            <div className='modal-fade-in relative w-full max-w-sm rounded-md bg-white dark:bg-zinc-900 p-10'>
                 <div className='mb-4 flex items-center justify-center'>
                     <HangulIcon />
                     <h2 className='text-center text-xl font-bold uppercase md:text-2xl'>
@@ -51,7 +51,7 @@ export default function HangulStartModal({
                         className={`w-full cursor-pointer border-2 px-3 py-2 text-left font-medium transition-all ${
                             selectedFilter === 'boy-group'
                                 ? 'border-black bg-black text-white'
-                                : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
+                                : 'border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 hover:border-gray-300 dark:hover:border-zinc-500 hover:bg-gray-50 dark:hover:bg-zinc-800'
                         }`}
                     >
                         Boy groups
@@ -62,7 +62,7 @@ export default function HangulStartModal({
                         className={`w-full cursor-pointer border-2 px-3 py-2 text-left font-medium transition-all ${
                             selectedFilter === 'girl-group'
                                 ? 'border-black bg-black text-white'
-                                : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
+                                : 'border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 hover:border-gray-300 dark:hover:border-zinc-500 hover:bg-gray-50 dark:hover:bg-zinc-800'
                         }`}
                     >
                         Girl groups
@@ -73,7 +73,7 @@ export default function HangulStartModal({
                         className={`w-full cursor-pointer border-2 px-3 py-2 text-left font-medium transition-all ${
                             selectedFilter === 'both'
                                 ? 'border-black bg-black text-white'
-                                : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
+                                : 'border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 hover:border-gray-300 dark:hover:border-zinc-500 hover:bg-gray-50 dark:hover:bg-zinc-800'
                         }`}
                     >
                         Both

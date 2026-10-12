@@ -63,9 +63,9 @@ export default function TicketThread({
 
     return (
         <div className='flex min-h-0 flex-1 flex-col'>
-            <div className='mb-3 flex flex-wrap items-center gap-2 text-xs text-gray-500'>
+            <div className='mb-3 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-zinc-400'>
                 {ticketNumberLabel && (
-                    <span className='rounded-full bg-gray-200 px-2 py-0.5 font-mono font-medium text-gray-700'>
+                    <span className='rounded-full bg-gray-200 dark:bg-zinc-800 px-2 py-0.5 font-mono font-medium text-gray-700 dark:text-zinc-300'>
                         {ticketNumberLabel}
                     </span>
                 )}
@@ -74,7 +74,7 @@ export default function TicketThread({
                 <span>Opened {formatTicketDate(ticket.created_at)}</span>
             </div>
 
-            <div className='min-h-0 flex-1 space-y-3 overflow-y-auto rounded-lg bg-gray-50 p-3'>
+            <div className='min-h-0 flex-1 space-y-3 overflow-y-auto rounded-lg bg-gray-50 dark:bg-zinc-950 p-3'>
                 {messages.map((message) => {
                     const own = message.sender === viewer
                     const author = message.sender === 'admin' ? 'Creator' : viewer === 'admin' ? 'Player' : 'You'
@@ -82,12 +82,12 @@ export default function TicketThread({
                         <div key={message.id} className={`flex flex-col ${own ? 'items-end' : 'items-start'}`}>
                             <div
                                 className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm break-words whitespace-pre-wrap ${
-                                    own ? 'bg-pink-500 text-white' : 'border border-gray-200 bg-white text-gray-900'
+                                    own ? 'bg-pink-500 text-white' : 'border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100'
                                 }`}
                             >
                                 {message.body}
                             </div>
-                            <span className='mt-1 text-[11px] text-gray-400'>
+                            <span className='mt-1 text-[11px] text-gray-400 dark:text-zinc-500'>
                                 {author} &middot; {formatTicketDate(message.created_at)}
                             </span>
                         </div>
@@ -105,7 +105,7 @@ export default function TicketThread({
                         rows={3}
                         maxLength={MAX_LENGTH}
                         placeholder='Write a reply... (Enter to send, Shift+Enter for new line)'
-                        className='w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-base focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none sm:text-sm'
+                        className='w-full resize-none rounded-md border border-gray-300 dark:border-zinc-600 px-3 py-2 text-base focus:border-transparent focus:ring-2 focus:ring-black dark:focus:ring-zinc-300 focus:outline-none sm:text-sm dark:bg-zinc-800'
                     />
                     {error && <p className='text-sm text-red-600'>{error}</p>}
                     <button
@@ -117,7 +117,7 @@ export default function TicketThread({
                     </button>
                 </form>
             ) : (
-                <p className='mt-3 text-center text-sm text-gray-500'>
+                <p className='mt-3 text-center text-sm text-gray-500 dark:text-zinc-400'>
                     {closedNotice ?? 'This ticket is closed.'}
                 </p>
             )}

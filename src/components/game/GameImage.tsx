@@ -177,7 +177,7 @@ export default function GameImage({
             <div className='relative h-full w-full overflow-hidden rounded-lg'>
                 {isLoading || !hasValidData ? (
                     <div className='flex h-full w-full items-center justify-center'>
-                        <div className='text-gray-400'>Loading...</div>
+                        <div className='text-gray-400 dark:text-zinc-500'>Loading...</div>
                     </div>
                 ) : dailyImage ? (
                     <div
@@ -230,7 +230,7 @@ export default function GameImage({
                     </div>
                 ) : (
                     <div className='flex h-full w-full items-center justify-center'>
-                        <div className='text-gray-400'>No image available</div>
+                        <div className='text-gray-400 dark:text-zinc-500'>No image available</div>
                     </div>
                 )}
 
@@ -255,7 +255,7 @@ export default function GameImage({
                                     className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all md:text-sm ${
                                         hintsRemaining <= 0 &&
                                         hintUsedOnIdol !== dailyImage.img_bucket
-                                            ? 'cursor-not-allowed bg-gray-200 text-gray-500'
+                                            ? 'cursor-not-allowed bg-gray-200 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'
                                             : 'text-black hover:scale-105 active:scale-95'
                                     }`}
                                     style={{
@@ -303,8 +303,8 @@ export default function GameImage({
                                     }}
                                     className={`relative flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-transform md:text-sm ${
                                         skipsRemaining === 0
-                                            ? 'cursor-not-allowed bg-gray-200 text-gray-500'
-                                            : 'cursor-pointer bg-white text-black hover:scale-105 hover:bg-gray-100 active:scale-95'
+                                            ? 'cursor-not-allowed bg-gray-200 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'
+                                            : 'cursor-pointer bg-white dark:bg-zinc-900 text-black dark:text-zinc-100 hover:scale-105 hover:bg-gray-100 dark:hover:bg-zinc-700 active:scale-95'
                                     }`}
                                     style={{ border: '1px solid #00000012' }}
                                     disabled={skipsRemaining === 0}
@@ -339,7 +339,7 @@ export default function GameImage({
                     )}
 
                 <div className='pointer-events-none absolute inset-x-0 bottom-2 z-[200] flex justify-center px-2 md:bottom-4 md:px-10'>
-                    <div className='inline-flex max-w-full items-center gap-2 rounded-md border border-gray-300/60 bg-zinc-900/70 px-6 py-2.5 md:h-12 md:gap-4 md:px-4 md:py-0'>
+                    <div className='inline-flex max-w-full items-center gap-2 rounded-md border border-gray-300/60 dark:border-zinc-600/60 bg-zinc-900/70 px-6 py-2.5 md:h-12 md:gap-4 md:px-4 md:py-0'>
                         <h1
                             className={`${proximanovaBold.className} text-xl leading-none text-white uppercase`}
                         >

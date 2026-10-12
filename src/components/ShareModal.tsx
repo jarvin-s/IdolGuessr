@@ -37,15 +37,15 @@ export default function ShareModal({
 
     return (
         <div className='fixed inset-0 z-[300] flex items-center justify-center bg-black/50 p-4'>
-            <div className='relative w-full max-w-md rounded-2xl bg-white p-8 shadow-xl'>
+            <div className='relative w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 p-8 shadow-xl'>
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className='absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200'
+                    className='absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                     aria-label='Close'
                 >
                     <svg
-                        className='h-4 w-4 text-gray-600'
+                        className='h-4 w-4 text-gray-600 dark:text-zinc-400'
                         fill='none'
                         stroke='currentColor'
                         viewBox='0 0 24 24'
@@ -60,10 +60,10 @@ export default function ShareModal({
                 </button>
 
                 {/* Modal Content */}
-                <h2 className='mb-2 text-2xl font-bold text-black'>
+                <h2 className='mb-2 text-2xl font-bold text-black dark:text-zinc-100'>
                     Share your result
                 </h2>
-                <p className='mb-6 text-gray-600'>
+                <p className='mb-6 text-gray-600 dark:text-zinc-400'>
                     Choose how you&apos;d like to share your daily result
                 </p>
 
