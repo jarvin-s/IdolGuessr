@@ -99,6 +99,18 @@ const sections: FaqSection[] = [
                     </p>
                 ),
             },
+            {
+                question: 'Can I suggest a group to be added to the game?',
+                plainAnswer:
+                    "Of course! Open a ticket and suggest as many groups as you want. Keep in mind I'm currently the only person working on the game so it might take some time.",
+                answer: (
+                    <p>
+                        Of course! Open a ticket and suggest as many groups as
+                        you want. Keep in mind I&apos;m currently the only
+                        person working on the game so it might take some time.
+                    </p>
+                ),
+            },
         ],
     },
     {
