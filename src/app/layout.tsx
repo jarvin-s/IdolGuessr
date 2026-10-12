@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
 import { Analytics } from '@vercel/analytics/next'
+import { ThemeProvider } from '@/components/theme/ThemeProvider'
+import { themeInitScript } from '@/components/theme/theme'
 
 const proximaNovaRegular = localFont({
     src: '../../public/fonts/proximanova_regular.ttf',
@@ -65,12 +67,17 @@ export default function RootLayout({
 }>) {
     return (
         <html lang='en' suppressHydrationWarning>
+            <head>
+                <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+            </head>
             <body
                 suppressHydrationWarning
-                className={`${proximaNovaRegular.className} antialiased`}
+                className={`${proximaNovaRegular.className} bg-white text-black antialiased dark:bg-zinc-950 dark:text-zinc-100`}
             >
-                {children}
-                <Analytics />
+                <ThemeProvider>
+                    {children}
+                    <Analytics />
+                </ThemeProvider>
             </body>
         </html>
     )

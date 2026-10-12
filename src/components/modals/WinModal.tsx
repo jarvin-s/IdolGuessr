@@ -73,15 +73,15 @@ export default function WinModal({
     return (
         <div className='hide-scrollbar fixed inset-0 z-[300] flex items-start justify-center overflow-y-auto bg-black/50'>
             <div
-                className={`win-modal-slide relative w-full max-w-md bg-white shadow-xl sm:my-8 sm:rounded-2xl ${isOpen ? 'win-modal-slide-in' : ''}`}
+                className={`win-modal-slide relative w-full max-w-md bg-white dark:bg-zinc-900 shadow-xl sm:my-8 sm:rounded-2xl ${isOpen ? 'win-modal-slide-in' : ''}`}
             >
                 <button
                     onClick={onClose}
-                    className='absolute top-4 right-4 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200'
+                    className='absolute top-4 right-4 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                     aria-label='Close'
                 >
                     <svg
-                        className='h-4 w-4 text-gray-600'
+                        className='h-4 w-4 text-gray-600 dark:text-zinc-400'
                         fill='none'
                         stroke='currentColor'
                         viewBox='0 0 24 24'
@@ -104,11 +104,11 @@ export default function WinModal({
                         </div>
                     )}
                     <h1
-                        className={`${proximaNovaBold.className} ${isHistoryMode ? 'mt-2' : 'mt-8'} mb-1 text-3xl font-extrabold text-black`}
+                        className={`${proximaNovaBold.className} ${isHistoryMode ? 'mt-2' : 'mt-8'} mb-1 text-3xl font-extrabold text-black dark:text-zinc-100`}
                     >
                         {isWin ? 'GOOD JOB!' : 'NICE TRY!'}
                     </h1>
-                    <p className='mb-6 text-base text-gray-700'>
+                    <p className='mb-6 text-base text-gray-700 dark:text-zinc-300'>
                         {isWin ? (
                             <>
                                 You guessed{' '}
@@ -176,7 +176,7 @@ export default function WinModal({
                                             className={`flex items-center justify-between rounded-lg px-4 py-3 ${isCorrectGuess ? 'border border-green-200 bg-green-50' : 'border border-red-200 bg-red-50'}`}
                                         >
                                             <div className='flex items-center gap-3'>
-                                                <span className='text-sm font-bold text-gray-500'>
+                                                <span className='text-sm font-bold text-gray-500 dark:text-zinc-400'>
                                                     {index + 1}
                                                 </span>
                                                 <span
@@ -203,43 +203,43 @@ export default function WinModal({
 
                     {gameMode === 'daily' && !isHistoryMode && (
                         <>
-                            <div className='mb-8 w-full border-t border-gray-200' />
+                            <div className='mb-8 w-full border-t border-gray-200 dark:border-zinc-700' />
                             <div className='mb-8 w-full'>
                                 <h2
-                                    className={`${proximaNovaBold.className} mb-4 text-center text-2xl font-bold text-black`}
+                                    className={`${proximaNovaBold.className} mb-4 text-center text-2xl font-bold text-black dark:text-zinc-100`}
                                 >
                                     STATISTICS
                                 </h2>
                                 <div className='mb-3 grid grid-cols-4 gap-4 text-center'>
                                     <div>
-                                        <div className='mb-2.5 text-3xl font-bold text-black'>
+                                        <div className='mb-2.5 text-3xl font-bold text-black dark:text-zinc-100'>
                                             {stats.gamesPlayed}
                                         </div>
-                                        <div className='text-sm leading-none text-gray-500'>
+                                        <div className='text-sm leading-none text-gray-500 dark:text-zinc-400'>
                                             Played
                                         </div>
                                     </div>
                                     <div>
-                                        <div className='mb-2.5 text-3xl font-bold text-black'>
+                                        <div className='mb-2.5 text-3xl font-bold text-black dark:text-zinc-100'>
                                             {stats.winPercentage}%
                                         </div>
-                                        <div className='text-sm leading-none text-gray-500'>
+                                        <div className='text-sm leading-none text-gray-500 dark:text-zinc-400'>
                                             Win %
                                         </div>
                                     </div>
                                     <div>
-                                        <div className='mb-2.5 text-3xl font-bold text-black'>
+                                        <div className='mb-2.5 text-3xl font-bold text-black dark:text-zinc-100'>
                                             {stats.currentStreak}
                                         </div>
-                                        <div className='text-sm leading-none text-gray-500'>
+                                        <div className='text-sm leading-none text-gray-500 dark:text-zinc-400'>
                                             Current streak
                                         </div>
                                     </div>
                                     <div>
-                                        <div className='mb-2.5 text-3xl font-bold text-black'>
+                                        <div className='mb-2.5 text-3xl font-bold text-black dark:text-zinc-100'>
                                             {stats.maxStreak}
                                         </div>
-                                        <div className='text-sm leading-none text-gray-500'>
+                                        <div className='text-sm leading-none text-gray-500 dark:text-zinc-400'>
                                             Max streak
                                         </div>
                                     </div>
@@ -248,7 +248,7 @@ export default function WinModal({
 
                             <div className='w-full'>
                                 <h2
-                                    className={`${proximaNovaBold.className} mb-4 text-center text-2xl font-bold text-black`}
+                                    className={`${proximaNovaBold.className} mb-4 text-center text-2xl font-bold text-black dark:text-zinc-100`}
                                 >
                                     GUESS DISTRIBUTION
                                 </h2>
@@ -263,10 +263,10 @@ export default function WinModal({
                                                 key={index}
                                                 className='flex items-center gap-2'
                                             >
-                                                <div className='w-4 text-sm font-medium text-black'>
+                                                <div className='w-4 text-sm font-medium text-black dark:text-zinc-100'>
                                                     {index + 1}
                                                 </div>
-                                                <div className='relative h-8 flex-1 overflow-hidden rounded-full bg-gray-200'>
+                                                <div className='relative h-8 flex-1 overflow-hidden rounded-full bg-gray-200 dark:bg-zinc-800'>
                                                     <div
                                                         className='flex h-full items-center justify-end bg-green-400 px-2 text-sm font-bold text-white transition-all duration-500'
                                                         style={{

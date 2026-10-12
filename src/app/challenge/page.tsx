@@ -39,7 +39,7 @@ export default function ChallengePage() {
   }
 
   return (
-    <div className='fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-amber-50 to-white'>
+    <div className='fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-amber-50 dark:from-amber-950 to-white dark:to-zinc-950'>
       <ChallengeCreateModal
         isOpen={true}
         isCreating={isCreating}

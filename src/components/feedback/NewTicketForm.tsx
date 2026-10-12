@@ -58,7 +58,7 @@ export default function NewTicketForm({ onCreated }: NewTicketFormProps) {
                     onChange={(e) =>
                         setCategory(e.target.value as TicketCategory)
                     }
-                    className='w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none'
+                    className='w-full rounded-md border border-gray-300 dark:border-zinc-600 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-black dark:focus:ring-zinc-300 focus:outline-none dark:bg-zinc-800'
                 >
                     {(Object.keys(CATEGORY_LABELS) as TicketCategory[]).map(
                         (key) => (
@@ -83,7 +83,7 @@ export default function NewTicketForm({ onCreated }: NewTicketFormProps) {
                     onChange={(e) => setMessage(e.target.value)}
                     rows={4}
                     maxLength={MAX_LENGTH}
-                    className='w-full resize-none rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none'
+                    className='w-full resize-none rounded-md border border-gray-300 dark:border-zinc-600 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-black dark:focus:ring-zinc-300 focus:outline-none dark:bg-zinc-800'
                     placeholder='Tell us what you think...'
                     required
                 />
@@ -99,7 +99,7 @@ export default function NewTicketForm({ onCreated }: NewTicketFormProps) {
                 {isSubmitting ? 'Submitting...' : 'Submit feedback'}
             </button>
 
-            <p className='text-center text-sm text-gray-500'>
+            <p className='text-center text-sm text-gray-500 dark:text-zinc-400'>
                 Tickets are saved in this browser. Clearing your site data will
                 remove access to them.
             </p>

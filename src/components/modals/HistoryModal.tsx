@@ -128,14 +128,14 @@ export default function HistoryModal({
 
     return (
         <div className='bg-opacity-50 fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='modal-fade-in relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6'>
+            <div className='modal-fade-in relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white dark:bg-zinc-900 p-6'>
                 <button
                     onClick={onClose}
-                    className='absolute top-4 right-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200'
+                    className='absolute top-4 right-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                     aria-label='Close History'
                 >
                     <svg
-                        className='h-4 w-4 text-gray-600'
+                        className='h-4 w-4 text-gray-600 dark:text-zinc-400'
                         fill='none'
                         stroke='currentColor'
                         viewBox='0 0 24 24'
@@ -152,24 +152,24 @@ export default function HistoryModal({
                 <div className='mb-6 flex items-center gap-2'>
                     <button
                         onClick={onBack}
-                        className='flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full bg-gray-100 px-3 transition-colors hover:bg-gray-200'
+                        className='flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full bg-gray-100 dark:bg-zinc-800 px-3 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                         aria-label='Go back'
                     >
                         <ArrowLeftIcon />
-                        <span className='text-sm text-gray-600'>Go back</span>
+                        <span className='text-sm text-gray-600 dark:text-zinc-400'>Go back</span>
                     </button>
                 </div>
 
                 <h1 className={`${proximaNovaBold.className} text-2xl uppercase`}>
                     Past Idols
                 </h1>
-                <p className='mt-2 text-gray-600'>
+                <p className='mt-2 text-gray-600 dark:text-zinc-400'>
                     Select a date to play that day&apos;s idol.
                 </p>
 
                 {isLoading ? (
                     <div className='mt-6 flex h-64 items-center justify-center'>
-                        <div className='h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-pink-500' />
+                        <div className='h-8 w-8 animate-spin rounded-full border-4 border-gray-200 dark:border-zinc-700 border-t-pink-500' />
                     </div>
                 ) : (
                     <div className='mt-6'>
@@ -180,8 +180,8 @@ export default function HistoryModal({
                                 disabled={!canGoToPreviousMonth()}
                                 className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
                                     canGoToPreviousMonth()
-                                        ? 'cursor-pointer bg-gray-100 hover:bg-gray-200'
-                                        : 'cursor-not-allowed bg-gray-50 opacity-50'
+                                        ? 'cursor-pointer bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700'
+                                        : 'cursor-not-allowed bg-gray-50 dark:bg-zinc-950 opacity-50'
                                 }`}
                                 aria-label='Previous month'
                             >
@@ -195,8 +195,8 @@ export default function HistoryModal({
                                 disabled={!canGoToNextMonth()}
                                 className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
                                     canGoToNextMonth()
-                                        ? 'cursor-pointer bg-gray-100 hover:bg-gray-200'
-                                        : 'cursor-not-allowed bg-gray-50 opacity-50'
+                                        ? 'cursor-pointer bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700'
+                                        : 'cursor-not-allowed bg-gray-50 dark:bg-zinc-950 opacity-50'
                                 }`}
                                 aria-label='Next month'
                             >
@@ -209,7 +209,7 @@ export default function HistoryModal({
                             {DAYS.map((day) => (
                                 <div
                                     key={day}
-                                    className='py-2 text-center text-xs font-medium text-gray-500'
+                                    className='py-2 text-center text-xs font-medium text-gray-500 dark:text-zinc-400'
                                 >
                                     {day}
                                 </div>
@@ -231,13 +231,13 @@ export default function HistoryModal({
                                         disabled={!isAvailable}
                                         className={`relative flex h-10 w-full items-center justify-center rounded-lg text-sm transition-colors ${
                                             !inCurrentMonth
-                                                ? 'text-gray-300'
+                                                ? 'text-gray-300 dark:text-zinc-500'
                                                 : isAvailable
-                                                ? 'cursor-pointer bg-pink-50 font-medium text-pink-600 hover:bg-pink-100'
-                                                : 'cursor-not-allowed text-gray-400'
+                                                ? 'cursor-pointer bg-pink-50 font-medium text-pink-600 hover:bg-pink-100 dark:bg-pink-950/40 dark:text-pink-300 dark:hover:bg-pink-950/70'
+                                                : 'cursor-not-allowed text-gray-400 dark:text-zinc-500'
                                         } ${
                                             isTodayDate && inCurrentMonth
-                                                ? 'ring-2 ring-pink-400 ring-offset-1'
+                                                ? 'ring-2 ring-pink-400 ring-offset-1 dark:ring-offset-zinc-900'
                                                 : ''
                                         }`}
                                         aria-label={`${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}${isAvailable ? ' - available' : ''}`}
@@ -251,7 +251,7 @@ export default function HistoryModal({
                             })}
                         </div>
 
-                        <p className='mt-4 text-center text-xs text-gray-400'>
+                        <p className='mt-4 text-center text-xs text-gray-400 dark:text-zinc-500'>
                             Highlighted dates have past idols available to play
                         </p>
                     </div>
@@ -264,7 +264,7 @@ export default function HistoryModal({
 function ArrowLeftIcon() {
     return (
         <svg
-            className='h-4 w-4 text-gray-600'
+            className='h-4 w-4 text-gray-600 dark:text-zinc-400'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -282,7 +282,7 @@ function ArrowLeftIcon() {
 function ChevronLeftIcon() {
     return (
         <svg
-            className='h-5 w-5 text-gray-600'
+            className='h-5 w-5 text-gray-600 dark:text-zinc-400'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -300,7 +300,7 @@ function ChevronLeftIcon() {
 function ChevronRightIcon() {
     return (
         <svg
-            className='h-5 w-5 text-gray-600'
+            className='h-5 w-5 text-gray-600 dark:text-zinc-400'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'

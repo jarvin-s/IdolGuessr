@@ -44,12 +44,12 @@ export default function ChallengeResultsView({
                                 className={`flex items-center justify-between rounded-lg p-3 ${
                                     isMe
                                         ? 'border-2 border-pink-400 bg-pink-100'
-                                        : 'bg-gray-100'
+                                        : 'bg-gray-100 dark:bg-zinc-800'
                                 }`}
                             >
                                 <div className='flex items-center gap-3'>
                                     <span
-                                        className={`text-lg font-bold ${index === 0 ? 'text-pink-600' : 'text-gray-500'}`}
+                                        className={`text-lg font-bold ${index === 0 ? 'text-pink-600' : 'text-gray-500 dark:text-zinc-400'}`}
                                     >
                                         #{index + 1}
                                     </span>
@@ -92,11 +92,11 @@ export default function ChallengeResultsView({
                         return (
                             <div
                                 key={idol.id}
-                                className='overflow-hidden border border-[#0f0f0f] bg-white'
+                                className='overflow-hidden border border-[#0f0f0f] dark:border-zinc-600 bg-white dark:bg-zinc-900'
                             >
                                 {/* Idol header */}
                                 <div className='flex items-center gap-3 p-3'>
-                                    <span className='text-lg text-black'>
+                                    <span className='text-lg text-black dark:text-zinc-100'>
                                         #{idolIndex + 1}
                                     </span>
                                     <div className='relative h-18 w-18 overflow-hidden rounded-full'>
@@ -112,7 +112,7 @@ export default function ChallengeResultsView({
                                             {idol.name}
                                         </div>
                                         {idol.group_name && (
-                                            <div className='text-md text-gray-500'>
+                                            <div className='text-md text-gray-500 dark:text-zinc-400'>
                                                 {idol.group_name}
                                             </div>
                                         )}
@@ -120,7 +120,7 @@ export default function ChallengeResultsView({
                                 </div>
 
                                 {/* Player results for this idol */}
-                                <div className='divide-y divide-gray-100'>
+                                <div className='divide-y divide-gray-100 dark:divide-zinc-800'>
                                     {results.map((result, playerIndex) => {
                                         const idolResult = getIdolResult(
                                             result,
@@ -141,7 +141,7 @@ export default function ChallengeResultsView({
                                             <div
                                                 key={result.session_id}
                                                 className={`flex items-center justify-between px-3 py-2 ${
-                                                    isMe ? 'bg-pink-50' : ''
+                                                    isMe ? 'bg-pink-50 dark:bg-pink-950/40' : ''
                                                 }`}
                                             >
                                                 <span className='text-sm'>

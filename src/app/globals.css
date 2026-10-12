@@ -1,11 +1,21 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Prevent scrolling on mobile */
 html,
 body {
     height: 100%;
     margin: 0;
     padding: 0;
+}
+
+html {
+    color-scheme: light;
+}
+
+html.dark {
+    color-scheme: dark;
 }
 
 .hide-scrollbar {
@@ -26,6 +36,10 @@ body {
 @media (min-width: 640px) {
     body {
         background-color: #f3f4f6; /* Light gray background for larger screens */
+    }
+
+    html.dark body {
+        background-color: #09090b;
     }
 }
 

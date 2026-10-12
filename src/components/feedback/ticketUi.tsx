@@ -18,7 +18,7 @@ const STATUS_STYLES: Record<TicketStatus, string> = {
     open: 'bg-blue-100 text-blue-700',
     in_progress: 'bg-amber-100 text-amber-700',
     resolved: 'bg-green-100 text-green-700',
-    closed: 'bg-gray-200 text-gray-600',
+    closed: 'bg-gray-200 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400',
 }
 
 export function StatusPill({ status }: { status: TicketStatus }) {

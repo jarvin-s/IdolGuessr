@@ -57,15 +57,15 @@ export default function GuessInput({
             return {
                 text: truncateText(currentGuess),
                 subText: '',
-                textColor: 'text-black',
-                bgColor: 'bg-gray-200',
+                textColor: 'text-black dark:text-zinc-100',
+                bgColor: 'bg-gray-200 dark:bg-zinc-800',
             }
         }
         return {
             text: "WHAT'S YOUR GUESS?",
             subText: '',
-            textColor: 'text-black/30',
-            bgColor: 'bg-gray-200',
+            textColor: 'text-black/30 dark:text-zinc-100/30',
+            bgColor: 'bg-gray-200 dark:bg-zinc-800',
         }
     }
 

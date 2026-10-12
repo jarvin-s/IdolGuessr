@@ -109,7 +109,7 @@ export default function InfiniteStartModal({
 
     return (
         <div className='fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='modal-fade-in relative w-full max-w-sm rounded-md bg-white p-10'>
+            <div className='modal-fade-in relative w-full max-w-sm rounded-md bg-white dark:bg-zinc-900 p-10'>
                 <div className='mb-4 flex items-center justify-center gap-2'>
                     <InfiniteIcon />
                     <h2 className='text-xl font-bold uppercase md:text-2xl'>
@@ -151,7 +151,7 @@ export default function InfiniteStartModal({
                 </div>
 
                 <div className='mb-4'>
-                    <label className='mb-1 block text-sm font-medium text-gray-700'>
+                    <label className='mb-1 block text-sm font-medium text-gray-700 dark:text-zinc-300'>
                         Difficulty
                     </label>
                     <div ref={difficultyDropdownRef} className='relative'>
@@ -162,7 +162,7 @@ export default function InfiniteStartModal({
                                 setGroupDropdownOpen(false)
                                 setGenDropdownOpen(false)
                             }}
-                            className='flex w-full cursor-pointer items-center justify-between border-2 border-gray-200 bg-white px-3 py-2 text-left font-medium transition-all hover:border-gray-300'
+                            className='flex w-full cursor-pointer items-center justify-between border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-left font-medium transition-all hover:border-gray-300 dark:hover:border-zinc-500'
                         >
                             <span>{DIFFICULTY_LABELS[selectedDifficulty]}</span>
                             <ChevronDownIcon
@@ -170,7 +170,7 @@ export default function InfiniteStartModal({
                             />
                         </button>
                         {difficultyDropdownOpen && (
-                            <div className='absolute z-10 mt-1 w-full border-2 border-gray-200 bg-white shadow-lg'>
+                            <div className='absolute z-10 mt-1 w-full border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg'>
                                 {DIFFICULTIES.map((option) => (
                                     <button
                                         key={option}
@@ -179,16 +179,16 @@ export default function InfiniteStartModal({
                                             setSelectedDifficulty(option)
                                             setDifficultyDropdownOpen(false)
                                         }}
-                                        className={`w-full cursor-pointer px-3 py-2 text-left transition-all hover:bg-gray-50 ${
+                                        className={`w-full cursor-pointer px-3 py-2 text-left transition-all hover:bg-gray-50 dark:hover:bg-zinc-800 ${
                                             selectedDifficulty === option
-                                                ? 'bg-gray-100'
+                                                ? 'bg-gray-100 dark:bg-zinc-800'
                                                 : ''
                                         }`}
                                     >
                                         <span className='block font-medium'>
                                             {DIFFICULTY_LABELS[option]}
                                         </span>
-                                        <span className='block text-xs text-gray-500'>
+                                        <span className='block text-xs text-gray-500 dark:text-zinc-400'>
                                             {DIFFICULTY_DESCRIPTIONS[option]}
                                         </span>
                                     </button>
@@ -196,14 +196,14 @@ export default function InfiniteStartModal({
                             </div>
                         )}
                     </div>
-                    <p className='mt-1 text-xs text-gray-500'>
+                    <p className='mt-1 text-xs text-gray-500 dark:text-zinc-400'>
                         {DIFFICULTY_DESCRIPTIONS[selectedDifficulty]}
                     </p>
                 </div>
 
                 {/* Group Type Dropdown */}
                 <div className='mb-4'>
-                    <label className='mb-1 block text-sm font-medium text-gray-700'>
+                    <label className='mb-1 block text-sm font-medium text-gray-700 dark:text-zinc-300'>
                         Group Type
                     </label>
                     <div ref={groupDropdownRef} className='relative'>
@@ -214,7 +214,7 @@ export default function InfiniteStartModal({
                                 setGenDropdownOpen(false)
                                 setDifficultyDropdownOpen(false)
                             }}
-                            className='flex w-full cursor-pointer items-center justify-between border-2 border-gray-200 bg-white px-3 py-2 text-left font-medium transition-all hover:border-gray-300'
+                            className='flex w-full cursor-pointer items-center justify-between border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-left font-medium transition-all hover:border-gray-300 dark:hover:border-zinc-500'
                         >
                             <span>{getGroupDisplayText()}</span>
                             <ChevronDownIcon
@@ -222,7 +222,7 @@ export default function InfiniteStartModal({
                             />
                         </button>
                         {groupDropdownOpen && (
-                            <div className='absolute z-10 mt-1 w-full border-2 border-gray-200 bg-white shadow-lg'>
+                            <div className='absolute z-10 mt-1 w-full border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg'>
                                 {GROUP_OPTIONS.map((option) => (
                                     <button
                                         key={option.value}
@@ -231,9 +231,9 @@ export default function InfiniteStartModal({
                                             setSelectedGroupFilter(option.value)
                                             setGroupDropdownOpen(false)
                                         }}
-                                        className={`w-full cursor-pointer px-3 py-2 text-left font-medium transition-all hover:bg-gray-50 ${
+                                        className={`w-full cursor-pointer px-3 py-2 text-left font-medium transition-all hover:bg-gray-50 dark:hover:bg-zinc-800 ${
                                             selectedGroupFilter === option.value
-                                                ? 'bg-gray-100'
+                                                ? 'bg-gray-100 dark:bg-zinc-800'
                                                 : ''
                                         }`}
                                     >
@@ -247,7 +247,7 @@ export default function InfiniteStartModal({
 
                 {/* Gen Multi-Select Dropdown */}
                 <div className='mb-6'>
-                    <label className='mb-1 block text-sm font-medium text-gray-700'>
+                    <label className='mb-1 block text-sm font-medium text-gray-700 dark:text-zinc-300'>
                         Generation
                     </label>
                     <div ref={genDropdownRef} className='relative'>
@@ -258,7 +258,7 @@ export default function InfiniteStartModal({
                                 setGroupDropdownOpen(false)
                                 setDifficultyDropdownOpen(false)
                             }}
-                            className='flex w-full cursor-pointer items-center justify-between border-2 border-gray-200 bg-white px-3 py-2 text-left font-medium transition-all hover:border-gray-300'
+                            className='flex w-full cursor-pointer items-center justify-between border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-left font-medium transition-all hover:border-gray-300 dark:hover:border-zinc-500'
                         >
                             <span>{getGenDisplayText()}</span>
                             <ChevronDownIcon
@@ -266,13 +266,13 @@ export default function InfiniteStartModal({
                             />
                         </button>
                         {genDropdownOpen && (
-                            <div className='absolute z-10 mt-1 w-full border-2 border-gray-200 bg-white shadow-lg'>
+                            <div className='absolute z-10 mt-1 w-full border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg'>
                                 {INFINITE_GEN_OPTIONS.map((option) => (
                                     <button
                                         key={option.value}
                                         type='button'
                                         onClick={() => toggleGen(option.value)}
-                                        className='flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left font-medium transition-all hover:bg-gray-50'
+                                        className='flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left font-medium transition-all hover:bg-gray-50 dark:hover:bg-zinc-800'
                                     >
                                         <div
                                             className={`flex h-5 w-5 items-center justify-center border-2 ${
@@ -280,7 +280,7 @@ export default function InfiniteStartModal({
                                                     option.value
                                                 )
                                                     ? 'border-black bg-black'
-                                                    : 'border-gray-300 bg-white'
+                                                    : 'border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-900'
                                             }`}
                                         >
                                             {selectedGens.includes(

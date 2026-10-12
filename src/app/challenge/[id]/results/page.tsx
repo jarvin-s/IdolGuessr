@@ -67,10 +67,10 @@ export default function ChallengeResultsPage() {
 
     if (isLoading) {
         return (
-            <div className='fixed inset-0 flex items-center justify-center bg-white'>
+            <div className='fixed inset-0 flex items-center justify-center bg-white dark:bg-zinc-950'>
                 <div className='text-center'>
                     <div className='mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-pink-600 border-t-transparent' />
-                    <p className='text-gray-600'>
+                    <p className='text-gray-600 dark:text-zinc-400'>
                         Loading challenge results...
                     </p>
                 </div>
@@ -80,12 +80,12 @@ export default function ChallengeResultsPage() {
 
     if (error || !challenge) {
         return (
-            <div className='fixed inset-0 flex items-center justify-center bg-white'>
+            <div className='fixed inset-0 flex items-center justify-center bg-white dark:bg-zinc-950'>
                 <div className='max-w-md p-8 text-center'>
                     <h1 className='mb-2 text-2xl font-bold'>
                         Challenge not found
                     </h1>
-                    <p className='mb-6 text-gray-600'>
+                    <p className='mb-6 text-gray-600 dark:text-zinc-400'>
                         {error || 'This challenge may have expired.'}
                     </p>
                     <button
@@ -102,7 +102,7 @@ export default function ChallengeResultsPage() {
     const hasPlayed = results.some((r) => r.session_id === sessionId)
 
     return (
-        <div className='min-h-screen bg-gradient-to-b from-pink-50 to-white'>
+        <div className='min-h-screen bg-gradient-to-b from-pink-50 dark:from-pink-950 to-white dark:to-zinc-950'>
             {copied && (
                 <div className='fade-in-from-top fixed top-4 left-1/2 z-50 -translate-x-1/2'>
                     <div className='rounded-full bg-pink-600 px-6 py-3'>
@@ -124,11 +124,11 @@ export default function ChallengeResultsPage() {
                             alt='Idol Guessr'
                             width={150}
                             height={40}
-                            className='mx-auto'
+                            className='mx-auto dark:invert'
                         />
                     </button>
                     <h1 className='text-2xl font-bold'>Challenge results</h1>
-                    <p className='text-gray-600'>
+                    <p className='text-gray-600 dark:text-zinc-400'>
                         {challenge.idol_count} idols •{' '}
                         {challenge.group_filter === 'both'
                             ? 'All groups'
@@ -185,8 +185,8 @@ export default function ChallengeResultsPage() {
                         currentSessionId={sessionId}
                     />
                 ) : (
-                    <div className='rounded-lg bg-gray-100 p-8 text-center'>
-                        <p className='text-gray-600'>
+                    <div className='rounded-lg bg-gray-100 dark:bg-zinc-800 p-8 text-center'>
+                        <p className='text-gray-600 dark:text-zinc-400'>
                             No results yet. Be the first to play!
                         </p>
                     </div>
@@ -196,7 +196,7 @@ export default function ChallengeResultsPage() {
                 <div className='mt-8 text-center'>
                     <button
                         onClick={() => router.push('/')}
-                        className='cursor-pointer text-gray-500 underline hover:text-gray-700'
+                        className='cursor-pointer text-gray-500 dark:text-zinc-400 underline hover:text-gray-700 dark:hover:text-zinc-200'
                     >
                         Back to IdolGuessr
                     </button>

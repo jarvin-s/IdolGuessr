@@ -40,7 +40,7 @@ export default function StatsModal({
             : stats
 
     const difficultyTabs = isUnlimited ? (
-        <div className='mb-6 flex rounded-full bg-gray-100 p-1'>
+        <div className='mb-6 flex rounded-full bg-gray-100 dark:bg-zinc-800 p-1'>
             {DIFFICULTIES.map((option) => (
                 <button
                     key={option}
@@ -48,8 +48,8 @@ export default function StatsModal({
                     onClick={() => setSelectedDifficulty(option)}
                     className={`flex-1 cursor-pointer rounded-full px-2 py-1.5 text-xs transition-colors sm:text-sm ${
                         selectedDifficulty === option
-                            ? 'bg-white font-medium text-black shadow-sm'
-                            : 'text-gray-600 hover:text-black'
+                            ? 'bg-white dark:bg-zinc-900 font-medium text-black dark:text-zinc-100 shadow-sm'
+                            : 'text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-zinc-100'
                     }`}
                 >
                     {DIFFICULTY_LABELS[option]}
@@ -60,15 +60,15 @@ export default function StatsModal({
 
     return (
         <div className='bg-opacity-50 fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='modal-fade-in relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white'>
+            <div className='modal-fade-in relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white dark:bg-zinc-900'>
                 <div className='absolute top-4 right-4 flex gap-2'>
                     <button
                         onClick={onClose}
-                        className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200'
+                        className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                         aria-label='Close Statistics'
                     >
                         <svg
-                            className='h-4 w-4 text-gray-600'
+                            className='h-4 w-4 text-gray-600 dark:text-zinc-400'
                             fill='none'
                             stroke='currentColor'
                             viewBox='0 0 24 24'

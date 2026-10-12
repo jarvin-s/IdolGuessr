@@ -58,7 +58,7 @@ export default function IndexModal({
 
     return (
         <div
-            className={`fixed inset-0 z-[500] flex items-center justify-center bg-[#e6e6e3] transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
+            className={`fixed inset-0 z-[500] flex items-center justify-center bg-[#e6e6e3] dark:bg-zinc-950 transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
         >
             <div
                 className={`flex w-full max-w-2xl flex-col items-center px-6 text-center transition-transform duration-300 ${isClosing ? 'scale-95' : 'scale-100'}`}
@@ -69,7 +69,7 @@ export default function IndexModal({
                         alt='IdolGuessr Logo'
                         width={350}
                         height={350}
-                        className='h-auto w-auto'
+                        className='h-auto w-auto dark:invert'
                     />
                 </div>
 
@@ -81,7 +81,7 @@ export default function IndexModal({
                     <div className='flex flex-row items-center justify-center'>
                         <button
                             onClick={handleDaily}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb]'
+                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] dark:bg-zinc-800 p-3 hover:bg-[#dbdbdb] dark:hover:bg-zinc-700 dark:border-zinc-600'
                         >
                             <DailyIcon />
                             Daily
@@ -90,7 +90,7 @@ export default function IndexModal({
                     <div className='flex flex-row items-center justify-center'>
                         <button
                             onClick={handleInfinite}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb]'
+                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] dark:bg-zinc-800 p-3 hover:bg-[#dbdbdb] dark:hover:bg-zinc-700 dark:border-zinc-600'
                         >
                             <InfiniteIcon />
                             Infinite
@@ -99,7 +99,7 @@ export default function IndexModal({
                     <div className='relative flex flex-row items-center justify-center'>
                         <button
                             onClick={handleHangul}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb]'
+                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] dark:bg-zinc-800 p-3 hover:bg-[#dbdbdb] dark:hover:bg-zinc-700 dark:border-zinc-600'
                         >
                             <HangulIcon />
                             Hangul
@@ -108,7 +108,7 @@ export default function IndexModal({
                     <div className='relative flex flex-row items-center justify-center'>
                         <button
                             onClick={handleChallenge}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb]'
+                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] dark:bg-zinc-800 p-3 hover:bg-[#dbdbdb] dark:hover:bg-zinc-700 dark:border-zinc-600'
                         >
                             <ChallengeIcon />
                             Challenge

@@ -175,23 +175,23 @@ export default function FeedbackModal({
 
     return (
         <div className='bg-opacity-50 fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='relative flex max-h-[90dvh] w-full max-w-md min-w-0 flex-col overflow-y-auto rounded-lg bg-white p-4 sm:p-6'>
+            <div className='relative flex max-h-[90dvh] w-full max-w-md min-w-0 flex-col overflow-y-auto rounded-lg bg-white dark:bg-zinc-900 p-4 sm:p-6'>
                 <div className='mb-6 flex items-center justify-between'>
                     <button
                         onClick={handleBack}
-                        className='flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full bg-gray-100 px-3 transition-colors hover:bg-gray-200'
+                        className='flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full bg-gray-100 dark:bg-zinc-800 px-3 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                         aria-label='Go back'
                     >
                         <ArrowLeftIcon />
-                        <span className='text-sm text-gray-600'>Go back</span>
+                        <span className='text-sm text-gray-600 dark:text-zinc-400'>Go back</span>
                     </button>
                     <button
                         onClick={onClose}
-                        className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200'
+                        className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                         aria-label='Close Feedback'
                     >
                         <svg
-                            className='h-4 w-4 text-gray-600'
+                            className='h-4 w-4 text-gray-600 dark:text-zinc-400'
                             fill='none'
                             stroke='currentColor'
                             viewBox='0 0 24 24'
@@ -212,7 +212,7 @@ export default function FeedbackModal({
                             className={`${proximaNovaBold.className} mb-3 text-xl break-words uppercase`}
                         >
                             {activeTicketNumberLabel && (
-                                <span className='mr-2 font-mono text-base text-gray-500 normal-case'>
+                                <span className='mr-2 font-mono text-base text-gray-500 dark:text-zinc-400 normal-case'>
                                     {activeTicketNumberLabel}
                                 </span>
                             )}
@@ -234,7 +234,7 @@ export default function FeedbackModal({
                                 />
                             </div>
                         ) : (
-                            <p className='py-6 text-center text-sm text-gray-500'>
+                            <p className='py-6 text-center text-sm text-gray-500 dark:text-zinc-400'>
                                 Loading ticket...
                             </p>
                         )}
@@ -246,10 +246,10 @@ export default function FeedbackModal({
                         >
                             Thank you!
                         </h1>
-                        <p className='mt-2 text-black'>
+                        <p className='mt-2 text-black dark:text-zinc-100'>
                             Your feedback has been submitted successfully.
                         </p>
-                        <p className='mt-1 text-sm text-gray-600'>
+                        <p className='mt-1 text-sm text-gray-600 dark:text-zinc-400'>
                             You can follow replies under My tickets.
                         </p>
                         <button
@@ -269,12 +269,12 @@ export default function FeedbackModal({
                         >
                             Feedback
                         </h1>
-                        <p className='mt-2 text-gray-600'>
+                        <p className='mt-2 text-gray-600 dark:text-zinc-400'>
                             All feedback is welcome! Fill in the form to open a
                             ticket and we&apos;ll get back to you there.
                         </p>
 
-                        <div className='mt-4 flex rounded-full bg-gray-100 p-1'>
+                        <div className='mt-4 flex rounded-full bg-gray-100 dark:bg-zinc-800 p-1'>
                             <TabButton
                                 active={view === 'new'}
                                 onClick={() => setView('new')}
@@ -326,14 +326,14 @@ export default function FeedbackModal({
                         aria-labelledby='feedback-intro-title'
                         aria-modal='true'
                     >
-                        <div className='w-full max-w-sm rounded-lg bg-white p-6 shadow-lg'>
+                        <div className='w-full max-w-sm rounded-lg bg-white dark:bg-zinc-900 p-6 shadow-lg'>
                             <h2
                                 id='feedback-intro-title'
                                 className={`${proximaNovaBold.className} text-xl uppercase`}
                             >
                                 Heads up!
                             </h2>
-                            <p className='mt-3 text-base text-black'>
+                            <p className='mt-3 text-base text-black dark:text-zinc-100'>
                                 You can now open a support ticket! Simply fill in the form and submit your feedback and you should see your ticket, I&apos;ll try to respond as fast as I can. :)
                             </p>
                             <button
@@ -366,8 +366,8 @@ function TabButton({
             onClick={onClick}
             className={`flex flex-1 cursor-pointer items-center justify-center rounded-full px-3 py-1.5 text-sm transition-colors ${
                 active
-                    ? 'bg-white font-medium text-black shadow-sm'
-                    : 'text-gray-600 hover:text-black'
+                    ? 'bg-white dark:bg-zinc-900 font-medium text-black dark:text-zinc-100 shadow-sm'
+                    : 'text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-zinc-100'
             }`}
         >
             {children}
@@ -378,7 +378,7 @@ function TabButton({
 function ArrowLeftIcon() {
     return (
         <svg
-            className='h-4 w-4 text-gray-600'
+            className='h-4 w-4 text-gray-600 dark:text-zinc-400'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
