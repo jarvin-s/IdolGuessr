@@ -521,10 +521,10 @@ export default function UserStats({ stats, isLoaded, className = '', gameMode = 
     if (!isLoaded) {
         return (
             <div className={`animate-pulse ${className}`}>
-                <div className='rounded-lg bg-gray-200 p-4'>
-                    <div className='mb-2 h-4 rounded bg-gray-300'></div>
-                    <div className='mb-2 h-4 rounded bg-gray-300'></div>
-                    <div className='h-4 rounded bg-gray-300'></div>
+                <div className='rounded-lg bg-gray-200 dark:bg-zinc-800 p-4'>
+                    <div className='mb-2 h-4 rounded bg-gray-300 dark:bg-zinc-700'></div>
+                    <div className='mb-2 h-4 rounded bg-gray-300 dark:bg-zinc-700'></div>
+                    <div className='h-4 rounded bg-gray-300 dark:bg-zinc-700'></div>
                 </div>
             </div>
         )
@@ -539,46 +539,46 @@ export default function UserStats({ stats, isLoaded, className = '', gameMode = 
         return 'Statistics'
     }
     return (
-        <div className={`rounded-lg bg-white p-10 shadow-lg ${className}`}>
+        <div className={`rounded-lg bg-white dark:bg-zinc-900 p-10 shadow-lg ${className}`}>
             <div className='mb-10 flex items-center justify-center'>
-                <Image src='/images/idolguessr-logo.png' alt='IdolGuessr Logo' width={150} height={50} className='h-20 w-auto' />
+                <Image src='/images/idolguessr-logo.png' alt='IdolGuessr Logo' width={150} height={50} className='h-20 w-auto dark:invert' />
             </div>
             <div className='mb-4 flex items-center justify-center'>
-                <h2 className='text-2xl font-bold text-gray-900 uppercase'>
+                <h2 className='text-2xl font-bold text-gray-900 dark:text-zinc-100 uppercase'>
                     {getTitle()}
                 </h2>
             </div>
             {subHeader}
             <div className='mb-6 flex flex-row justify-center gap-4'>
                 <div className='text-center'>
-                    <div className='mb-2.5 text-2xl font-bold text-gray-900'>{stats.totalGames}</div>
-                    <div className='text-sm leading-none text-gray-600'>Played</div>
+                    <div className='mb-2.5 text-2xl font-bold text-gray-900 dark:text-zinc-100'>{stats.totalGames}</div>
+                    <div className='text-sm leading-none text-gray-600 dark:text-zinc-400'>Played</div>
                 </div>
                 {!isUnlimited && !isHangul && (
                     <div className='text-center'>
-                        <div className='mb-2.5 text-2xl font-bold text-gray-900'>{winPercentage}%</div>
-                        <div className='text-sm leading-none text-gray-600'>Win %</div>
+                        <div className='mb-2.5 text-2xl font-bold text-gray-900 dark:text-zinc-100'>{winPercentage}%</div>
+                        <div className='text-sm leading-none text-gray-600 dark:text-zinc-400'>Win %</div>
                     </div>
                 )}
                 <div className='text-center'>
-                    <div className='mb-2.5 text-2xl font-bold text-gray-900'>{stats.currentStreak}</div>
-                    <div className='text-sm leading-none text-gray-600'>Current streak</div>
+                    <div className='mb-2.5 text-2xl font-bold text-gray-900 dark:text-zinc-100'>{stats.currentStreak}</div>
+                    <div className='text-sm leading-none text-gray-600 dark:text-zinc-400'>Current streak</div>
                 </div>
                 <div className='text-center'>
-                    <div className='mb-2.5 text-2xl font-bold text-gray-900'>{stats.maxStreak}</div>
-                    <div className='text-sm leading-none text-gray-600'>Max streak</div>
+                    <div className='mb-2.5 text-2xl font-bold text-gray-900 dark:text-zinc-100'>{stats.maxStreak}</div>
+                    <div className='text-sm leading-none text-gray-600 dark:text-zinc-400'>Max streak</div>
                 </div>
             </div>
             {!isUnlimited && !isHangul && hasGuessDistribution && stats.totalWins > 0 && (
                 <>
-                    <h3 className='mb-3 text-lg font-semibold text-gray-900 uppercase'>Guess distribution</h3>
+                    <h3 className='mb-3 text-lg font-semibold text-gray-900 dark:text-zinc-100 uppercase'>Guess distribution</h3>
                     <div className='space-y-2'>
                         {Object.entries((stats as UserStats).guessDistribution).map(([guesses, count]) => {
                             const percentage = stats.totalWins > 0 ? (count / stats.totalWins) * 100 : 0
                             return (
                                 <div key={guesses} className='flex items-center'>
-                                    <div className='w-4 text-sm font-medium text-black'>{guesses}</div>
-                                    <div className='relative mx-2 h-6 flex-1 rounded-full bg-gray-200'>
+                                    <div className='w-4 text-sm font-medium text-black dark:text-zinc-100'>{guesses}</div>
+                                    <div className='relative mx-2 h-6 flex-1 rounded-full bg-gray-200 dark:bg-zinc-800'>
                                         <div className='flex h-6 items-center justify-end rounded-full bg-green-400 pr-2' style={{ width: `${Math.min(Math.max(percentage, 8), 100)}%` }}>
                                             {count > 0 && <span className='text-xs font-bold text-white'>{count}</span>}
                                         </div>

@@ -25,6 +25,7 @@ import {
     formatTicketNumber,
     resolveTicketNumber,
 } from '@/components/feedback/ticketUi'
+import ThemeToggle from '@/components/theme/ThemeToggle'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -74,30 +75,33 @@ export default function AdminPage() {
     }, [userId])
 
     return (
-        <main className='min-h-screen overflow-x-hidden bg-gray-50 p-3 sm:p-8'>
+        <main className='min-h-screen overflow-x-hidden bg-gray-50 dark:bg-zinc-950 p-3 sm:p-8'>
             <div className='mx-auto w-full min-w-0 max-w-6xl'>
-                <header className='mb-4 flex items-center justify-between gap-3 sm:mb-6'>
+                <header className='mb-4 flex flex-wrap items-center justify-between gap-3 sm:mb-6'>
                     <h1 className={`${proximaNovaBold.className} text-xl uppercase sm:text-2xl`}>
                         Feedback tickets
                     </h1>
-                    {session && (
-                        <div className='flex items-center gap-3 text-sm text-gray-600'>
-                            <span className='hidden sm:inline'>{session.user.email}</span>
-                            <button
-                                onClick={() => signOutAdmin()}
-                                className='cursor-pointer rounded-full bg-gray-200 px-3 py-1.5 transition-colors hover:bg-gray-300'
-                            >
-                                Sign out
-                            </button>
-                        </div>
-                    )}
+                    <div className='flex flex-wrap items-center gap-3'>
+                        <ThemeToggle />
+                        {session && (
+                            <div className='flex items-center gap-3 text-sm text-gray-600 dark:text-zinc-400'>
+                                <span className='hidden sm:inline'>{session.user.email}</span>
+                                <button
+                                    onClick={() => signOutAdmin()}
+                                    className='cursor-pointer rounded-full bg-gray-200 px-3 py-1.5 transition-colors hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-600'
+                                >
+                                    Sign out
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </header>
 
-                {authState === 'loading' && <p className='text-gray-500'>Loading...</p>}
+                {authState === 'loading' && <p className='text-gray-500 dark:text-zinc-400'>Loading...</p>}
                 {authState === 'signed-out' && <LoginForm />}
                 {authState === 'unauthorized' && (
-                    <div className='rounded-lg bg-white p-6 text-center shadow-sm'>
-                        <p className='text-gray-700'>Not authorized. This account is not registered as an admin.</p>
+                    <div className='rounded-lg bg-white dark:bg-zinc-900 p-6 text-center shadow-sm'>
+                        <p className='text-gray-700 dark:text-zinc-300'>Not authorized. This account is not registered as an admin.</p>
                     </div>
                 )}
                 {authState === 'admin' && <AdminDashboard />}
@@ -126,7 +130,7 @@ function LoginForm() {
     }
 
     return (
-        <form onSubmit={handleSubmit} className='mx-auto max-w-sm space-y-4 rounded-lg bg-white p-6 shadow-sm'>
+        <form onSubmit={handleSubmit} className='mx-auto max-w-sm space-y-4 rounded-lg bg-white dark:bg-zinc-900 p-6 shadow-sm'>
             <h2 className={`${proximaNovaBold.className} text-lg uppercase`}>Sign in</h2>
             <input
                 type='email'
@@ -135,7 +139,7 @@ function LoginForm() {
                 placeholder='Email'
                 autoComplete='email'
                 required
-                className='w-full rounded-md border border-gray-300 px-3 py-2 text-base focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none'
+                className='w-full rounded-md border border-gray-300 dark:border-zinc-600 px-3 py-2 text-base focus:border-transparent focus:ring-2 focus:ring-black dark:focus:ring-zinc-300 focus:outline-none dark:bg-zinc-800'
             />
             <input
                 type='password'
@@ -144,7 +148,7 @@ function LoginForm() {
                 placeholder='Password'
                 autoComplete='current-password'
                 required
-                className='w-full rounded-md border border-gray-300 px-3 py-2 text-base focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none'
+                className='w-full rounded-md border border-gray-300 dark:border-zinc-600 px-3 py-2 text-base focus:border-transparent focus:ring-2 focus:ring-black dark:focus:ring-zinc-300 focus:outline-none dark:bg-zinc-800'
             />
             {error && <p className='text-sm text-red-600'>{error}</p>}
             <button
@@ -266,13 +270,13 @@ function AdminDashboard() {
     return (
         <div className='grid min-w-0 gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]'>
             <section
-                className={`min-w-0 rounded-lg bg-white p-3 shadow-sm sm:p-4 ${showThreadOnMobile ? 'hidden md:block' : ''}`}
+                className={`min-w-0 rounded-lg bg-white dark:bg-zinc-900 p-3 shadow-sm sm:p-4 ${showThreadOnMobile ? 'hidden md:block' : ''}`}
             >
                 <div className='mb-3 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center'>
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value as TicketStatus | 'all')}
-                        className='w-full rounded-md border border-gray-300 px-2 py-2 text-base sm:w-auto sm:py-1.5 sm:text-sm'
+                        className='w-full rounded-md border border-gray-300 dark:border-zinc-600 px-2 py-2 text-base sm:w-auto sm:py-1.5 sm:text-sm dark:bg-zinc-800'
                     >
                         <option value='all'>All statuses</option>
                         {(Object.keys(STATUS_LABELS) as TicketStatus[]).map((key) => (
@@ -284,7 +288,7 @@ function AdminDashboard() {
                     <select
                         value={categoryFilter}
                         onChange={(e) => setCategoryFilter(e.target.value as TicketCategory | 'all')}
-                        className='w-full rounded-md border border-gray-300 px-2 py-2 text-base sm:w-auto sm:py-1.5 sm:text-sm'
+                        className='w-full rounded-md border border-gray-300 dark:border-zinc-600 px-2 py-2 text-base sm:w-auto sm:py-1.5 sm:text-sm dark:bg-zinc-800'
                     >
                         <option value='all'>All categories</option>
                         {(Object.keys(CATEGORY_LABELS) as TicketCategory[]).map((key) => (
@@ -295,12 +299,12 @@ function AdminDashboard() {
                     </select>
                     <button
                         onClick={loadTickets}
-                        className='cursor-pointer rounded-full bg-gray-100 px-3 py-2 text-base transition-colors hover:bg-gray-200 sm:ml-auto sm:py-1.5 sm:text-sm'
+                        className='cursor-pointer rounded-full bg-gray-100 dark:bg-zinc-800 px-3 py-2 text-base transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700 sm:ml-auto sm:py-1.5 sm:text-sm'
                     >
                         Refresh
                     </button>
                 </div>
-                <p className='mb-3 text-xs text-gray-500'>
+                <p className='mb-3 text-xs text-gray-500 dark:text-zinc-400'>
                     {awaitingReply} ticket{awaitingReply === 1 ? '' : 's'} awaiting your reply (marked with a dot)
                 </p>
                 <div className='max-h-[calc(100dvh-14rem)] overflow-y-auto md:max-h-[70vh]'>
@@ -318,7 +322,7 @@ function AdminDashboard() {
             </section>
 
             <section
-                className={`flex min-w-0 flex-col rounded-lg bg-white p-3 shadow-sm sm:p-4 ${
+                className={`flex min-w-0 flex-col rounded-lg bg-white dark:bg-zinc-900 p-3 shadow-sm sm:p-4 ${
                     showThreadOnMobile
                         ? 'min-h-[calc(100dvh-8rem)] md:min-h-[60vh]'
                         : 'hidden md:min-h-[60vh] md:flex'
@@ -328,25 +332,25 @@ function AdminDashboard() {
                     <button
                         type='button'
                         onClick={clearSelection}
-                        className='mb-3 flex cursor-pointer items-center gap-2 self-start rounded-full bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200 md:hidden'
+                        className='mb-3 flex cursor-pointer items-center gap-2 self-start rounded-full bg-gray-100 dark:bg-zinc-800 px-3 py-1.5 text-sm text-gray-700 dark:text-zinc-300 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700 md:hidden'
                     >
                         ← Back to tickets
                     </button>
                 )}
                 {!selectedId ? (
-                    <p className='m-auto hidden text-sm text-gray-500 md:block'>
+                    <p className='m-auto hidden text-sm text-gray-500 dark:text-zinc-400 md:block'>
                         Select a ticket to view the conversation.
                     </p>
                 ) : threadError && !thread ? (
                     <p className='m-auto text-sm text-red-600'>{threadError}</p>
                 ) : !thread ? (
-                    <p className='m-auto text-sm text-gray-500'>Loading ticket...</p>
+                    <p className='m-auto text-sm text-gray-500 dark:text-zinc-400'>Loading ticket...</p>
                 ) : (
                     <>
                         <div className='mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between'>
                             <h2 className={`${proximaNovaBold.className} min-w-0 flex-1 text-base break-words sm:text-lg`}>
                                 {activeTicketNumberLabel && (
-                                    <span className='mr-2 font-mono text-base font-normal text-gray-500'>
+                                    <span className='mr-2 font-mono text-base font-normal text-gray-500 dark:text-zinc-400'>
                                         {activeTicketNumberLabel}
                                     </span>
                                 )}
@@ -406,7 +410,7 @@ function StatusButtons({
                         status === 'resolved'
                             ? 'bg-green-500 text-white hover:bg-green-600'
                             : status === 'closed'
-                              ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              ? 'bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:bg-gray-300 dark:hover:bg-zinc-600'
                               : 'bg-pink-500 text-white hover:bg-pink-600'
                     }`}
                 >

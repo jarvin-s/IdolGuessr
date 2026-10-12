@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import localFont from 'next/font/local'
+import ThemeToggle from '@/components/theme/ThemeToggle'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -64,15 +65,15 @@ const entries: { date: string; changes: string[] }[] = [
 
 export default function ChangelogPage() {
     return (
-        <main className='min-h-screen bg-white'>
+        <main className='min-h-screen bg-white dark:bg-zinc-950'>
             <div className='mx-auto w-full max-w-md px-6 py-8'>
                 <div className='mb-6 flex items-center justify-between'>
                     <Link
                         href='/'
-                        className='flex h-8 items-center justify-center gap-2 rounded-full bg-gray-100 px-3 transition-colors hover:bg-gray-200'
+                        className='flex h-8 items-center justify-center gap-2 rounded-full bg-gray-100 dark:bg-zinc-800 px-3 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                     >
                         <svg
-                            className='h-4 w-4 text-gray-600'
+                            className='h-4 w-4 text-gray-600 dark:text-zinc-400'
                             fill='none'
                             stroke='currentColor'
                             viewBox='0 0 24 24'
@@ -84,7 +85,7 @@ export default function ChangelogPage() {
                                 d='M10 19l-7-7m0 0l7-7m-7 7h18'
                             />
                         </svg>
-                        <span className='text-sm text-gray-600'>
+                        <span className='text-sm text-gray-600 dark:text-zinc-400'>
                             Back to game
                         </span>
                     </Link>
@@ -93,8 +94,12 @@ export default function ChangelogPage() {
                         alt='IdolGuessr Logo'
                         width={150}
                         height={50}
-                        className='h-10 w-auto'
+                        className='h-10 w-auto dark:invert'
                     />
+                </div>
+
+                <div className='mb-6 flex justify-center'>
+                    <ThemeToggle />
                 </div>
 
                 <h1
@@ -102,7 +107,7 @@ export default function ChangelogPage() {
                 >
                     Changelog
                 </h1>
-                <p className='mt-2 text-gray-600'>
+                <p className='mt-2 text-gray-600 dark:text-zinc-400'>
                     See what&apos;s new in IdolGuessr.
                 </p>
 
@@ -110,7 +115,7 @@ export default function ChangelogPage() {
                     {entries.map((entry) => (
                         <div
                             key={entry.date}
-                            className='border-l-2 border-gray-200 pl-4'
+                            className='border-l-2 border-gray-200 dark:border-zinc-700 pl-4'
                         >
                             <span className='text-md font-bold text-pink-400'>
                                 {entry.date}
@@ -119,7 +124,7 @@ export default function ChangelogPage() {
                                 {entry.changes.map((change) => (
                                     <li
                                         key={change}
-                                        className='text-md text-gray-600'
+                                        className='text-md text-gray-600 dark:text-zinc-400'
                                     >
                                         • {change}
                                     </li>

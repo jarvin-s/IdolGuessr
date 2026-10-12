@@ -13,7 +13,7 @@ export default function ChallengeProgress({
 
     return (
         <div className='w-full px-4 py-2'>
-            <div className='relative mb-2 h-2 w-full overflow-hidden rounded-full bg-gray-200'>
+            <div className='relative mb-2 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-zinc-800'>
                 <div
                     className='h-full bg-pink-600 transition-all duration-500'
                     style={{ width: `${progressPercent}%` }}
@@ -21,7 +21,7 @@ export default function ChallengeProgress({
             </div>
 
             <div className='hidden md:flex items-center justify-between text-sm'>
-                <span className='text-xl text-black'>
+                <span className='text-xl text-black dark:text-zinc-100'>
                     Idol{' '}
                     <span className='font-bold'>
                         {Math.min(current + 1, total)}/{total}

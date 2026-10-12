@@ -71,10 +71,10 @@ export default function ChallengePlayPage() {
 
     if (isLoading) {
         return (
-            <div className='fixed inset-0 flex items-center justify-center bg-white'>
+            <div className='fixed inset-0 flex items-center justify-center bg-white dark:bg-zinc-950'>
                 <div className='text-center'>
                     <div className='mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-pink-600 border-t-transparent' />
-                    <p className='text-gray-600'>Loading challenge...</p>
+                    <p className='text-gray-600 dark:text-zinc-400'>Loading challenge...</p>
                 </div>
             </div>
         )
@@ -82,12 +82,12 @@ export default function ChallengePlayPage() {
 
     if (error) {
         return (
-            <div className='fixed inset-0 flex items-center justify-center bg-white'>
+            <div className='fixed inset-0 flex items-center justify-center bg-white dark:bg-zinc-950'>
                 <div className='max-w-md p-8 text-center'>
                     <h1 className='mb-2 text-2xl font-bold'>
                         Challenge not found
                     </h1>
-                    <p className='mb-6 text-gray-600'>{error}</p>
+                    <p className='mb-6 text-gray-600 dark:text-zinc-400'>{error}</p>
                     <button
                         onClick={() => router.push('/challenge')}
                         className='cursor-pointer rounded-full bg-pink-600 px-6 py-2 font-bold text-white transition-colors hover:bg-pink-700'
@@ -102,17 +102,17 @@ export default function ChallengePlayPage() {
     // Already played - show loading while redirecting
     if (alreadyPlayed) {
         return (
-            <div className='fixed inset-0 flex items-center justify-center bg-white'>
+            <div className='fixed inset-0 flex items-center justify-center bg-white dark:bg-zinc-950'>
                 <div className='text-center'>
                     <div className='mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-pink-600 border-t-transparent' />
-                    <p className='text-gray-600'>Loading results...</p>
+                    <p className='text-gray-600 dark:text-zinc-400'>Loading results...</p>
                 </div>
             </div>
         )
     }
 
     return (
-        <div className='fixed inset-0 flex flex-col justify-center overflow-hidden bg-white'>
+        <div className='fixed inset-0 flex flex-col justify-center overflow-hidden bg-white dark:bg-zinc-950'>
             {challenge && (
                 <ChallengeIntroModal
                     isOpen={showIntro}
@@ -122,7 +122,7 @@ export default function ChallengePlayPage() {
                 />
             )}
             {!showIntro && (
-                <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:shadow-lg'>
+                <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:dark:border-zinc-700 sm:shadow-lg'>
                     <GameHeader
                         timer={`${currentIndex + 1}/${totalIdols}`}
                         onShowStats={() => {}}

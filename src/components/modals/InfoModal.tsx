@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import localFont from 'next/font/local'
 import { useFeedbackUnread } from '@/hooks/useFeedbackUnread'
+import ThemeToggle from '@/components/theme/ThemeToggle'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -29,14 +30,14 @@ export default function InfoModal({
 
     return (
         <div className='bg-opacity-50 fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='modal-fade-in relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6'>
+            <div className='modal-fade-in relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white dark:bg-zinc-900 p-6'>
                 <button
                     onClick={onClose}
-                    className='absolute top-4 right-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200'
+                    className='absolute top-4 right-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                     aria-label='Close Info'
                 >
                     <svg
-                        className='h-4 w-4 text-gray-600'
+                        className='h-4 w-4 text-gray-600 dark:text-zinc-400'
                         fill='none'
                         stroke='currentColor'
                         viewBox='0 0 24 24'
@@ -55,16 +56,16 @@ export default function InfoModal({
                 >
                     Info
                 </h1>
-                <p className='mt-2 text-gray-600'>
+                <p className='mt-2 text-gray-600 dark:text-zinc-400'>
                     Get help, send feedback, or see what&apos;s new.
                 </p>
 
                 <div className='mt-6 space-y-3'>
                     <Link
                         href='/faq'
-                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
                     >
-                        <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                        <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                             <FaqIcon />
                         </div>
                         <div className='text-left'>
@@ -73,7 +74,7 @@ export default function InfoModal({
                             >
                                 FAQ
                             </h3>
-                            <p className='text-sm text-gray-500'>
+                            <p className='text-sm text-gray-500 dark:text-zinc-400'>
                                 Answers to common questions
                             </p>
                         </div>
@@ -81,9 +82,9 @@ export default function InfoModal({
                     </Link>
                     <button
                         onClick={onShowHelp}
-                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
                     >
-                        <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                        <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                             <HelpIcon />
                         </div>
                         <div className='text-left'>
@@ -92,7 +93,7 @@ export default function InfoModal({
                             >
                                 How to play
                             </h3>
-                            <p className='text-sm text-gray-500'>
+                            <p className='text-sm text-gray-500 dark:text-zinc-400'>
                                 Learn the game rules
                             </p>
                         </div>
@@ -102,9 +103,9 @@ export default function InfoModal({
                     {gameMode === 'daily' && (
                         <button
                             onClick={onShowHistory}
-                            className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
+                            className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
                         >
-                            <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                            <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                                 <HistoryIcon />
                             </div>
                             <div className='text-left'>
@@ -113,7 +114,7 @@ export default function InfoModal({
                                 >
                                     Past idols
                                 </h3>
-                                <p className='text-sm text-gray-500'>
+                                <p className='text-sm text-gray-500 dark:text-zinc-400'>
                                     Play idols from previous days
                                 </p>
                             </div>
@@ -122,9 +123,9 @@ export default function InfoModal({
                     )}
                     <button
                         onClick={onShowFeedback}
-                        className='relative flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
+                        className='relative flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
                     >
-                        <div className='relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                        <div className='relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                             <FeedbackIcon />
                             {feedbackUnread > 0 && (
                                 <span className='absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-500 px-1 text-xs text-white'>
@@ -138,7 +139,7 @@ export default function InfoModal({
                             >
                                 Send feedback
                             </h3>
-                            <p className='text-sm text-gray-500'>
+                            <p className='text-sm text-gray-500 dark:text-zinc-400'>
                                 {feedbackUnread > 0
                                     ? 'You have new replies to your tickets'
                                     : 'Report bugs or suggest features'}
@@ -149,9 +150,9 @@ export default function InfoModal({
 
                     <Link
                         href='/changelog'
-                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
                     >
-                        <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                        <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                             <ChangelogIcon />
                         </div>
                         <div className='text-left'>
@@ -160,7 +161,7 @@ export default function InfoModal({
                             >
                                 Changelog
                             </h3>
-                            <p className='text-sm text-gray-500'>
+                            <p className='text-sm text-gray-500 dark:text-zinc-400'>
                                 See what&apos;s new in IdolGuessr
                             </p>
                         </div>
@@ -168,7 +169,14 @@ export default function InfoModal({
                     </Link>
                 </div>
 
-                <div className='mt-6 flex justify-center gap-4 border-t border-gray-200 pt-4'>
+                <div className='mt-6 border-t border-gray-200 pt-4 dark:border-zinc-700'>
+                    <p className='mb-3 text-sm text-gray-500 dark:text-zinc-400'>
+                        Appearance
+                    </p>
+                    <ThemeToggle />
+                </div>
+
+                <div className='mt-6 flex justify-center gap-4 border-t border-gray-200 pt-4 dark:border-zinc-700'>
                     <a
                         href='https://youtube.com/@idolguessr'
                         target='_blank'
@@ -214,7 +222,7 @@ export default function InfoModal({
 function HelpIcon() {
     return (
         <svg
-            className='h-5 w-5 text-gray-600'
+            className='h-5 w-5 text-gray-600 dark:text-zinc-400'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -233,7 +241,7 @@ function HelpIcon() {
 function FaqIcon() {
     return (
         <svg
-            className='h-5 w-5 text-gray-600'
+            className='h-5 w-5 text-gray-600 dark:text-zinc-400'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -251,7 +259,7 @@ function FaqIcon() {
 function FeedbackIcon() {
     return (
         <svg
-            className='h-5 w-5 text-gray-600'
+            className='h-5 w-5 text-gray-600 dark:text-zinc-400'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -269,7 +277,7 @@ function FeedbackIcon() {
 function ChangelogIcon() {
     return (
         <svg
-            className='h-5 w-5 text-gray-600'
+            className='h-5 w-5 text-gray-600 dark:text-zinc-400'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -287,7 +295,7 @@ function ChangelogIcon() {
 function ChevronRightIcon() {
     return (
         <svg
-            className='ml-auto h-5 w-5 text-gray-400'
+            className='ml-auto h-5 w-5 text-gray-400 dark:text-zinc-500'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -305,7 +313,7 @@ function ChevronRightIcon() {
 function InstagramIcon() {
     return (
         <svg
-            className='h-6 w-6 text-gray-600'
+            className='h-6 w-6 text-gray-600 dark:text-zinc-400'
             fill='currentColor'
             viewBox='0 0 24 24'
         >
@@ -317,7 +325,7 @@ function InstagramIcon() {
 function TikTokIcon() {
     return (
         <svg
-            className='h-6 w-6 text-gray-600'
+            className='h-6 w-6 text-gray-600 dark:text-zinc-400'
             fill='currentColor'
             viewBox='0 0 24 24'
         >
@@ -329,7 +337,7 @@ function TikTokIcon() {
 function YouTubeIcon() {
     return (
         <svg
-            className='h-6 w-6 text-gray-600'
+            className='h-6 w-6 text-gray-600 dark:text-zinc-400'
             fill='currentColor'
             viewBox='0 0 512 512'
         >
@@ -344,7 +352,7 @@ function YouTubeIcon() {
 function HistoryIcon() {
     return (
         <svg
-            className='h-5 w-5 text-gray-600'
+            className='h-5 w-5 text-gray-600 dark:text-zinc-400'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -363,7 +371,7 @@ function HistoryIcon() {
 function TwitterIcon() {
     return (
         <svg
-            className='h-6 w-6 text-gray-600'
+            className='h-6 w-6 text-gray-600 dark:text-zinc-400'
             fill='currentColor'
             viewBox='0 0 24 24'
         >

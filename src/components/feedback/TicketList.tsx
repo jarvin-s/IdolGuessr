@@ -30,13 +30,13 @@ export default function TicketList({
 }: TicketListProps) {
     const numberingTickets = allTicketsForNumbering ?? tickets
     if (isLoading && tickets.length === 0) {
-        return <p className='py-6 text-center text-sm text-gray-500'>Loading tickets...</p>
+        return <p className='py-6 text-center text-sm text-gray-500 dark:text-zinc-400'>Loading tickets...</p>
     }
     if (error) {
         return <p className='py-6 text-center text-sm text-red-600'>{error}</p>
     }
     if (tickets.length === 0) {
-        return <p className='py-6 text-center text-sm text-gray-500'>{emptyMessage}</p>
+        return <p className='py-6 text-center text-sm text-gray-500 dark:text-zinc-400'>{emptyMessage}</p>
     }
 
     return (
@@ -49,8 +49,8 @@ export default function TicketList({
                     <li key={ticket.id}>
                         <button
                             onClick={() => onSelect(ticket)}
-                            className={`flex w-full cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-gray-50 ${
-                                selected ? 'border-pink-400 bg-pink-50' : 'border-gray-200'
+                            className={`flex w-full cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800 ${
+                                selected ? 'border-pink-400 bg-pink-50 dark:bg-pink-950/40' : 'border-gray-200 dark:border-zinc-700'
                             }`}
                         >
                             <span
@@ -58,15 +58,15 @@ export default function TicketList({
                                 aria-label={unread ? 'New reply' : undefined}
                             />
                             <div className='min-w-0 flex-1'>
-                                <p className={`truncate text-sm ${unread ? 'font-semibold text-black' : 'text-gray-800'}`}>
+                                <p className={`truncate text-sm ${unread ? 'font-semibold text-black dark:text-zinc-100' : 'text-gray-800 dark:text-zinc-200'}`}>
                                     {ticketNumberLabel && (
-                                        <span className='mr-2 font-mono text-xs text-gray-500'>
+                                        <span className='mr-2 font-mono text-xs text-gray-500 dark:text-zinc-400'>
                                             {ticketNumberLabel}
                                         </span>
                                     )}
                                     {ticket.subject}
                                 </p>
-                                <div className='mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500'>
+                                <div className='mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-zinc-400'>
                                     <StatusPill status={ticket.status} />
                                     <span>{CATEGORY_LABELS[ticket.category] ?? ticket.category}</span>
                                     <span>{formatTicketDate(ticket.updated_at)}</span>

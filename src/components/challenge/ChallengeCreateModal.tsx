@@ -33,15 +33,15 @@ export default function ChallengeCreateModal({
 
     return (
         <div className='fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='modal-fade-in relative w-full max-w-sm rounded-md bg-white p-8'>
+            <div className='modal-fade-in relative w-full max-w-sm rounded-md bg-white dark:bg-zinc-900 p-8'>
                 {/* Close button */}
                 <button
                     onClick={onClose}
-                    className='absolute top-4 right-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200'
+                    className='absolute top-4 right-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                     aria-label='Close'
                 >
                     <svg
-                        className='h-4 w-4 text-gray-600'
+                        className='h-4 w-4 text-gray-600 dark:text-zinc-400'
                         fill='none'
                         stroke='currentColor'
                         viewBox='0 0 24 24'
@@ -63,10 +63,10 @@ export default function ChallengeCreateModal({
                 </div>
 
                 <div className='mb-6 bg-pink-100 p-3 text-sm'>
-                    <p className='mb-2 text-lg'>
+                    <p className='mb-2 text-lg text-gray-700 dark:text-zinc-800'>
                         <strong>How it works:</strong>
                     </p>
-                    <ul className='space-y-1 text-sm'>
+                    <ul className='space-y-1 text-sm text-gray-700 dark:text-zinc-800'>
                         <li className='flex items-start gap-2'>
                             <span>•</span>
                             <span>
@@ -101,7 +101,7 @@ export default function ChallengeCreateModal({
                                 className={`cursor-pointer border-2 px-3 py-2 text-center font-bold transition-all ${
                                     selectedCount === count
                                         ? 'border-pink-600 bg-pink-600 text-white'
-                                        : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
+                                        : 'border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 hover:border-gray-300 dark:hover:border-zinc-500 hover:bg-gray-50 dark:hover:bg-zinc-800'
                                 }`}
                             >
                                 {count}
@@ -121,7 +121,7 @@ export default function ChallengeCreateModal({
                             className={`w-full cursor-pointer border-2 px-3 py-2 text-center transition-all ${
                                 selectedFilter === 'boy-group'
                                     ? 'border-pink-600 bg-pink-600 text-white'
-                                    : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
+                                    : 'border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 hover:border-gray-300 dark:hover:border-zinc-500 hover:bg-gray-50 dark:hover:bg-zinc-800'
                             }`}
                         >
                             Boy
@@ -132,7 +132,7 @@ export default function ChallengeCreateModal({
                             className={`w-full cursor-pointer border-2 px-3 py-2 text-center transition-all ${
                                 selectedFilter === 'girl-group'
                                     ? 'border-pink-600 bg-pink-600 text-white'
-                                    : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
+                                    : 'border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 hover:border-gray-300 dark:hover:border-zinc-500 hover:bg-gray-50 dark:hover:bg-zinc-800'
                             }`}
                             >
                             Girl
@@ -143,7 +143,7 @@ export default function ChallengeCreateModal({
                             className={`w-full cursor-pointer border-2 px-3 py-2 text-center transition-all ${
                                 selectedFilter === 'both'
                                     ? 'border-pink-600 bg-pink-600 text-white'
-                                    : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50'
+                                    : 'border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 hover:border-gray-300 dark:hover:border-zinc-500 hover:bg-gray-50 dark:hover:bg-zinc-800'
                             }`}
                         >
                             Both

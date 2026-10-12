@@ -287,14 +287,14 @@ export default function Home() {
     }
 
     return (
-        <div className='fixed inset-0 flex flex-col justify-center overflow-hidden bg-white'>
-            <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:shadow-lg'>
+        <div className='fixed inset-0 flex flex-col justify-center overflow-hidden bg-white dark:bg-zinc-950'>
+            <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:dark:border-zinc-700 sm:shadow-lg'>
                 {isInHistoryMode ? (
                     <div className='flex w-full flex-shrink-0 flex-col gap-3 p-4'>
                         <div className='flex w-full items-center justify-between'>
                             <button
                                 onClick={handleExitHistoryMode}
-                                className='flex items-center cursor-pointer gap-2 rounded-full bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200'
+                                className='flex items-center cursor-pointer gap-2 rounded-full bg-gray-100 dark:bg-zinc-800 px-3 py-2 text-sm font-medium text-gray-600 dark:text-zinc-400 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                             >
                                 <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10 19l-7-7m0 0l7-7m-7 7h18' />
@@ -302,7 +302,7 @@ export default function Home() {
                                 Back to today
                             </button>
                             <div className='flex flex-col items-end text-right'>
-                                <div className='text-xs font-medium text-gray-400'>
+                                <div className='text-xs font-medium text-gray-400 dark:text-zinc-500'>
                                     PAST IDOL
                                 </div>
                                 <div className='text-sm font-medium text-pink-600'>

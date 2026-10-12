@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import localFont from 'next/font/local'
 import GmtPlus2Clock from '@/components/faq/GmtPlus2Clock'
+import ThemeToggle from '@/components/theme/ThemeToggle'
 import {
     DIFFICULTIES,
     DIFFICULTY_DESCRIPTIONS,
@@ -247,7 +248,7 @@ const faqJsonLd = {
 
 export default function FaqPage() {
     return (
-        <main className='min-h-screen bg-white'>
+        <main className='min-h-screen bg-white dark:bg-zinc-950'>
             <script
                 type='application/ld+json'
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
@@ -256,10 +257,10 @@ export default function FaqPage() {
                 <div className='mb-6 flex items-center justify-between'>
                     <Link
                         href='/'
-                        className='flex h-8 items-center justify-center gap-2 rounded-full bg-gray-100 px-3 transition-colors hover:bg-gray-200'
+                        className='flex h-8 items-center justify-center gap-2 rounded-full bg-gray-100 dark:bg-zinc-800 px-3 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                     >
                         <svg
-                            className='h-4 w-4 text-gray-600'
+                            className='h-4 w-4 text-gray-600 dark:text-zinc-400'
                             fill='none'
                             stroke='currentColor'
                             viewBox='0 0 24 24'
@@ -271,7 +272,7 @@ export default function FaqPage() {
                                 d='M10 19l-7-7m0 0l7-7m-7 7h18'
                             />
                         </svg>
-                        <span className='text-sm text-gray-600'>
+                        <span className='text-sm text-gray-600 dark:text-zinc-400'>
                             Back to game
                         </span>
                     </Link>
@@ -280,8 +281,12 @@ export default function FaqPage() {
                         alt='IdolGuessr Logo'
                         width={150}
                         height={50}
-                        className='h-10 w-auto'
+                        className='h-10 w-auto dark:invert'
                     />
+                </div>
+
+                <div className='mb-6 flex justify-center'>
+                    <ThemeToggle />
                 </div>
 
                 <h1
@@ -289,7 +294,7 @@ export default function FaqPage() {
                 >
                     FAQ
                 </h1>
-                <p className='mt-2 text-gray-600'>
+                <p className='mt-2 text-gray-600 dark:text-zinc-400'>
                     Answers to the questions we get the most.
                 </p>
 
@@ -305,12 +310,12 @@ export default function FaqPage() {
                                 {section.items.map((item) => (
                                     <details
                                         key={item.question}
-                                        className='group rounded-lg border border-gray-200 transition-colors open:bg-gray-50'
+                                        className='group rounded-lg border border-gray-200 dark:border-zinc-700 transition-colors open:bg-gray-50 dark:open:bg-zinc-800'
                                     >
                                         <summary className='flex cursor-pointer list-none items-center justify-between gap-4 p-4 font-bold [&::-webkit-details-marker]:hidden'>
                                             {item.question}
                                             <svg
-                                                className='h-5 w-5 flex-shrink-0 text-gray-400 transition-transform group-open:rotate-180'
+                                                className='h-5 w-5 flex-shrink-0 text-gray-400 dark:text-zinc-500 transition-transform group-open:rotate-180'
                                                 fill='none'
                                                 stroke='currentColor'
                                                 viewBox='0 0 24 24'
@@ -323,7 +328,7 @@ export default function FaqPage() {
                                                 />
                                             </svg>
                                         </summary>
-                                        <div className='px-4 pb-4 text-gray-600'>
+                                        <div className='px-4 pb-4 text-gray-600 dark:text-zinc-400'>
                                             {item.answer}
                                         </div>
                                     </details>

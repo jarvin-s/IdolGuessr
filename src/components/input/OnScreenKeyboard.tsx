@@ -82,7 +82,7 @@ export default function OnScreenKeyboard({
                         <button
                             key={key}
                             data-key={key}
-                            className='flex h-12 flex-1 touch-none items-center justify-center rounded text-sm font-semibold transition-colors bg-gray-300 text-black hover:bg-gray-400 active:bg-gray-500'
+                            className='flex h-12 flex-1 touch-none items-center justify-center rounded text-sm font-semibold transition-colors bg-gray-300 dark:bg-zinc-700 text-black dark:text-zinc-100 hover:bg-gray-400 dark:hover:bg-zinc-600 active:bg-gray-500 dark:active:bg-zinc-500'
                             onPointerDown={handlePress(key)}
                         >
                             {key}
@@ -101,8 +101,8 @@ export default function OnScreenKeyboard({
                             disabled={isDisabled}
                             className={`flex h-12 flex-1 touch-none items-center justify-center rounded text-sm font-semibold transition-colors ${
                                 isDisabled
-                                    ? 'cursor-not-allowed bg-gray-500 text-gray-700 opacity-40'
-                                    : 'bg-gray-300 text-black hover:bg-gray-400 active:bg-gray-500'
+                                    ? 'cursor-not-allowed bg-gray-500 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 opacity-40'
+                                    : 'bg-gray-300 dark:bg-zinc-700 text-black dark:text-zinc-100 hover:bg-gray-400 dark:hover:bg-zinc-600 active:bg-gray-500 dark:active:bg-zinc-500'
                             }`}
                             onPointerDown={handlePress(key)}
                         >
@@ -123,8 +123,8 @@ export default function OnScreenKeyboard({
                             disabled={isDisabled}
                             className={`flex h-12 flex-1 touch-none items-center justify-center rounded text-sm font-semibold transition-colors ${
                                 isDisabled
-                                    ? 'cursor-not-allowed bg-gray-500 text-gray-700 opacity-40'
-                                    : 'bg-gray-300 text-black hover:bg-gray-400 active:bg-gray-500'
+                                    ? 'cursor-not-allowed bg-gray-500 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 opacity-40'
+                                    : 'bg-gray-300 dark:bg-zinc-700 text-black dark:text-zinc-100 hover:bg-gray-400 dark:hover:bg-zinc-600 active:bg-gray-500 dark:active:bg-zinc-500'
                             }`}
                             onPointerDown={handlePress(key)}
                         >
@@ -138,7 +138,7 @@ export default function OnScreenKeyboard({
             <div className='flex gap-1'>
                 <button
                     data-key="ENTER"
-                    className='flex h-12 flex-[1.5] touch-none items-center justify-center rounded bg-gray-300 text-[12px] font-bold text-black transition-colors hover:bg-gray-400 active:bg-gray-500'
+                    className='flex h-12 flex-[1.5] touch-none items-center justify-center rounded bg-gray-300 dark:bg-zinc-700 text-[12px] font-bold text-black dark:text-zinc-100 transition-colors hover:bg-gray-400 dark:hover:bg-zinc-600 active:bg-gray-500 dark:active:bg-zinc-500'
                     onPointerDown={handlePress('ENTER')}
                 >
                     ENTER
@@ -152,8 +152,8 @@ export default function OnScreenKeyboard({
                             disabled={isDisabled}
                             className={`flex h-12 flex-1 touch-none items-center justify-center rounded text-sm font-semibold transition-colors ${
                                 isDisabled
-                                    ? 'cursor-not-allowed bg-gray-500 text-gray-700 opacity-40'
-                                    : 'bg-gray-300 text-black hover:bg-gray-400 active:bg-gray-500'
+                                    ? 'cursor-not-allowed bg-gray-500 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 opacity-40'
+                                    : 'bg-gray-300 dark:bg-zinc-700 text-black dark:text-zinc-100 hover:bg-gray-400 dark:hover:bg-zinc-600 active:bg-gray-500 dark:active:bg-zinc-500'
                             }`}
                             onPointerDown={handlePress(key)}
                         >
@@ -163,7 +163,7 @@ export default function OnScreenKeyboard({
                 })}
                 <button
                     data-key="✕"
-                    className='flex h-12 flex-[1.5] touch-none items-center justify-center rounded bg-gray-300 text-black transition-colors hover:bg-gray-400 active:bg-gray-500'
+                    className='flex h-12 flex-[1.5] touch-none items-center justify-center rounded bg-gray-300 dark:bg-zinc-700 text-black dark:text-zinc-100 transition-colors hover:bg-gray-400 dark:hover:bg-zinc-600 active:bg-gray-500 dark:active:bg-zinc-500'
                     onPointerDown={handlePress('✕')}
                 >
                     <BackspaceIcon />

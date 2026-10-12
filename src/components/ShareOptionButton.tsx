@@ -27,7 +27,7 @@ export default function ShareOptionButton({
     const variantClasses = {
         primary: 'bg-black text-white hover:bg-gray-800',
         secondary:
-            'border-2 border-black bg-white text-black hover:bg-gray-200',
+            'border-2 border-black dark:border-zinc-100 bg-white dark:bg-zinc-900 text-black dark:text-zinc-100 hover:bg-gray-200 dark:hover:bg-zinc-700',
     }
 
     const renderContent = () => {

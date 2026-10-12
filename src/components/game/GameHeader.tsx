@@ -53,7 +53,7 @@ export default function GameHeader({
                                 alt='IdolGuessr Logo'
                                 width={150}
                                 height={50}
-                                className='h-10 w-auto'
+                                className='h-10 w-auto dark:invert'
                             />
                         </button>
                     </div>
@@ -96,10 +96,10 @@ export default function GameHeader({
                     <div className='flex items-center gap-2'>
                         {gameMode === 'daily' && (
                             <div className='flex flex-col items-end text-right'>
-                                <div className='text-xs font-medium text-gray-400'>
+                                <div className='text-xs font-medium text-gray-400 dark:text-zinc-500'>
                                     NEXT IDOL
                                 </div>
-                                <div className='font-mono text-lg leading-none font-bold text-black'>
+                                <div className='font-mono text-lg leading-none font-bold text-black dark:text-zinc-100'>
                                     {timer}
                                 </div>
                             </div>
@@ -121,14 +121,14 @@ export default function GameHeader({
                             onClick={() => {
                                 onLogoClick?.()
                             }}
-                            className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 transition-colors hover:bg-gray-200'
+                            className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                         >
                             <HomeIcon />
                         </button>
 
                         <button
                             onClick={onShowStats}
-                            className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 transition-colors hover:bg-gray-200'
+                            className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                             aria-label='View Statistics'
                         >
                             <StatsIcon />
@@ -137,7 +137,7 @@ export default function GameHeader({
                         {onShowInfo && (
                             <button
                                 onClick={onShowInfo}
-                                className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 transition-colors hover:bg-gray-200'
+                                className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                                 aria-label='View Info'
                             >
                                 <InfoIcon />
@@ -185,7 +185,7 @@ export default function GameHeader({
 function StatsIcon() {
     return (
         <svg
-            className='h-5 w-5 text-gray-600'
+            className='h-5 w-5'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -260,7 +260,7 @@ function HomeIcon() {
         >
             <path
                 fill='none'
-                stroke='#4a5565'
+                stroke='currentColor'
                 strokeLinecap='round'
                 strokeLinejoin='round'
                 strokeWidth='2'
@@ -274,7 +274,7 @@ function InfoIcon() {
     return (
         <svg
             xmlns='http://www.w3.org/2000/svg'
-            className='h-5 w-5 text-gray-600'
+            className='h-5 w-5'
             viewBox='0 0 24 24'
             fill='none'
             stroke='currentColor'
