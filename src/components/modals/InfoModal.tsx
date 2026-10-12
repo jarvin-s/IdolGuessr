@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import Link from 'next/link'
 import localFont from 'next/font/local'
 import { useFeedbackUnread } from '@/hooks/useFeedbackUnread'
 
@@ -23,7 +23,6 @@ export default function InfoModal({
     onShowHistory,
     gameMode = 'daily',
 }: InfoModalProps) {
-    const [showChangelog, setShowChangelog] = useState(false)
     const feedbackUnread = useFeedbackUnread(isOpen)
 
     if (!isOpen) return null
@@ -51,261 +50,164 @@ export default function InfoModal({
                     </svg>
                 </button>
 
-                {showChangelog ? (
-                    <>
-                        <div className='mb-6 flex items-center gap-2'>
-                            <button
-                                onClick={() => setShowChangelog(false)}
-                                className='flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full bg-gray-100 px-3 transition-colors hover:bg-gray-200'
-                                aria-label='Go back'
-                            >
-                                <ArrowLeftIcon />
-                                <span className='text-sm text-gray-600'>
-                                    Go back
-                                </span>
-                            </button>
+                <h1
+                    className={`${proximaNovaBold.className} text-2xl uppercase`}
+                >
+                    Info
+                </h1>
+                <p className='mt-2 text-gray-600'>
+                    Get help, send feedback, or see what&apos;s new.
+                </p>
+
+                <div className='mt-6 space-y-3'>
+                    <Link
+                        href='/faq'
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
+                    >
+                        <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                            <FaqIcon />
                         </div>
-                        <h1
-                            className={`${proximaNovaBold.className} text-4xl uppercase`}
-                        >
-                            Changelog
-                        </h1>
-                        <div className='mt-4 space-y-4'>
-                            <ChangelogEntry
-                                date='October 6, 2026'
-                                changes={['Added difficulty levels to Infinite mode']}
-                            />
-                            <ChangelogEntry
-                                date='September 28, 2026'
-                                changes={['Added ticketing feedback system']}
-                            />
-                            <ChangelogEntry
-                                date='June 9, 2026'
-                                changes={[
-                                    'Fixed a bug in the hangul mode where users could not type numbers',
-                                    "Added today's player count",
-                                ]}
-                            />
-                            <ChangelogEntry
-                                date='January 29, 2026'
-                                changes={[
-                                    'Launched Challenge links',
-                                    'Added past idol history to Daily mode',
-                                    'Added Gen filter to Infinite mode',
-                                ]}
-                            />
-                            <ChangelogEntry
-                                date='January 11, 2026'
-                                changes={[
-                                    'Launched Hangul mode',
-                                    'Added Info screen',
-                                    'Added restricted guessing to only idol names',
-                                ]}
-                            />
-                            <ChangelogEntry
-                                date='December 11, 2025'
-                                changes={[
-                                    'Added group filters to Infinite mode',
-                                ]}
-                            />
-                            <ChangelogEntry
-                                date='November 1, 2025'
-                                changes={['Launched Infinite mode']}
-                            />
-                            <ChangelogEntry
-                                date='October 21, 2025'
-                                changes={['Initial release']}
-                            />
+                        <div className='text-left'>
+                            <h3
+                                className={`${proximaNovaBold.className} text-lg`}
+                            >
+                                FAQ
+                            </h3>
+                            <p className='text-sm text-gray-500'>
+                                Answers to common questions
+                            </p>
                         </div>
-                    </>
-                ) : (
-                    <>
-                        <h1
-                            className={`${proximaNovaBold.className} text-2xl uppercase`}
+                        <ChevronRightIcon />
+                    </Link>
+                    <button
+                        onClick={onShowHelp}
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
+                    >
+                        <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                            <HelpIcon />
+                        </div>
+                        <div className='text-left'>
+                            <h3
+                                className={`${proximaNovaBold.className} text-lg`}
+                            >
+                                How to play
+                            </h3>
+                            <p className='text-sm text-gray-500'>
+                                Learn the game rules
+                            </p>
+                        </div>
+                        <ChevronRightIcon />
+                    </button>
+
+                    {gameMode === 'daily' && (
+                        <button
+                            onClick={onShowHistory}
+                            className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
                         >
-                            Info
-                        </h1>
-                        <p className='mt-2 text-gray-600'>
-                            Get help, send feedback, or see what&apos;s new.
-                        </p>
-
-                        <div className='mt-6 space-y-3'>
-                            <button
-                                onClick={onShowHelp}
-                                className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
-                            >
-                                <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
-                                    <HelpIcon />
-                                </div>
-                                <div className='text-left'>
-                                    <h3
-                                        className={`${proximaNovaBold.className} text-lg`}
-                                    >
-                                        How to play
-                                    </h3>
-                                    <p className='text-sm text-gray-500'>
-                                        Learn the game rules
-                                    </p>
-                                </div>
-                                <ChevronRightIcon />
-                            </button>
-
-                            <button
-                                onClick={onShowFeedback}
-                                className='relative flex w-full cursor-pointer items-center gap-4 rounded-lg border border-pink-500 p-4 transition-colors hover:bg-gray-50'
-                            >
-                                <div className='relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
-                                    <FeedbackIcon />
-                                    {feedbackUnread > 0 && (
-                                        <span className='absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-500 px-1 text-xs text-white'>
-                                            {feedbackUnread}
-                                        </span>
-                                    )}
-                                </div>
-                                <span className='absolute -top-2 -right-2 z-10 rounded-full bg-pink-500 px-2.5 py-0.5 text-xs text-white'>
-                                    UPDATED
-                                </span>
-                                <div className='text-left'>
-                                    <h3
-                                        className={`${proximaNovaBold.className} text-lg`}
-                                    >
-                                        Send feedback
-                                    </h3>
-                                    <p className='text-sm text-gray-500'>
-                                        {feedbackUnread > 0
-                                            ? 'You have new replies to your tickets'
-                                            : 'Report bugs or suggest features'}
-                                    </p>
-                                </div>
-                                <ChevronRightIcon />
-                            </button>
-
-                            <button
-                                onClick={() => setShowChangelog(true)}
-                                className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
-                            >
-                                <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
-                                    <ChangelogIcon />
-                                </div>
-                                <div className='text-left'>
-                                    <h3
-                                        className={`${proximaNovaBold.className} text-lg`}
-                                    >
-                                        Changelog
-                                    </h3>
-                                    <p className='text-sm text-gray-500'>
-                                        See what&apos;s new in IdolGuessr
-                                    </p>
-                                </div>
-                                <ChevronRightIcon />
-                            </button>
-
-                            {gameMode === 'daily' && (
-                                <button
-                                    onClick={onShowHistory}
-                                    className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
+                            <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                                <HistoryIcon />
+                            </div>
+                            <div className='text-left'>
+                                <h3
+                                    className={`${proximaNovaBold.className} text-lg`}
                                 >
-                                    <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
-                                        <HistoryIcon />
-                                    </div>
-                                    <div className='text-left'>
-                                        <h3
-                                            className={`${proximaNovaBold.className} text-lg`}
-                                        >
-                                            Past idols
-                                        </h3>
-                                        <p className='text-sm text-gray-500'>
-                                            Play idols from previous days
-                                        </p>
-                                    </div>
-                                    <ChevronRightIcon />
-                                </button>
+                                    Past idols
+                                </h3>
+                                <p className='text-sm text-gray-500'>
+                                    Play idols from previous days
+                                </p>
+                            </div>
+                            <ChevronRightIcon />
+                        </button>
+                    )}
+                    <button
+                        onClick={onShowFeedback}
+                        className='relative flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
+                    >
+                        <div className='relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                            <FeedbackIcon />
+                            {feedbackUnread > 0 && (
+                                <span className='absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-500 px-1 text-xs text-white'>
+                                    {feedbackUnread}
+                                </span>
                             )}
                         </div>
-
-                        <div className='mt-6 flex justify-center gap-4 border-t border-gray-200 pt-4'>
-                            <a
-                                href='https://youtube.com/@idolguessr'
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='flex items-center justify-center transition-opacity hover:opacity-70'
-                                aria-label='Follow us on YouTube'
+                        <div className='text-left'>
+                            <h3
+                                className={`${proximaNovaBold.className} text-lg`}
                             >
-                                <YouTubeIcon />
-                            </a>
-                            <a
-                                href='https://instagram.com/idolguessr.fun'
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='flex items-center justify-center transition-opacity hover:opacity-70'
-                                aria-label='Follow us on Instagram'
-                            >
-                                <InstagramIcon />
-                            </a>
-                            <a
-                                href='https://tiktok.com/@idolguessr.fun'
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='flex items-center justify-center transition-opacity hover:opacity-70'
-                                aria-label='Follow us on TikTok'
-                            >
-                                <TikTokIcon />
-                            </a>
-                            <a
-                                href='https://x.com/idolguessr'
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='flex items-center justify-center transition-opacity hover:opacity-70'
-                                aria-label='Follow us on Twitter'
-                            >
-                                <TwitterIcon />
-                            </a>
+                                Send feedback
+                            </h3>
+                            <p className='text-sm text-gray-500'>
+                                {feedbackUnread > 0
+                                    ? 'You have new replies to your tickets'
+                                    : 'Report bugs or suggest features'}
+                            </p>
                         </div>
-                    </>
-                )}
+                        <ChevronRightIcon />
+                    </button>
+
+                    <Link
+                        href='/changelog'
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50'
+                    >
+                        <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100'>
+                            <ChangelogIcon />
+                        </div>
+                        <div className='text-left'>
+                            <h3
+                                className={`${proximaNovaBold.className} text-lg`}
+                            >
+                                Changelog
+                            </h3>
+                            <p className='text-sm text-gray-500'>
+                                See what&apos;s new in IdolGuessr
+                            </p>
+                        </div>
+                        <ChevronRightIcon />
+                    </Link>
+                </div>
+
+                <div className='mt-6 flex justify-center gap-4 border-t border-gray-200 pt-4'>
+                    <a
+                        href='https://youtube.com/@idolguessr'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='flex items-center justify-center transition-opacity hover:opacity-70'
+                        aria-label='Follow us on YouTube'
+                    >
+                        <YouTubeIcon />
+                    </a>
+                    <a
+                        href='https://instagram.com/idolguessr.fun'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='flex items-center justify-center transition-opacity hover:opacity-70'
+                        aria-label='Follow us on Instagram'
+                    >
+                        <InstagramIcon />
+                    </a>
+                    <a
+                        href='https://tiktok.com/@idolguessr.fun'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='flex items-center justify-center transition-opacity hover:opacity-70'
+                        aria-label='Follow us on TikTok'
+                    >
+                        <TikTokIcon />
+                    </a>
+                    <a
+                        href='https://x.com/idolguessr'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='flex items-center justify-center transition-opacity hover:opacity-70'
+                        aria-label='Follow us on Twitter'
+                    >
+                        <TwitterIcon />
+                    </a>
+                </div>
             </div>
         </div>
-    )
-}
-
-function ChangelogEntry({
-    date,
-    changes,
-}: {
-    date: string
-    changes: string[]
-}) {
-    return (
-        <div className='border-l-2 border-gray-200 pl-4'>
-            <div className='flex items-center gap-2'>
-                <span className='text-md font-bold text-pink-400'>{date}</span>
-            </div>
-            <ul className='mt-2 space-y-1'>
-                {changes.map((change, i) => (
-                    <li key={i} className='text-md text-gray-600'>
-                        • {change}
-                    </li>
-                ))}
-            </ul>
-        </div>
-    )
-}
-
-function ArrowLeftIcon() {
-    return (
-        <svg
-            className='h-4 w-4 text-gray-600'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
-        >
-            <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M10 19l-7-7m0 0l7-7m-7 7h18'
-            />
-        </svg>
     )
 }
 
@@ -323,6 +225,24 @@ function HelpIcon() {
                 strokeLinejoin='round'
                 strokeWidth='2'
                 d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3m.08 4h.01'
+            />
+        </svg>
+    )
+}
+
+function FaqIcon() {
+    return (
+        <svg
+            className='h-5 w-5 text-gray-600'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+        >
+            <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M4 6h16M4 12h16M4 18h10'
             />
         </svg>
     )

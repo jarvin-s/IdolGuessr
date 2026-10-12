@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { isActiveInfiniteGenFilter } from '@/utils/genFilter'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -242,7 +243,7 @@ export async function getMultipleRandomUnlimitedImages(
 ): Promise<DailyImage[]> {
   const seenIdols = getSeenIdols();
 
-  const isFilteringByGen = genFilter && genFilter.length > 0 && genFilter.length < 3;
+  const isFilteringByGen = isActiveInfiniteGenFilter(genFilter);
 
   const passesFilters = (img: DailyImage): boolean => {
     if (!img.group_category || !img.base64_group) {

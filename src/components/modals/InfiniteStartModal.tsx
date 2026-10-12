@@ -7,6 +7,11 @@ import {
     loadSavedDifficulty,
     type InfiniteDifficulty,
 } from '@/utils/difficulty'
+import {
+    DEFAULT_INFINITE_GEN_FILTER,
+    INFINITE_GEN_OPTIONS,
+    INFINITE_GEN_VALUES,
+} from '@/utils/genFilter'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 
@@ -25,19 +30,15 @@ const GROUP_OPTIONS: { value: GroupFilter; label: string }[] = [
     { value: 'girl-group', label: 'Girl groups' },
 ]
 
-const GEN_OPTIONS: { value: number; label: string }[] = [
-    { value: 3, label: 'Gen 3' },
-    { value: 4, label: 'Gen 4' },
-    { value: 5, label: 'Gen 5' },
-]
-
 export default function InfiniteStartModal({
     isOpen,
     onStart,
 }: InfiniteStartModalProps) {
     const [selectedGroupFilter, setSelectedGroupFilter] =
         useState<GroupFilter>('both')
-    const [selectedGens, setSelectedGens] = useState<number[]>([3, 4, 5])
+    const [selectedGens, setSelectedGens] = useState<number[]>(
+        DEFAULT_INFINITE_GEN_FILTER
+    )
     const [selectedDifficulty, setSelectedDifficulty] =
         useState<InfiniteDifficulty>(() => loadSavedDifficulty())
     const [groupDropdownOpen, setGroupDropdownOpen] = useState(false)
@@ -86,7 +87,7 @@ export default function InfiniteStartModal({
     const toggleGen = (gen: number) => {
         setSelectedGens((prev) => {
             if (prev.includes(gen)) {
-                // Don't allow deselecting if it's the last one
+                // Don't allow deselecting if it's the last  one
                 if (prev.length === 1) return prev
                 return prev.filter((g) => g !== gen)
             }
@@ -95,7 +96,7 @@ export default function InfiniteStartModal({
     }
 
     const getGenDisplayText = () => {
-        if (selectedGens.length === 3) return 'All Gens'
+        if (selectedGens.length === INFINITE_GEN_VALUES.length) return 'All Gens'
         return selectedGens.map((g) => `Gen ${g}`).join(', ')
     }
 
@@ -266,7 +267,7 @@ export default function InfiniteStartModal({
                         </button>
                         {genDropdownOpen && (
                             <div className='absolute z-10 mt-1 w-full border-2 border-gray-200 bg-white shadow-lg'>
-                                {GEN_OPTIONS.map((option) => (
+                                {INFINITE_GEN_OPTIONS.map((option) => (
                                     <button
                                         key={option.value}
                                         type='button'

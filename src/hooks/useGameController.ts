@@ -22,6 +22,10 @@ import {
     saveDifficulty,
     type InfiniteDifficulty,
 } from '@/utils/difficulty'
+import {
+    DEFAULT_INFINITE_GEN_FILTER,
+    isValidInfiniteGenFilter,
+} from '@/utils/genFilter'
 import idolNames from '@/data/idolNames.json'
 
 function restoredHints(
@@ -76,7 +80,9 @@ export function useGameController() {
     const [groupFilter, setGroupFilter] = useState<
         'boy-group' | 'girl-group' | 'both'
     >('both')
-    const [genFilter, setGenFilter] = useState<number[]>([3, 4, 5])
+    const [genFilter, setGenFilter] = useState<number[]>(
+        DEFAULT_INFINITE_GEN_FILTER
+    )
     const [disabledLetters, setDisabledLetters] = useState<Set<string>>(
         new Set()
     )
@@ -1153,23 +1159,16 @@ export function useGameController() {
                 )
                 if (savedGenFilter) {
                     const parsed = JSON.parse(savedGenFilter)
-                    if (
-                        Array.isArray(parsed) &&
-                        parsed.length > 0 &&
-                        parsed.every(
-                            (g: unknown) =>
-                                typeof g === 'number' && [3, 4, 5].includes(g)
-                        )
-                    ) {
+                    if (isValidInfiniteGenFilter(parsed)) {
                         setGenFilter(parsed)
                     } else {
-                        setGenFilter([3, 4, 5])
+                        setGenFilter(DEFAULT_INFINITE_GEN_FILTER)
                     }
                 } else {
-                    setGenFilter([3, 4, 5])
+                    setGenFilter(DEFAULT_INFINITE_GEN_FILTER)
                 }
             } catch {
-                setGenFilter([3, 4, 5])
+                setGenFilter(DEFAULT_INFINITE_GEN_FILTER)
             }
         }
 
