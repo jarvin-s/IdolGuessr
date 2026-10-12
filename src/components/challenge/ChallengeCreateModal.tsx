@@ -63,10 +63,10 @@ export default function ChallengeCreateModal({
                 </div>
 
                 <div className='mb-6 bg-pink-100 p-3 text-sm'>
-                    <p className='mb-2 text-lg'>
+                    <p className='mb-2 text-lg text-gray-700 dark:text-zinc-800'>
                         <strong>How it works:</strong>
                     </p>
-                    <ul className='space-y-1 text-sm'>
+                    <ul className='space-y-1 text-sm text-gray-700 dark:text-zinc-800'>
                         <li className='flex items-start gap-2'>
                             <span>•</span>
                             <span>

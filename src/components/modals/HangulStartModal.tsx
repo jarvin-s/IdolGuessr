@@ -29,10 +29,10 @@ export default function HangulStartModal({
                 </div>
 
                 <div className='mb-6 bg-purple-100 p-3 text-sm'>
-                    <p className='mb-2'>
+                    <p className='mb-2 text-gray-700 dark:text-zinc-800'>
                         <strong>How to play:</strong>
                     </p>
-                    <ul className='list-inside list-disc space-y-1'>
+                    <ul className='list-inside list-disc space-y-1 text-gray-700 dark:text-zinc-800'>
                         <li>Read the idol&apos;s name in Korean (Hangul).</li>
                         <li>Type their English name to guess.</li>
                         <li>Use the hint to reveal their group.</li>

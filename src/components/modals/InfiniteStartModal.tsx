@@ -118,10 +118,10 @@ export default function InfiniteStartModal({
                 </div>
 
                 <div className='mb-6 bg-purple-100 p-3 text-sm'>
-                    <p className='mb-2 text-lg'>
+                    <p className='mb-2 text-lg text-gray-700 dark:text-zinc-800'>
                         <strong>How to play:</strong>
                     </p>
-                    <ul className='space-y-1 text-sm'>
+                    <ul className='space-y-1 text-sm text-gray-700 dark:text-zinc-800'>
                         <li className='flex items-start gap-2'>
                             <span>•</span>
                             <span>
@@ -130,18 +130,18 @@ export default function InfiniteStartModal({
                                 tries.
                             </span>
                         </li>
+                        <li className='flex items-start gap-2'>
+                            <span>•</span>
+                            <span>
+                                After guessing correctly, instantly move on to the
+                                next idol.
+                            </span>
+                        </li>
+                        <li className='flex items-start gap-2'>
+                            <span>•</span>
+                            <span>Enjoy the endless idols!</span>
+                        </li>
                     </ul>
-                    <li className='flex items-start gap-2'>
-                        <span>•</span>
-                        <span>
-                            After guessing correctly, instantly move on to the
-                            next idol.
-                        </span>
-                    </li>
-                    <li className='flex items-start gap-2'>
-                        <span>•</span>
-                        <span>Enjoy the endless idols!</span>
-                    </li>
                 </div>
 
                 <div className='mb-4'>

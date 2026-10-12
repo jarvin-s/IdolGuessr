@@ -67,13 +67,11 @@ export default function RootLayout({
 }>) {
     return (
         <html lang='en' suppressHydrationWarning>
-            <head>
-                <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-            </head>
             <body
                 suppressHydrationWarning
                 className={`${proximaNovaRegular.className} bg-white text-black antialiased dark:bg-zinc-950 dark:text-zinc-100`}
             >
+                <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
                 <ThemeProvider>
                     {children}
                     <Analytics />
