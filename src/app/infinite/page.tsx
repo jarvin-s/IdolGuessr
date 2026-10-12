@@ -21,6 +21,10 @@ import {
     saveDifficulty,
     type InfiniteDifficulty,
 } from '@/utils/difficulty'
+import {
+    DEFAULT_INFINITE_GEN_FILTER,
+    isValidInfiniteGenFilter,
+} from '@/utils/genFilter'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 
@@ -101,11 +105,11 @@ export default function InfinitePage() {
             const savedGenFilter = localStorage.getItem('idol-guessr-gen-filter')
 
             // Parse gen filter with validation
-            let parsedGenFilter: number[] = [3, 4, 5]
+            let parsedGenFilter = DEFAULT_INFINITE_GEN_FILTER
             if (savedGenFilter) {
                 try {
                     const parsed = JSON.parse(savedGenFilter)
-                    if (Array.isArray(parsed) && parsed.length > 0 && parsed.every((g: unknown) => typeof g === 'number' && [3, 4, 5].includes(g))) {
+                    if (isValidInfiniteGenFilter(parsed)) {
                         parsedGenFilter = parsed
                     }
                 } catch {
