@@ -10,13 +10,13 @@ const proximaNovaBold = localFont({
 
 export const metadata: Metadata = {
     title: 'Changelog',
-    description: "See what's new in IdolGuessr.",
+    description: "See what's new in IdolGuessr",
 }
 
 const entries: { date: string; changes: string[] }[] = [
     {
         date: 'October 12, 2026',
-        changes: ['Added FAQ section.', 'Added Dark mode'],
+        changes: ['Added FAQ section', 'Added Dark mode'],
     },
     {
         date: 'October 6, 2026',
