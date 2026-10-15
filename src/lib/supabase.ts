@@ -465,7 +465,7 @@ const CLEAR_IMAGE_QUALITY = 75
 function publicImageUrl(objectPath: string, fileName: string): string {
   const normalizedUrl = supabaseUrl.replace(/\/+$/, '')
   if (fileName === 'clear.png') {
-    return `${normalizedUrl}/storage/v1/render/image/public/${objectPath}?width=${CLEAR_IMAGE_WIDTH}&quality=${CLEAR_IMAGE_QUALITY}`
+    return `${normalizedUrl}/storage/v1/render/image/public/${objectPath}?width=${CLEAR_IMAGE_WIDTH}&quality=${CLEAR_IMAGE_QUALITY}&format=webp`
   }
   return `${normalizedUrl}/storage/v1/object/public/${objectPath}`
 }

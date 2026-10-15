@@ -96,44 +96,27 @@ export default function GameImage({
 
     const isChallenger = maxGuesses <= 3
     const roundEnded = gameWon || gameLost || remainingGuesses === 0
-    const [clearReady, setClearReady] = useState(false)
+    const [loadedState, setLoadedState] = useState<{
+        bucket: string | null
+        slots: Array<number | 'clear'>
+    }>({ bucket: null, slots: [] })
+    const currentBucket = dailyImage?.img_bucket ?? null
+    const loadedSlots =
+        loadedState.bucket === currentBucket ? loadedState.slots : []
 
-    const clearUrl =
-        dailyImage && isChallenger && roundEnded
-            ? getImageUrl(
-                  dailyImage.group_type || '',
-                  dailyImage.img_bucket,
-                  'clear',
-                  gameMode,
-                  dailyImage.group_category,
-                  dailyImage.base64_group
-              )
-            : null
-
-    useEffect(() => {
-        setClearReady(false)
-        if (!clearUrl) return
-        let cancelled = false
-        const img = new window.Image()
-        const reveal = () => {
-            requestAnimationFrame(() => {
-                if (!cancelled) setClearReady(true)
-            })
-        }
-        img.onload = reveal
-        img.onerror = reveal
-        img.src = clearUrl
-        return () => {
-            cancelled = true
-        }
-    }, [clearUrl])
+    const markSlotLoaded = (bucket: string, slot: number | 'clear') => {
+        setLoadedState((prev) => {
+            const prevSlots = prev.bucket === bucket ? prev.slots : []
+            if (prevSlots.includes(slot)) return prev
+            return { bucket, slots: [...prevSlots, slot] }
+        })
+    }
 
     const getImageNumber = (): number | 'clear' => {
         if (isChallenger) {
             const guessesUsed = maxGuesses - remainingGuesses
             if (!roundEnded) return guessesUsed + 1
-            if (clearReady) return 'clear'
-            return Math.min(Math.max(guessesUsed, 1), maxGuesses)
+            return 'clear'
         }
         if (roundEnded || remainingGuesses === 1) {
             return 'clear'
@@ -146,7 +129,7 @@ export default function GameImage({
         return 1
     }
 
-    const imageNumber = getImageNumber()
+    const targetImageNumber = getImageNumber()
     const hasValidData =
         !dailyImage ||
         gameMode === 'daily' ||
@@ -172,6 +155,28 @@ export default function GameImage({
               )
             : []
 
+    const targetIndex = imageSlots.indexOf(targetImageNumber)
+    let currentIndex = targetIndex
+    if (!loadedSlots.includes(targetImageNumber)) {
+        for (let i = targetIndex - 1; i >= 0; i--) {
+            if (loadedSlots.includes(imageSlots[i])) {
+                currentIndex = i
+                break
+            }
+        }
+    }
+    const imageNumber = imageSlots[currentIndex]
+
+    const mountedSlots = imageSlots
+        .map((num, index) => ({ num, index, url: allImageUrls[index] }))
+        .filter(
+            ({ num, index, url }) =>
+                url &&
+                (loadedSlots.includes(num) ||
+                    index === targetIndex ||
+                    index === targetIndex + 1)
+        )
+
     return (
         <div className='relative mb-3 min-h-0 w-full flex-1 sm:mx-auto sm:max-w-md'>
             <div className='relative h-full w-full overflow-hidden rounded-lg'>
@@ -190,11 +195,10 @@ export default function GameImage({
                         }}
                         key={dailyImage.img_bucket}
                     >
-                        {allImageUrls.map((url, index) => {
-                            const imageNum = imageSlots[index]
+                        {mountedSlots.map(({ num: imageNum, index, url }) => {
                             const isVisible = imageNumber === imageNum
-                            const currentIndex = imageSlots.indexOf(imageNumber)
                             const isPastImage = index < currentIndex
+                            const bucket = dailyImage.img_bucket
                             return (
                                 <div
                                     key={url}
@@ -223,6 +227,15 @@ export default function GameImage({
                                         }}
                                         unoptimized
                                         priority={index === 0}
+                                        loading={
+                                            index === 0 ? undefined : 'eager'
+                                        }
+                                        onLoad={() =>
+                                            markSlotLoaded(bucket, imageNum)
+                                        }
+                                        onError={() =>
+                                            markSlotLoaded(bucket, imageNum)
+                                        }
                                     />
                                 </div>
                             )
