@@ -459,6 +459,17 @@ export async function adminSetStatus(ticketId: string, status: TicketStatus): Pr
   if (error) throw error
 }
 
+const CLEAR_IMAGE_WIDTH = 800
+const CLEAR_IMAGE_QUALITY = 75
+
+function publicImageUrl(objectPath: string, fileName: string): string {
+  const normalizedUrl = supabaseUrl.replace(/\/+$/, '')
+  if (fileName === 'clear.png') {
+    return `${normalizedUrl}/storage/v1/render/image/public/${objectPath}?width=${CLEAR_IMAGE_WIDTH}&quality=${CLEAR_IMAGE_QUALITY}&format=webp`
+  }
+  return `${normalizedUrl}/storage/v1/object/public/${objectPath}`
+}
+
 export function getImageUrl(
   groupType: string,
   imgBucket: string,
@@ -468,9 +479,6 @@ export function getImageUrl(
   base64Group?: string,
 ): string {
   const fileName = guessNumber === 'clear' ? 'clear.png' : `00${guessNumber}.png`
-
-  // Normalize supabaseUrl by removing trailing slash
-  const normalizedUrl = supabaseUrl.replace(/\/+$/, '')
 
   if (mode === 'unlimited') {
     if (!groupCategory || !base64Group || !imgBucket) {
@@ -484,10 +492,16 @@ export function getImageUrl(
       }
       return ''
     }
-    return `${normalizedUrl}/storage/v1/object/public/images/unlimited/${groupCategory}/${base64Group}/${imgBucket}/${fileName}`
+    return publicImageUrl(
+      `images/unlimited/${groupCategory}/${base64Group}/${imgBucket}/${fileName}`,
+      fileName,
+    )
   }
 
-  return `${normalizedUrl}/storage/v1/object/public/images/${mode}/${groupType}/${imgBucket}/${fileName}`
+  return publicImageUrl(
+    `images/${mode}/${groupType}/${imgBucket}/${fileName}`,
+    fileName,
+  )
 }
 
 export function getHangulImageUrl(
@@ -505,9 +519,11 @@ export function getHangulImageUrl(
     return '';
   }
 
-  const normalizedUrl = supabaseUrl.replace(/\/+$/, '');
   const fileName = imageType === 'hint' ? 'hint.png' : 'clear.png';
-  return `${normalizedUrl}/storage/v1/object/public/images/hangul/${groupCategory}/${base64Group}/${imgBucket}/${fileName}`;
+  return publicImageUrl(
+    `images/hangul/${groupCategory}/${base64Group}/${imgBucket}/${fileName}`,
+    fileName,
+  );
 }
 
 export interface GuessTrackingData {

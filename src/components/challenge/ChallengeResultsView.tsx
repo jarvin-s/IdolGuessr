@@ -105,6 +105,7 @@ export default function ChallengeResultsView({
                                             alt={idol.name}
                                             fill
                                             className='object-cover'
+                                            unoptimized
                                         />
                                     </div>
                                     <div>

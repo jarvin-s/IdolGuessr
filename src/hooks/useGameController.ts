@@ -754,24 +754,15 @@ export function useGameController() {
                         nextRow.group_category &&
                         nextRow.base64_group
                     ) {
-                        const preloadSlots: Array<number | 'clear'> =
-                            activeConfig.maxGuesses <= 3
-                                ? [1, 2, 3]
-                                : [1, 2, 3, 4, 5, 'clear']
-                        const imagesToPreload = preloadSlots.map((num) =>
-                            getImageUrl(
-                                nextRow.group_type || '',
-                                nextRow.img_bucket,
-                                num as number | 'clear',
-                                'unlimited',
-                                nextRow.group_category,
-                                nextRow.base64_group
-                            )
+                        const img = new window.Image()
+                        img.src = getImageUrl(
+                            nextRow.group_type || '',
+                            nextRow.img_bucket,
+                            1,
+                            'unlimited',
+                            nextRow.group_category,
+                            nextRow.base64_group
                         )
-                        imagesToPreload.forEach((url) => {
-                            const img = new window.Image()
-                            img.src = url
-                        })
                     }
                 }
 
