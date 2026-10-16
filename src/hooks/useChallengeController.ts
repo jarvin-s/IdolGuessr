@@ -2,15 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
-  getChallenge,
-  submitChallengeResult,
-  checkChallengePlayed,
-  getOrCreateSessionId,
-  getImageUrl,
-  type Challenge,
-  type ChallengeIdol,
-  type ChallengeIdolResult,
-} from '@/lib/supabase'
+  fetchPlayChallenge,
+  fetchChallengePlayed,
+  submitPlayChallenge,
+  submitIdolGuess,
+  type PlayIdol,
+  type PlayChallenge,
+} from '@/lib/gameApi'
+import { getOrCreateSessionId, type ChallengeIdolResult } from '@/lib/supabase'
 import idolNames from '@/data/idolNames.json'
 
 const idolNamesSet = new Set(idolNames.map((name: string) => name.toUpperCase()))
@@ -25,7 +24,7 @@ interface ChallengeProgress {
 }
 
 export function useChallengeController(challengeId: string) {
-  const [challenge, setChallenge] = useState<Challenge | null>(null)
+  const [challenge, setChallenge] = useState<PlayChallenge | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [alreadyPlayed, setAlreadyPlayed] = useState(false)
@@ -50,7 +49,7 @@ export function useChallengeController(challengeId: string) {
   const sessionId = useRef<string>('')
   const hasLoadedRef = useRef(false)
 
-  const currentIdol: ChallengeIdol | null = challenge?.idols?.[currentIndex] ?? null
+  const currentIdol: PlayIdol | null = challenge?.idols?.[currentIndex] ?? null
   const correctAnswer = currentIdol?.name?.toUpperCase() ?? ''
   const remainingGuesses = guesses.filter((g) => g === 'empty').length
   const totalIdols = challenge?.idol_count ?? 0
@@ -105,14 +104,14 @@ export function useChallengeController(challengeId: string) {
       setIsLoading(true)
       sessionId.current = getOrCreateSessionId()
 
-      const played = await checkChallengePlayed(challengeId, sessionId.current)
+      const played = await fetchChallengePlayed(challengeId, sessionId.current)
       if (played) {
         setAlreadyPlayed(true)
         setIsLoading(false)
         return
       }
 
-      const challengeData = await getChallenge(challengeId)
+      const challengeData = await fetchPlayChallenge(challengeId)
       if (!challengeData) {
         setError('Challenge not found or has expired')
         setIsLoading(false)
@@ -186,13 +185,13 @@ export function useChallengeController(challengeId: string) {
     setIsSubmitting(true)
     const finalCorrect = results.filter((r) => r.correct).length
 
-    const resultId = await submitChallengeResult(
+    const resultId = await submitPlayChallenge({
       challengeId,
-      sessionId.current,
+      sessionId: sessionId.current,
       nickname,
       results,
-      finalCorrect
-    )
+      totalCorrect: finalCorrect,
+    })
 
     setIsSubmitting(false)
     clearProgress()
@@ -225,63 +224,67 @@ export function useChallengeController(challengeId: string) {
           return
         }
 
+        if (!currentIdol.session) return
         guessAttemptsRef.current.push(normalizedGuess)
-
-        const normalizedName = currentIdol.name?.toUpperCase().trim() || ''
-        const normalizedAltName = currentIdol.alt_name?.toUpperCase().trim() || ''
-        let isCorrect = normalizedGuess === normalizedName
-        if (normalizedAltName && !isCorrect) {
-          isCorrect = normalizedGuess === normalizedAltName
-        }
-
+        const guessNumber = 6 - remainingGuesses + 1
         setIsAnimating(true)
 
-        if (!isCorrect) {
-          setLastIncorrectGuess(normalizedGuess)
-          setCurrentGuess('')
-
-          setTimeout(() => {
+        void (async () => {
+          const result = await submitIdolGuess(currentIdol.session, normalizedGuess)
+          if (!result) {
             setIsAnimating(false)
-            setGuesses((prev) => {
-              const newGuesses = [...prev]
-              const emptyIndex = newGuesses.findIndex((g) => g === 'empty')
-              if (emptyIndex === -1) return prev
-              newGuesses[emptyIndex] = 'incorrect'
-
-              const remainingAfterThis = newGuesses.filter((g) => g === 'empty').length
-              if (remainingAfterThis === 0) {
-                setTimeout(() => {
-                  setGameLost(true)
-                  recordResult(false, 6, guessAttemptsRef.current)
-                  guessAttemptsRef.current = []
-                  setTimeout(() => moveToNextIdol(), 2000)
-                }, 300)
-              } else {
-                saveProgress(currentIndex, results, newGuesses)
-              }
-
-              return newGuesses
-            })
-          }, 500)
-        } else {
-          const emptyIndex = guesses.findIndex((g) => g === 'empty')
-          const guessNumber = 6 - remainingGuesses + 1
-
-          setGameWon(true)
-          setIsAnimating(false)
-          setCurrentGuess('')
-          setGuesses((prev) => {
-            const newGuesses = [...prev]
-            if (emptyIndex === -1) return prev
-            newGuesses[emptyIndex] = 'correct'
-            return newGuesses
+            return
+          }
+          setChallenge((prev) => {
+            if (!prev) return prev
+            const idols = [...prev.idols]
+            idols[currentIndex] = {
+              ...result.idol,
+              group_name: idols[currentIndex]?.group_name,
+            }
+            return { ...prev, idols }
           })
 
-          recordResult(true, guessNumber, guessAttemptsRef.current)
-          guessAttemptsRef.current = []
-
-          setTimeout(() => moveToNextIdol(), 2000)
-        }
+          if (!result.correct) {
+            setLastIncorrectGuess(normalizedGuess)
+            setCurrentGuess('')
+            setTimeout(() => {
+              setIsAnimating(false)
+              setGuesses((prev) => {
+                const newGuesses = [...prev]
+                const emptyIndex = newGuesses.findIndex((g) => g === 'empty')
+                if (emptyIndex === -1) return prev
+                newGuesses[emptyIndex] = 'incorrect'
+                const remainingAfterThis = newGuesses.filter((g) => g === 'empty').length
+                if (remainingAfterThis === 0 || result.gameOver) {
+                  setTimeout(() => {
+                    setGameLost(true)
+                    recordResult(false, 6, guessAttemptsRef.current)
+                    guessAttemptsRef.current = []
+                    setTimeout(() => moveToNextIdol(), 2000)
+                  }, 300)
+                } else {
+                  saveProgress(currentIndex, results, newGuesses)
+                }
+                return newGuesses
+              })
+            }, 500)
+          } else {
+            const emptyIndex = guesses.findIndex((g) => g === 'empty')
+            setGameWon(true)
+            setIsAnimating(false)
+            setCurrentGuess('')
+            setGuesses((prev) => {
+              const newGuesses = [...prev]
+              if (emptyIndex === -1) return prev
+              newGuesses[emptyIndex] = 'correct'
+              return newGuesses
+            })
+            recordResult(true, guessNumber, guessAttemptsRef.current)
+            guessAttemptsRef.current = []
+            setTimeout(() => moveToNextIdol(), 2000)
+          }
+        })()
       }
     } else if (key === '✕') {
       if (!gameWon && !gameLost) {
@@ -350,14 +353,8 @@ export function useChallengeController(challengeId: string) {
 
   const getCurrentImageUrl = useCallback((guessNumber: number | 'clear') => {
     if (!currentIdol) return ''
-    return getImageUrl(
-      '',
-      currentIdol.img_bucket,
-      guessNumber,
-      'unlimited',
-      currentIdol.group_category,
-      currentIdol.base64_group
-    )
+    if (guessNumber === 'clear') return currentIdol.clearImageUrl || currentIdol.imageUrl
+    return currentIdol.imageUrl
   }, [currentIdol])
 
   return {

@@ -141,19 +141,7 @@ export default function ChallengePlayPage() {
                         <div className='flex min-h-0 w-full flex-1 flex-col items-center'>
                             <GameImage
                             isLoading={!currentIdol}
-                            dailyImage={
-                                currentIdol
-                                    ? {
-                                          group_type: '',
-                                          img_bucket: currentIdol.img_bucket,
-                                          group_category:
-                                              currentIdol.group_category,
-                                          base64_group:
-                                              currentIdol.base64_group,
-                                          group_name: currentIdol.group_name,
-                                      }
-                                    : null
-                            }
+                            dailyImage={currentIdol}
                             remainingGuesses={remainingGuesses}
                             gameWon={gameWon}
                             gameLost={gameLost}

@@ -2,23 +2,24 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
-    getMultipleRandomHangulImages,
-    type HangulImage,
-    getHangulImageUrl,
-    resetGuessTimer,
-    addSeenHangulIdol,
-    clearSeenHangulIdols,
-    trackHangulGame,
-} from '@/lib/supabase'
+    fetchHangulIdols,
+    submitIdolGuess,
+    fetchGroupHint,
+    addSeenHangulId,
+    clearSeenHangulIds,
+    fromStoredIdol,
+    toStoredIdol,
+    type PlayIdol,
+} from '@/lib/gameApi'
+import { resetGuessTimer, trackHangulGame } from '@/lib/supabase'
 import { useHangulStats } from '@/components/stats/UserStats'
-import { encodeIdolName, decodeIdolName } from '@/utils/encoding'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 
 export function useHangulGameController() {
     const [currentGuess, setCurrentGuess] = useState('')
     const [lastIncorrectGuess, setLastIncorrectGuess] = useState('')
-    const [hangulImage, setHangulImage] = useState<HangulImage | null>(null)
+    const [hangulImage, setHangulImage] = useState<PlayIdol | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [isAnimating, setIsAnimating] = useState(false)
     const [correctAnswer, setCorrectAnswer] = useState('')
@@ -33,7 +34,7 @@ export function useHangulGameController() {
         width: 0,
         height: 0,
     })
-    const [prefetchedImages, setPrefetchedImages] = useState<HangulImage[]>([])
+    const [prefetchedImages, setPrefetchedImages] = useState<PlayIdol[]>([])
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const [showStreakPopup, setShowStreakPopup] = useState(false)
     const [streakMilestone, setStreakMilestone] = useState(0)
@@ -90,14 +91,17 @@ export function useHangulGameController() {
             const savedGameState = hangulStats.loadGameState()
 
             if (savedGameState) {
-                // Only require encodedIdolName and hangulName - image data is optional
-                const isValidSavedState =
-                    savedGameState.encodedIdolName &&
-                    savedGameState.hangulName
+                const savedIdol = savedGameState.idol?.session
+                    ? fromStoredIdol(savedGameState.idol)
+                    : null
+                const filterMismatch =
+                    currentFilter !== null &&
+                    !!savedIdol?.group_category &&
+                    savedIdol.group_category !== currentFilter
 
-                if (!isValidSavedState) {
+                if (!savedIdol || filterMismatch) {
                     hangulStats.clearGameState()
-                    const newImages = await getMultipleRandomHangulImages(5, currentFilter)
+                    const newImages = await fetchHangulIdols(5, currentFilter)
                     setIsLoading(false)
 
                     if (newImages.length > 0) {
@@ -105,49 +109,11 @@ export function useHangulGameController() {
                         setCurrentImageIndex(1)
                         guessesLoadedRef.current = true
                         setHangulImage(newImages[0])
-                        setHangulName(newImages[0].hangul_name)
+                        setHangulName(newImages[0].hangul_name || '')
                         setSkipsRemaining(3)
                         setImageRevealed(false)
-                        if (newImages[0].name) setCorrectAnswer(newImages[0].name.toUpperCase())
-                        if (newImages[0].img_bucket) addSeenHangulIdol(newImages[0].img_bucket)
-                    }
-                    loadHangulRef.current = false
-                    return
-                }
-
-                const decodedName = decodeIdolName(savedGameState.encodedIdolName)
-                const decodedAltName = savedGameState.encodedAltName
-                    ? decodeIdolName(savedGameState.encodedAltName)
-                    : undefined
-
-                const savedImage: HangulImage = {
-                    id: 0,
-                    name: decodedName,
-                    alt_name: decodedAltName,
-                    hangul_name: savedGameState.hangulName,
-                    group_type: savedGameState.groupType,
-                    img_bucket: savedGameState.imgBucket,
-                    group_category: savedGameState.groupCategory,
-                    base64_group: savedGameState.base64Group,
-                    base64_idol: savedGameState.base64Idol,
-                    group_name: savedGameState.groupName,
-                }
-
-                if (currentFilter !== null && savedImage.group_category !== currentFilter) {
-                    hangulStats.clearGameState()
-                    const newImages = await getMultipleRandomHangulImages(5, currentFilter)
-                    setIsLoading(false)
-
-                    if (newImages.length > 0) {
-                        setPrefetchedImages(newImages)
-                        setCurrentImageIndex(1)
-                        guessesLoadedRef.current = true
-                        setHangulImage(newImages[0])
-                        setHangulName(newImages[0].hangul_name)
-                        setSkipsRemaining(3)
-                        setImageRevealed(false)
-                        if (newImages[0].name) setCorrectAnswer(newImages[0].name.toUpperCase())
-                        if (newImages[0].img_bucket) addSeenHangulIdol(newImages[0].img_bucket)
+                        setCorrectAnswer('')
+                        addSeenHangulId(newImages[0].id)
                     }
                     loadHangulRef.current = false
                     return
@@ -164,16 +130,16 @@ export function useHangulGameController() {
                 guessesLoadedRef.current = true
                 justLoadedGuessesRef.current = true
                 guessesRef.current = savedGuesses
-                currentImageBucketRef.current = savedImage.img_bucket
+                currentImageBucketRef.current = savedIdol.img_bucket
 
                 setGameWon(hasWon)
                 setGameLost(hasLost)
                 setGuesses(savedGuesses)
 
                 Promise.resolve().then(() => {
-                    setHangulImage(savedImage)
-                    setHangulName(savedGameState.hangulName)
-                    setCorrectAnswer(decodedName.toUpperCase())
+                    setHangulImage(savedIdol)
+                    setHangulName(savedIdol.hangul_name || '')
+                    setCorrectAnswer('')
                     setImageRevealed(savedGameState.imageRevealed || false)
                     setSkipsRemaining(savedGameState.skipsRemaining ?? 3)
                 })
@@ -190,51 +156,38 @@ export function useHangulGameController() {
                 setIsLoading(false)
 
                 if (savedGameState.prefetchedImages && savedGameState.prefetchedImages.length > 0) {
-                    const allImagesValid = savedGameState.prefetchedImages.every(
-                        (img) => img.hangul_name
-                    )
+                    const stored = (savedGameState.prefetchedImages || [])
+                        .filter((img) => img.session)
+                        .map((img) => fromStoredIdol(img))
+                    const filteredPrefetched =
+                        currentFilter !== null
+                            ? stored.filter(
+                                  (img) => img.group_category === currentFilter
+                              )
+                            : stored
 
-                    if (allImagesValid) {
-                        const filteredPrefetched =
-                            currentFilter !== null
-                                ? savedGameState.prefetchedImages.filter(
-                                      (img) => img.group_category === currentFilter
-                                  )
-                                : savedGameState.prefetchedImages
-
-                        if (filteredPrefetched.length > 0) {
-                            setPrefetchedImages(filteredPrefetched as HangulImage[])
-                            setCurrentImageIndex(savedGameState.currentImageIndex || 0)
-                        } else {
-                            getMultipleRandomHangulImages(5, currentFilter).then((newImages) => {
-                                setPrefetchedImages(newImages)
-                                setCurrentImageIndex(0)
-                                newImages.forEach((img) => {
-                                    if (img.img_bucket) addSeenHangulIdol(img.img_bucket)
-                                })
-                            })
-                        }
-                    } else {
-                        getMultipleRandomHangulImages(5, currentFilter).then((newImages) => {
-                            setPrefetchedImages(newImages)
-                            setCurrentImageIndex(0)
-                            newImages.forEach((img) => {
-                                if (img.img_bucket) addSeenHangulIdol(img.img_bucket)
-                            })
-                        })
-                    }
+                if (filteredPrefetched.length > 0) {
+                    setPrefetchedImages(filteredPrefetched)
+                    setCurrentImageIndex(savedGameState.currentImageIndex || 0)
                 } else {
-                    getMultipleRandomHangulImages(5, currentFilter).then((newImages) => {
+                    fetchHangulIdols(5, currentFilter).then((newImages) => {
+                        setPrefetchedImages(newImages)
+                        setCurrentImageIndex(0)
+                        newImages.forEach((img) => addSeenHangulId(img.id))
+                    })
+                }
+            } else {
+                    fetchHangulIdols(5, currentFilter).then((newImages) => {
                         setPrefetchedImages(newImages)
                         setCurrentImageIndex(0)
                         newImages.forEach((img) => {
-                            if (img.img_bucket) addSeenHangulIdol(img.img_bucket)
+                            addSeenHangulId(img.id)
                         })
                     })
                 }
             } else {
                 setIsLoading(true)
-                const newImages = await getMultipleRandomHangulImages(5, currentFilter)
+                const newImages = await fetchHangulIdols(5, currentFilter)
                 setIsLoading(false)
 
                 if (newImages.length > 0) {
@@ -242,12 +195,12 @@ export function useHangulGameController() {
                     setCurrentImageIndex(1)
                     guessesLoadedRef.current = true
                     setHangulImage(newImages[0])
-                    setHangulName(newImages[0].hangul_name)
+                    setHangulName(newImages[0].hangul_name || '')
                     setSkipsRemaining(3)
                     setImageRevealed(false)
                     if (newImages[0].name) setCorrectAnswer(newImages[0].name.toUpperCase())
                     newImages.forEach((img) => {
-                        if (img.img_bucket) addSeenHangulIdol(img.img_bucket)
+                        addSeenHangulId(img.id)
                     })
                 }
             }
@@ -296,35 +249,16 @@ export function useHangulGameController() {
             setImageRevealed(finalImageRevealed)
 
             const buildGameState = (
-                row: HangulImage,
+                row: PlayIdol,
                 nextImageIndex: number,
-                images: HangulImage[]
+                images: PlayIdol[]
             ) => ({
-                groupType: row.group_type || '',
-                imgBucket: row.img_bucket,
-                groupCategory: row.group_category,
-                base64Group: row.base64_group,
-                base64Idol: row.base64_idol,
-                encodedIdolName: encodeIdolName(row.name || ''),
-                encodedAltName: row.alt_name ? encodeIdolName(row.alt_name) : undefined,
-                hangulName: row.hangul_name,
-                groupName: row.group_name,
+                idol: toStoredIdol(row),
                 imageRevealed: finalImageRevealed,
                 skipsRemaining: finalSkipsRemaining,
                 guesses: freshGuesses,
                 savedAt: new Date().toISOString(),
-                prefetchedImages: images.map((img) => ({
-                    id: img.id,
-                    name: img.name,
-                    alt_name: img.alt_name,
-                    hangul_name: img.hangul_name,
-                    group_type: img.group_type || '',
-                    img_bucket: img.img_bucket,
-                    group_category: img.group_category,
-                    base64_group: img.base64_group,
-                    base64_idol: img.base64_idol,
-                    group_name: img.group_name,
-                })),
+                prefetchedImages: images.map((img) => toStoredIdol(img)),
                 currentImageIndex: nextImageIndex,
             })
 
@@ -334,8 +268,8 @@ export function useHangulGameController() {
                 guessesLoadedRef.current = true
                 justLoadedGuessesRef.current = true
                 setHangulImage(row)
-                setHangulName(row.hangul_name)
-                if (row.name) setCorrectAnswer(row.name.toUpperCase())
+                setHangulName(row.hangul_name || '')
+                setCorrectAnswer('')
                 setCurrentImageIndex(nextImageIndex)
                 setTimeout(() => {
                     justLoadedGuessesRef.current = false
@@ -345,34 +279,24 @@ export function useHangulGameController() {
 
                 if (prefetchedImages.length > nextImageIndex) {
                     const nextRow = prefetchedImages[nextImageIndex]
-                    if (nextRow && nextRow.group_category && nextRow.base64_group) {
-                        const imagesToPreload = ['hint', 'clear'].map((type) =>
-                            getHangulImageUrl(
-                                nextRow.group_category || '',
-                                nextRow.base64_group || '',
-                                nextRow.img_bucket,
-                                type as 'hint' | 'clear'
-                            )
-                        )
-                        imagesToPreload.forEach((url) => {
-                            const img = new window.Image()
-                            img.src = url
-                        })
+                    if (nextRow?.imageUrl) {
+                        const img = new window.Image()
+                        img.src = nextRow.imageUrl
                     }
                 }
 
                 if (nextImageIndex >= prefetchedImages.length - 2) {
                     const apiFilter = effectiveFilter === 'both' ? null : effectiveFilter
-                    getMultipleRandomHangulImages(5, apiFilter).then((newImages) => {
+                    fetchHangulIdols(5, apiFilter).then((newImages) => {
                         setPrefetchedImages((prev) => [...prev, ...newImages])
                         newImages.forEach((img) => {
-                            if (img.img_bucket) addSeenHangulIdol(img.img_bucket)
+                            addSeenHangulId(img.id)
                         })
                     })
                 }
             } else {
                 const apiFilter = effectiveFilter === 'both' ? null : effectiveFilter
-                getMultipleRandomHangulImages(5, apiFilter).then((newImages) => {
+                fetchHangulIdols(5, apiFilter).then((newImages) => {
                     if (newImages.length > 0) {
                         const basePrefetched = overrideGroupFilter ? [] : prefetchedImages
                         const updatedPrefetched = [...basePrefetched, ...newImages]
@@ -382,8 +306,8 @@ export function useHangulGameController() {
                         guessesLoadedRef.current = true
                         justLoadedGuessesRef.current = true
                         setHangulImage(row)
-                        setHangulName(row.hangul_name)
-                        if (row.name) setCorrectAnswer(row.name.toUpperCase())
+                        setHangulName(row.hangul_name || '')
+                        setCorrectAnswer('')
                         setCurrentImageIndex(nextImageIndex + 1)
                         setTimeout(() => {
                             justLoadedGuessesRef.current = false
@@ -394,7 +318,7 @@ export function useHangulGameController() {
                         )
 
                         newImages.forEach((img) => {
-                            if (img.img_bucket) addSeenHangulIdol(img.img_bucket)
+                            addSeenHangulId(img.id)
                         })
                     }
                 })
@@ -418,7 +342,7 @@ export function useHangulGameController() {
             lossRecordedRef.current = false
             hasTrackedCurrentGame.current = false
             hangulStats.clearGameState()
-            clearSeenHangulIdols()
+            clearSeenHangulIds()
 
             if (overrideGroupFilter) {
                 setGroupFilter(overrideGroupFilter)
@@ -451,72 +375,87 @@ export function useHangulGameController() {
                     !gameLost
                 ) {
                     const normalizedGuess = currentGuess.toUpperCase().trim()
-                    const normalizedName = hangulImage?.name?.toUpperCase().trim() || ''
-                    const normalizedAltName = hangulImage?.alt_name?.toUpperCase().trim() || ''
-                    let isCorrect = normalizedGuess === normalizedName
-                    let matchedAnswer = normalizedName
-                    if (normalizedAltName && !isCorrect) {
-                        isCorrect = normalizedGuess === normalizedAltName
-                        if (isCorrect) matchedAnswer = normalizedAltName
-                    }
-
+                    if (!hangulImage?.session) return
                     setIsAnimating(true)
-
-                    if (!isCorrect) {
-                        setLastIncorrectGuess(normalizedGuess)
-                        setCurrentGuess('')
-
-                        setTimeout(() => {
+                    void (async () => {
+                        const result = await submitIdolGuess(
+                            hangulImage.session,
+                            normalizedGuess
+                        )
+                        if (!result) {
                             setIsAnimating(false)
+                            return
+                        }
+                        const revealed = result.idol.name?.toUpperCase() || ''
+                        setHangulImage((prev) =>
+                            prev
+                                ? { ...result.idol, group_name: prev.group_name }
+                                : result.idol
+                        )
+                        if (revealed) setCorrectAnswer(revealed)
+                        if (!result.correct) {
+                            setLastIncorrectGuess(normalizedGuess)
+                            setCurrentGuess('')
+                            setTimeout(() => {
+                                setIsAnimating(false)
+                                setGuesses((prev) => {
+                                    const newGuesses = [...prev]
+                                    const emptyIndex = newGuesses.findIndex(
+                                        (g) => g === 'empty'
+                                    )
+                                    if (emptyIndex === -1) return prev
+                                    newGuesses[emptyIndex] = 'incorrect'
+                                    const remainingAfterThis = newGuesses.filter(
+                                        (g) => g === 'empty'
+                                    ).length
+                                    if (remainingAfterThis === 0 || result.gameOver) {
+                                        setTimeout(() => {
+                                            const streakBeforeReset =
+                                                hangulStats.stats.currentStreak
+                                            setFinalStreak(streakBeforeReset)
+                                            setGameLost(true)
+                                            if (!lossRecordedRef.current) {
+                                                lossRecordedRef.current = true
+                                                if (
+                                                    !hasTrackedCurrentGame.current &&
+                                                    streakBeforeReset >= 1
+                                                ) {
+                                                    void trackHangulGame(
+                                                        streakBeforeReset
+                                                    )
+                                                    hasTrackedCurrentGame.current = true
+                                                }
+                                                hangulStats.updateStats(false, true)
+                                            }
+                                            hangulStats.clearGameState()
+                                            lastStreakMilestoneRef.current = 0
+                                            clearSeenHangulIds()
+                                        }, 300)
+                                    }
+                                    return newGuesses
+                                })
+                            }, 500)
+                        } else {
+                            const emptyIndex = guesses.findIndex((g) => g === 'empty')
+                            setGameWon(true)
+                            setIsAnimating(false)
+                            setCurrentGuess('')
                             setGuesses((prev) => {
                                 const newGuesses = [...prev]
-                                const emptyIndex = newGuesses.findIndex((g) => g === 'empty')
                                 if (emptyIndex === -1) return prev
-                                newGuesses[emptyIndex] = 'incorrect'
-                                const remainingAfterThis = newGuesses.filter((g) => g === 'empty').length
-                                if (remainingAfterThis === 0) {
-                                    setTimeout(() => {
-                                        const streakBeforeReset = hangulStats.stats.currentStreak
-                                        setFinalStreak(streakBeforeReset)
-                                        setGameLost(true)
-                                        if (!lossRecordedRef.current) {
-                                            lossRecordedRef.current = true
-                                            if (!hasTrackedCurrentGame.current && streakBeforeReset >= 1) {
-                                                void trackHangulGame(streakBeforeReset)
-                                                hasTrackedCurrentGame.current = true
-                                            }
-                                            hangulStats.updateStats(false, true)
-                                        }
-                                        hangulStats.clearGameState()
-                                        lastStreakMilestoneRef.current = 0
-                                        clearSeenHangulIdols()
-                                    }, 300)
-                                }
+                                newGuesses[emptyIndex] = 'correct'
                                 return newGuesses
                             })
-                        }, 500)
-                    } else {
-                        const emptyIndex = guesses.findIndex((g) => g === 'empty')
-                        setGameWon(true)
-                        setCorrectAnswer(matchedAnswer)
-                        setIsAnimating(false)
-                        setCurrentGuess('')
-                        setGuesses((prev) => {
-                            const newGuesses = [...prev]
-                            if (emptyIndex === -1) return prev
-                            newGuesses[emptyIndex] = 'correct'
-                            return newGuesses
-                        })
-
-                        const currentStreak = hangulStats.stats.currentStreak
-                        const newStreak = currentStreak + 1
-                        if (newStreak % 5 === 0) {
-                            setStreakMilestone(newStreak)
-                            setShowStreakPopup(true)
+                            const currentStreak = hangulStats.stats.currentStreak
+                            const newStreak = currentStreak + 1
+                            if (newStreak % 5 === 0) {
+                                setStreakMilestone(newStreak)
+                                setShowStreakPopup(true)
+                            }
+                            hangulStats.updateStats(true, false)
+                            hangulStats.clearGameState()
                         }
-                        hangulStats.updateStats(true, false)
-                        hangulStats.clearGameState()
-                    }
+                    })()
                 }
             } else if (key === '✕') {
                 if (!gameWon && !gameLost) {
@@ -648,34 +587,13 @@ export function useHangulGameController() {
                 return
             }
             hangulStats.saveGameState({
-                groupType: hangulImage.group_type || '',
-                imgBucket: hangulImage.img_bucket,
-                groupCategory: hangulImage.group_category,
-                base64Group: hangulImage.base64_group,
-                base64Idol: hangulImage.base64_idol,
-                encodedIdolName: encodeIdolName(hangulImage.name || ''),
-                encodedAltName: hangulImage.alt_name
-                    ? encodeIdolName(hangulImage.alt_name)
-                    : undefined,
-                hangulName: hangulImage.hangul_name,
-                groupName: hangulImage.group_name,
-                imageRevealed: imageRevealed,
-                skipsRemaining: skipsRemaining,
-                guesses: guesses,
+                idol: toStoredIdol(hangulImage),
+                imageRevealed,
+                skipsRemaining,
+                guesses,
                 savedAt: new Date().toISOString(),
-                prefetchedImages: prefetchedImages.map((img) => ({
-                    id: img.id,
-                    name: img.name,
-                    alt_name: img.alt_name,
-                    hangul_name: img.hangul_name,
-                    group_type: img.group_type || '',
-                    img_bucket: img.img_bucket,
-                    group_category: img.group_category,
-                    base64_group: img.base64_group,
-                    base64_idol: img.base64_idol,
-                    group_name: img.group_name,
-                })),
-                currentImageIndex: currentImageIndex,
+                prefetchedImages: prefetchedImages.map((img) => toStoredIdol(img)),
+                currentImageIndex,
             })
         }
     }, [
@@ -701,6 +619,17 @@ export function useHangulGameController() {
         []
     )
 
+    const revealHangulHint = useCallback(async () => {
+        if (!hangulImage?.session || imageRevealed) return
+        const groupName = await fetchGroupHint(hangulImage.session)
+        if (groupName) {
+            setHangulImage((prev) =>
+                prev ? { ...prev, group_name: groupName } : prev
+            )
+        }
+        setImageRevealed(true)
+    }, [hangulImage, imageRevealed])
+
     return {
         // Core state
         isLoading,
@@ -719,6 +648,7 @@ export function useHangulGameController() {
         // Image reveal
         imageRevealed,
         setImageRevealed,
+        revealHangulHint,
         // UI state
         showConfetti,
         windowDimensions,

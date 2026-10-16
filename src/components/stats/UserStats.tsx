@@ -38,34 +38,29 @@ export interface UnlimitedStats {
     maxStreak: number
 }
 
+export interface StoredIdol {
+  id: number
+  session: string
+  imageUrl: string
+  nextImageUrl: string | null
+  clearImageUrl: string | null
+  pixelImageUrl: string | null
+  hasHint: boolean
+  groupCategory?: string
+  hangulName?: string
+  groupName?: string
+}
+
 export interface UnlimitedGameState {
-    groupType: string
-    imgBucket: string
-    groupCategory?: string
-    base64Group?: string
-    base64Idol?: string
-    encodedIdolName: string
-    encodedAltName?: string
-    groupName?: string
-    difficulty?: InfiniteDifficulty
-    hintUsed?: boolean
-    hintsRemaining?: number
-    hintUsedOnIdol?: string
-    skipsRemaining?: number
-    guesses: Array<'correct' | 'incorrect' | 'empty'>
-    savedAt: string
-    prefetchedImages?: Array<{
-        id: number
-        name: string
-        alt_name?: string
-        group_type: string
-        img_bucket: string
-        group_category?: string
-        base64_group?: string
-        base64_idol?: string
-        group_name?: string
-    }>
-    currentImageIndex?: number
+  idol: StoredIdol
+  difficulty?: InfiniteDifficulty
+  hintsRemaining?: number
+  hintUsedOnIdol?: string
+  skipsRemaining?: number
+  guesses: Array<'correct' | 'incorrect' | 'empty'>
+  savedAt: string
+  prefetchedImages?: StoredIdol[]
+  currentImageIndex?: number
 }
 
 export interface HangulStats {
@@ -76,32 +71,13 @@ export interface HangulStats {
 }
 
 export interface HangulGameState {
-    groupType: string
-    imgBucket: string
-    groupCategory?: string
-    base64Group?: string
-    base64Idol?: string
-    encodedIdolName: string
-    encodedAltName?: string
-    hangulName: string
-    groupName?: string
-    imageRevealed?: boolean
-    skipsRemaining?: number
-    guesses: Array<'correct' | 'incorrect' | 'empty'>
-    savedAt: string
-    prefetchedImages?: Array<{
-        id: number
-        name: string
-        alt_name?: string
-        hangul_name: string
-        group_type: string
-        img_bucket: string
-        group_category?: string
-        base64_group?: string
-        base64_idol?: string
-        group_name?: string
-    }>
-    currentImageIndex?: number
+  idol: StoredIdol
+  imageRevealed?: boolean
+  skipsRemaining?: number
+  guesses: Array<'correct' | 'incorrect' | 'empty'>
+  savedAt: string
+  prefetchedImages?: StoredIdol[]
+  currentImageIndex?: number
 }
 
 const defaultStats: UserStats = {

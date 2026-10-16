@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import localFont from 'next/font/local'
-import { getAvailableDailyDates } from '@/lib/supabase'
+import { fetchHistoryDates } from '@/lib/gameApi'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -36,7 +36,7 @@ export default function HistoryModal({
     useEffect(() => {
         if (isOpen) {
             setIsLoading(true)
-            getAvailableDailyDates().then(({ dates, firstDate, lastDate }) => {
+            fetchHistoryDates().then(({ dates, firstDate, lastDate }) => {
                 setAvailableDates(new Set(dates))
                 setFirstAvailableDate(firstDate)
                 setLastAvailableDate(lastDate)

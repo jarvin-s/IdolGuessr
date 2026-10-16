@@ -1,4 +1,3 @@
-import { getImageUrl } from '@/lib/supabase'
 import StreakPopup from './StreakPopup'
 import GameOverModal from './GameOverModal'
 import Image from 'next/image'
@@ -12,12 +11,12 @@ const proximanovaBold = localFont({
 interface GameImageProps {
     isLoading: boolean
     dailyImage: {
-        group_type: string
         img_bucket: string
-        group_category?: string
-        base64_group?: string
-        base64_idol?: string
+        imageUrl?: string
+        nextImageUrl?: string | null
+        clearImageUrl?: string | null
         group_name?: string
+        hasHint?: boolean
     } | null
     remainingGuesses: number
     gameWon: boolean
@@ -94,88 +93,37 @@ export default function GameImage({
         }
     }, [hintUsedOnIdol, dailyImage?.img_bucket])
 
-    const isChallenger = maxGuesses <= 3
     const roundEnded = gameWon || gameLost || remainingGuesses === 0
-    const [loadedState, setLoadedState] = useState<{
-        bucket: string | null
-        slots: Array<number | 'clear'>
-    }>({ bucket: null, slots: [] })
-    const currentBucket = dailyImage?.img_bucket ?? null
-    const loadedSlots =
-        loadedState.bucket === currentBucket ? loadedState.slots : []
+    const visibleUrl =
+        roundEnded && dailyImage?.clearImageUrl
+            ? dailyImage.clearImageUrl
+            : dailyImage?.imageUrl || ''
+    const hasValidData = !dailyImage || !!visibleUrl
+    const [frame, setFrame] = useState({ current: '', previous: '' })
 
-    const markSlotLoaded = (bucket: string, slot: number | 'clear') => {
-        setLoadedState((prev) => {
-            const prevSlots = prev.bucket === bucket ? prev.slots : []
-            if (prevSlots.includes(slot)) return prev
-            return { bucket, slots: [...prevSlots, slot] }
-        })
-    }
-
-    const getImageNumber = (): number | 'clear' => {
-        if (isChallenger) {
-            const guessesUsed = maxGuesses - remainingGuesses
-            if (!roundEnded) return guessesUsed + 1
-            return 'clear'
-        }
-        if (roundEnded || remainingGuesses === 1) {
-            return 'clear'
-        }
-        if (remainingGuesses === 6) return 1
-        if (remainingGuesses === 5) return 2
-        if (remainingGuesses === 4) return 3
-        if (remainingGuesses === 3) return 4
-        if (remainingGuesses === 2) return 5
-        return 1
-    }
-
-    const targetImageNumber = getImageNumber()
-    const hasValidData =
-        !dailyImage ||
-        gameMode === 'daily' ||
-        (dailyImage.group_category && dailyImage.base64_group)
-
-    const imageSlots: Array<number | 'clear'> = isChallenger
-        ? roundEnded
-            ? [1, 2, 3, 'clear']
-            : [1, 2, 3]
-        : [1, 2, 3, 4, 5, 'clear']
-
-    const allImageUrls =
-        dailyImage && hasValidData
-            ? imageSlots.map((num) =>
-                  getImageUrl(
-                      dailyImage.group_type || '',
-                      dailyImage.img_bucket,
-                      num,
-                      gameMode,
-                      dailyImage.group_category,
-                      dailyImage.base64_group
-                  )
-              )
-            : []
-
-    const targetIndex = imageSlots.indexOf(targetImageNumber)
-    let currentIndex = targetIndex
-    if (!loadedSlots.includes(targetImageNumber)) {
-        for (let i = targetIndex - 1; i >= 0; i--) {
-            if (loadedSlots.includes(imageSlots[i])) {
-                currentIndex = i
-                break
-            }
-        }
-    }
-    const imageNumber = imageSlots[currentIndex]
-
-    const mountedSlots = imageSlots
-        .map((num, index) => ({ num, index, url: allImageUrls[index] }))
-        .filter(
-            ({ num, index, url }) =>
-                url &&
-                (loadedSlots.includes(num) ||
-                    index === targetIndex ||
-                    index === targetIndex + 1)
+    useEffect(() => {
+        if (!visibleUrl) return
+        setFrame((prev) =>
+            prev.current === visibleUrl
+                ? prev
+                : { current: visibleUrl, previous: prev.current }
         )
+    }, [visibleUrl])
+
+    useEffect(() => {
+        if (!dailyImage?.nextImageUrl || roundEnded) return
+        const preload = new window.Image()
+        preload.src = dailyImage.nextImageUrl
+    }, [dailyImage?.nextImageUrl, roundEnded])
+
+    const mountedSlots = [
+        frame.previous
+            ? { key: frame.previous, url: frame.previous, visible: false }
+            : null,
+        frame.current
+            ? { key: frame.current, url: frame.current, visible: true }
+            : null,
+    ].filter((slot): slot is { key: string; url: string; visible: boolean } => !!slot)
 
     return (
         <div className='relative mb-3 min-h-0 w-full flex-1 sm:mx-auto sm:max-w-md'>
@@ -195,24 +143,17 @@ export default function GameImage({
                         }}
                         key={dailyImage.img_bucket}
                     >
-                        {mountedSlots.map(({ num: imageNum, index, url }) => {
-                            const isVisible = imageNumber === imageNum
-                            const isPastImage = index < currentIndex
-                            const bucket = dailyImage.img_bucket
+                        {mountedSlots.map(({ key, url, visible }) => {
                             return (
                                 <div
-                                    key={url}
+                                    key={key}
                                     className='absolute inset-0 overflow-hidden rounded-lg transition-all duration-500 ease-out'
                                     style={{
-                                        opacity: isVisible ? 1 : 0,
-                                        transform: isVisible
+                                        opacity: visible ? 1 : 0,
+                                        transform: visible
                                             ? 'translateX(0) rotate(0deg)'
-                                            : isPastImage
-                                              ? 'translateX(-150%) rotate(-15deg)'
-                                              : 'translateX(150%) rotate(15deg)',
-                                        pointerEvents: isVisible
-                                            ? 'auto'
-                                            : 'none',
+                                            : 'translateX(-150%) rotate(-15deg)',
+                                        pointerEvents: visible ? 'auto' : 'none',
                                     }}
                                 >
                                     <Image
@@ -226,16 +167,7 @@ export default function GameImage({
                                             height: '100%',
                                         }}
                                         unoptimized
-                                        priority={index === 0}
-                                        loading={
-                                            index === 0 ? undefined : 'eager'
-                                        }
-                                        onLoad={() =>
-                                            markSlotLoaded(bucket, imageNum)
-                                        }
-                                        onError={() =>
-                                            markSlotLoaded(bucket, imageNum)
-                                        }
+                                        priority={visible}
                                     />
                                 </div>
                             )
@@ -250,7 +182,8 @@ export default function GameImage({
                 {gameMode === 'unlimited' && !gameWon && !gameLost && (
                     <>
                         <div className='absolute top-3 left-3 z-10 flex items-center gap-2'>
-                            {maxHints > 0 && dailyImage?.group_name && (
+                            {maxHints > 0 &&
+                                (dailyImage?.group_name || dailyImage?.hasHint) && (
                                 <button
                                     onClick={() => {
                                         const revealedHere =
@@ -294,7 +227,7 @@ export default function GameImage({
                                     <HintButton />
                                     {hintUsedOnIdol === dailyImage.img_bucket ||
                                     groupNameRevealed
-                                        ? dailyImage.group_name
+                                        ? dailyImage.group_name || 'HINT'
                                         : hintsRemaining <= 0
                                           ? 'HINT (0)'
                                           : `HINT (${hintsRemaining})`}

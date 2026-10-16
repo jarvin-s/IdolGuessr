@@ -6,10 +6,12 @@ import copy from 'copy-to-clipboard'
 import Image from 'next/image'
 import ChallengeResultsView from '@/components/challenge/ChallengeResultsView'
 import {
-    getChallenge,
-    getChallengeResults,
+    fetchRevealedChallenge,
+    fetchChallengeResultRows,
+    type RevealedChallenge,
+} from '@/lib/gameApi'
+import {
     getOrCreateSessionId,
-    type Challenge,
     type ChallengeResult,
 } from '@/lib/supabase'
 
@@ -18,7 +20,7 @@ export default function ChallengeResultsPage() {
     const router = useRouter()
     const challengeId = params.id as string
 
-    const [challenge, setChallenge] = useState<Challenge | null>(null)
+    const [challenge, setChallenge] = useState<RevealedChallenge | null>(null)
     const [results, setResults] = useState<ChallengeResult[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -32,8 +34,8 @@ export default function ChallengeResultsPage() {
             setSessionId(sid)
 
             const [challengeData, resultsData] = await Promise.all([
-                getChallenge(challengeId),
-                getChallengeResults(challengeId),
+                fetchRevealedChallenge(challengeId),
+                fetchChallengeResultRows(challengeId),
             ])
 
             if (!challengeData) {
@@ -43,7 +45,7 @@ export default function ChallengeResultsPage() {
             }
 
             setChallenge(challengeData)
-            setResults(resultsData)
+            setResults(resultsData as ChallengeResult[])
             setIsLoading(false)
         }
 

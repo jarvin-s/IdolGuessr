@@ -1,10 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { DailyImage } from '@/lib/supabase'
 import {
     useUserStats,
-    DailyCompletion,
+    type DailyCompletion,
 } from '@/components/stats/UserStats'
 
 interface GameProgressHook {
@@ -20,15 +19,15 @@ interface GameProgressHook {
     todayCompletionData: DailyCompletion | null
     stats: ReturnType<typeof useUserStats>['stats']
     statsLoaded: boolean
-    handleGameWin: (guessNumber: number) => void
-    handleGameLoss: () => void
+    handleGameWin: (guessNumber: number, revealedName?: string) => void
+    handleGameLoss: (revealedName?: string) => void
     saveProgress: (newGuesses: Array<'correct' | 'incorrect' | 'empty'>) => void
     saveGuessAttempt: (guess: string) => void
     loadGuessAttempts: () => string[]
 }
 
 export function useGameProgress(
-    dailyImage: DailyImage | null,
+    dailyImage: { id: number } | null,
     correctAnswer: string,
     gameMode: 'daily' | 'unlimited' = 'daily'
 ): GameProgressHook {
@@ -125,21 +124,32 @@ export function useGameProgress(
     ])
 
     const handleGameWin = useCallback(
-        (guessNumber: number) => {
+        (guessNumber: number, revealedName?: string) => {
             const attempts = loadGuessAttempts()
-            updateStats(true, guessNumber, dailyImage?.id, correctAnswer, attempts)
+            updateStats(
+                true,
+                guessNumber,
+                dailyImage?.id,
+                revealedName || correctAnswer,
+                attempts
+            )
             clearDailyProgress()
-            // Don't clear guess attempts here - they're needed for the modal
         },
         [updateStats, dailyImage, correctAnswer, clearDailyProgress, loadGuessAttempts]
     )
 
-    const handleGameLoss = useCallback(() => {
-        const attempts = loadGuessAttempts()
-        updateStats(false, 0, dailyImage?.id, correctAnswer, attempts)
-        clearDailyProgress()
-        // Don't clear guess attempts here - they're needed for the modal
-    }, [updateStats, dailyImage, correctAnswer, clearDailyProgress, loadGuessAttempts])
+    const handleGameLoss = useCallback(
+        (revealedName?: string) => {
+            const attempts = loadGuessAttempts()
+            updateStats(
+                false,
+                0,
+                dailyImage?.id,
+                revealedName || correctAnswer,
+                attempts
+            )
+            clearDailyProgress()
+        }, [updateStats, dailyImage, correctAnswer, clearDailyProgress, loadGuessAttempts])
 
     const saveProgress = useCallback(
         (newGuesses: Array<'correct' | 'incorrect' | 'empty'>) => {

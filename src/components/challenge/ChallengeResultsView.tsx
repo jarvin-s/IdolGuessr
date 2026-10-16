@@ -1,15 +1,14 @@
 'use client'
 
 import Image from 'next/image'
-import { getImageUrl } from '@/lib/supabase'
+import type { RevealedChallenge } from '@/lib/gameApi'
 import type {
-    Challenge,
     ChallengeResult,
     ChallengeIdolResult,
 } from '@/lib/supabase'
 
 interface ChallengeResultsViewProps {
-    challenge: Challenge
+    challenge: RevealedChallenge
     results: ChallengeResult[]
     currentSessionId: string
 }
@@ -80,15 +79,6 @@ export default function ChallengeResultsView({
                 <h2 className='mb-3 text-2xl font-bold'>Idol breakdown</h2>
                 <div className='space-y-3'>
                     {challenge.idols.map((idol, idolIndex) => {
-                        const imageUrl = getImageUrl(
-                            '',
-                            idol.img_bucket,
-                            'clear',
-                            'unlimited',
-                            idol.group_category,
-                            idol.base64_group
-                        )
-
                         return (
                             <div
                                 key={idol.id}
@@ -101,7 +91,7 @@ export default function ChallengeResultsView({
                                     </span>
                                     <div className='relative h-18 w-18 overflow-hidden rounded-full'>
                                         <Image
-                                            src={imageUrl}
+                                            src={idol.clearImageUrl}
                                             alt={idol.name}
                                             fill
                                             className='object-cover'

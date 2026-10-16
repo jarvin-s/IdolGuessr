@@ -11,7 +11,11 @@ import FeedbackModal from '@/components/modals/FeedbackModal'
 import InfoModal from '@/components/modals/InfoModal'
 import HistoryModal from '@/components/modals/HistoryModal'
 import WinModal from '@/components/modals/WinModal'
-import { getImageUrl, getDailyImageByDate, type HistoryDailyImage } from '@/lib/supabase'
+import {
+    fetchHistoryIdol,
+    submitIdolGuess,
+    type PlayIdol,
+} from '@/lib/gameApi'
 import { useGameController } from '@/hooks/useGameController'
 import IndexModal from '@/components/modals/IndexModal'
 import { useRouter } from 'next/navigation'
@@ -26,7 +30,8 @@ export default function Home() {
     const [showInfo, setShowInfo] = useState(false)
     const [showHistory, setShowHistory] = useState(false)
     const [historyDate, setHistoryDate] = useState<string | null>(null)
-    const [historyImage, setHistoryImage] = useState<HistoryDailyImage | null>(null)
+    const [historyImage, setHistoryImage] = useState<PlayIdol | null>(null)
+    const [historyRevealedName, setHistoryRevealedName] = useState('')
     const [historyGuesses, setHistoryGuesses] = useState<Array<'correct' | 'incorrect' | 'empty'>>(['empty', 'empty', 'empty', 'empty', 'empty', 'empty'])
     const [historyGameWon, setHistoryGameWon] = useState(false)
     const [historyGameLost, setHistoryGameLost] = useState(false)
@@ -85,17 +90,18 @@ export default function Home() {
 
     const isInHistoryMode = historyDate !== null && historyImage !== null
 
-    const historyCorrectAnswer = historyImage?.name?.toUpperCase() || ''
+    const historyCorrectAnswer = historyRevealedName
     const historyRemainingGuesses = historyGuesses.filter((g) => g === 'empty').length
 
     // Past idol games are no longer saved to localStorage - users must recomplete on refresh
 
     const handleSelectHistoryDate = useCallback(async (date: string) => {
         setShowHistory(false)
-        const image = await getDailyImageByDate(date)
+        const image = await fetchHistoryIdol(date)
         if (image) {
             setHistoryDate(date)
             setHistoryImage(image)
+            setHistoryRevealedName('')
             setHistoryCurrentGuess('')
             setHistoryLastIncorrectGuess('')
             setHistoryIsAnimating(false)
@@ -112,6 +118,7 @@ export default function Home() {
     const handleExitHistoryMode = useCallback(() => {
         setHistoryDate(null)
         setHistoryImage(null)
+        setHistoryRevealedName('')
         setHistoryGuesses(['empty', 'empty', 'empty', 'empty', 'empty', 'empty'])
         setHistoryGameWon(false)
         setHistoryGameLost(false)
@@ -145,55 +152,72 @@ export default function Home() {
                     return
                 }
 
-                const normalizedName = historyImage.name?.toUpperCase().trim() || ''
-                const isCorrect = normalizedGuess === normalizedName
-
+                if (!historyImage.session) return
                 setHistoryIsAnimating(true)
-
-                if (!isCorrect) {
-                    setHistoryLastIncorrectGuess(normalizedGuess)
-                    setHistoryCurrentGuess('')
-
-                    const correctLetters = new Set(normalizedName.split(''))
-                    const incorrectLettersInGuess = normalizedGuess
-                        .split('')
-                        .filter((letter) => !correctLetters.has(letter))
-
-                    const newDisabledLetters = new Set(historyDisabledLetters)
-                    incorrectLettersInGuess.forEach((letter) => newDisabledLetters.add(letter))
-                    setHistoryDisabledLetters(newDisabledLetters)
-
-                    setTimeout(() => {
+                void (async () => {
+                    const result = await submitIdolGuess(
+                        historyImage.session,
+                        normalizedGuess
+                    )
+                    if (!result) {
                         setHistoryIsAnimating(false)
+                        return
+                    }
+                    setHistoryImage((prev) =>
+                        prev ? { ...prev, ...result.idol } : result.idol
+                    )
+                    if (result.idol.name) {
+                        setHistoryRevealedName(result.idol.name.toUpperCase())
+                    }
+                    if (result.absentLetters.length > 0) {
+                        setHistoryDisabledLetters((prev) => {
+                            const next = new Set(prev)
+                            result.absentLetters.forEach((letter) =>
+                                next.add(letter)
+                            )
+                            return next
+                        })
+                    }
+                    if (!result.correct) {
+                        setHistoryLastIncorrectGuess(normalizedGuess)
+                        setHistoryCurrentGuess('')
+                        setTimeout(() => {
+                            setHistoryIsAnimating(false)
+                            setHistoryGuesses((prev) => {
+                                const newGuesses = [...prev] as Array<
+                                    'correct' | 'incorrect' | 'empty'
+                                >
+                                const emptyIndex = newGuesses.findIndex(
+                                    (g) => g === 'empty'
+                                )
+                                if (emptyIndex === -1) return prev
+                                newGuesses[emptyIndex] = 'incorrect'
+                                if (
+                                    newGuesses.filter((g) => g === 'empty')
+                                        .length === 0
+                                ) {
+                                    setTimeout(() => setHistoryGameLost(true), 300)
+                                }
+                                return newGuesses
+                            })
+                        }, 500)
+                    } else {
+                        const emptyIndex = historyGuesses.findIndex(
+                            (g) => g === 'empty'
+                        )
+                        setHistoryGameWon(true)
+                        setHistoryIsAnimating(false)
+                        setHistoryCurrentGuess('')
                         setHistoryGuesses((prev) => {
-                            const newGuesses = [...prev] as Array<'correct' | 'incorrect' | 'empty'>
-                            const emptyIndex = newGuesses.findIndex((g) => g === 'empty')
+                            const newGuesses = [...prev] as Array<
+                                'correct' | 'incorrect' | 'empty'
+                            >
                             if (emptyIndex === -1) return prev
-                            newGuesses[emptyIndex] = 'incorrect'
-                            
-                            const remainingAfterThis = newGuesses.filter((g) => g === 'empty').length
-                            if (remainingAfterThis === 0) {
-                                setTimeout(() => {
-                                    setHistoryGameLost(true)
-                                    // Win modal disabled for past idols
-                                }, 300)
-                            }
+                            newGuesses[emptyIndex] = 'correct'
                             return newGuesses
                         })
-                    }, 500)
-                } else {
-                    const emptyIndex = historyGuesses.findIndex((g) => g === 'empty')
-                    setHistoryGameWon(true)
-                    setHistoryIsAnimating(false)
-                    setHistoryCurrentGuess('')
-                    setHistoryGuesses((prev) => {
-                        const newGuesses = [...prev] as Array<'correct' | 'incorrect' | 'empty'>
-                        if (emptyIndex === -1) return prev
-                        newGuesses[emptyIndex] = 'correct'
-                        // Win modal disabled for past idols
-                        return newGuesses
-                    })
-                }
+                    }
+                })()
             }
         } else if (key === '✕') {
             if (!historyGameWon && !historyGameLost) {
@@ -335,23 +359,7 @@ export default function Home() {
                         <GameImage
                             isLoading={isInHistoryMode ? false : isLoading}
                             dailyImage={
-                                isInHistoryMode && historyImage
-                                    ? {
-                                          group_type: historyImage.group_type || '',
-                                          img_bucket: historyImage.img_bucket,
-                                          group_category: historyImage.group_category,
-                                          base64_group: historyImage.base64_group,
-                                          base64_idol: historyImage.base64_idol,
-                                          group_name: historyImage.group_name,
-                                      }
-                                    : dailyImage && {
-                                          group_type: dailyImage.group_type || '',
-                                          img_bucket: dailyImage.img_bucket,
-                                          group_category: dailyImage.group_category,
-                                          base64_group: dailyImage.base64_group,
-                                          base64_idol: dailyImage.base64_idol,
-                                          group_name: dailyImage.group_name,
-                                      }
+                                isInHistoryMode ? historyImage : dailyImage
                             }
                             remainingGuesses={isInHistoryMode ? historyRemainingGuesses : remainingGuesses}
                             gameWon={isInHistoryMode ? historyGameWon : gameWon}
@@ -477,30 +485,8 @@ export default function Home() {
                     isOpen={showWinModal}
                     onClose={() => setShowWinModal(false)}
                     idolName={correctAnswer}
-                    imageUrl={
-                        dailyImage
-                            ? getImageUrl(
-                                  dailyImage.group_type || '',
-                                  dailyImage.img_bucket,
-                                  'clear',
-                                  gameMode,
-                                  dailyImage.group_category,
-                                  dailyImage.base64_group
-                              )
-                            : ''
-                    }
-                    pixelatedImageUrl={
-                        dailyImage
-                            ? getImageUrl(
-                                  dailyImage.group_type || '',
-                                  dailyImage.img_bucket,
-                                  1,
-                                  gameMode,
-                                  dailyImage.group_category,
-                                  dailyImage.base64_group
-                              )
-                            : ''
-                    }
+                    imageUrl={dailyImage?.clearImageUrl || ''}
+                    pixelatedImageUrl={dailyImage?.pixelImageUrl || ''}
                     guessCount={
                         todayCompletionData?.guessCount ||
                         6 - guesses.filter((g) => g === 'empty').length

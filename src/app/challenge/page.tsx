@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ChallengeCreateModal from '@/components/challenge/ChallengeCreateModal'
-import { createChallenge, getOrCreateSessionId } from '@/lib/supabase'
+import { createPlayChallenge } from '@/lib/gameApi'
+import { getOrCreateSessionId } from '@/lib/supabase'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 type IdolCount = 5 | 10 | 15 | 20
@@ -19,7 +20,7 @@ export default function ChallengePage() {
 
     try {
       const sessionId = getOrCreateSessionId()
-      const challengeId = await createChallenge(sessionId, idolCount, groupFilter)
+      const challengeId = await createPlayChallenge(sessionId, idolCount, groupFilter)
 
       if (challengeId) {
         router.push(`/challenge/${challengeId}`)

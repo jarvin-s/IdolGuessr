@@ -12,6 +12,7 @@ interface HangulDisplayProps {
         base64_group?: string
         base64_idol?: string
         group_name?: string
+        hasHint?: boolean
     } | null
     remainingGuesses: number
     gameWon: boolean
@@ -62,7 +63,7 @@ export default function HangulDisplay({
         }
     }, [hangulImage?.img_bucket])
 
-    const hasGroupHint = !!hangulImage?.group_name
+    const hasGroupHint = !!hangulImage?.group_name || !!hangulImage?.hasHint
 
     return (
         <div className='relative mb-3 min-h-0 w-full flex-1 sm:mx-auto sm:max-w-md'>

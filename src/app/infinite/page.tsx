@@ -15,7 +15,6 @@ import WinModal from '@/components/modals/WinModal'
 import InfiniteStartModal from '@/components/modals/InfiniteStartModal'
 import FilterModal from '@/components/filters/FilterModal'
 import { useGameController } from '@/hooks/useGameController'
-import { getImageUrl } from '@/lib/supabase'
 import {
     loadSavedDifficulty,
     saveDifficulty,
@@ -69,8 +68,7 @@ export default function InfinitePage() {
         maxHints,
         maxSkips,
         hintUsedOnIdol,
-        setHintUsedOnIdol,
-        consumeHint,
+        revealHint,
         showStreakPopup,
         streakMilestone,
         setShowStreakPopup,
@@ -151,16 +149,7 @@ export default function InfinitePage() {
                     <div className='flex min-h-0 w-full flex-1 flex-col items-center'>
                         <GameImage
                             isLoading={isLoading}
-                            dailyImage={
-                                dailyImage && {
-                                    group_type: dailyImage.group_type || '',
-                                    img_bucket: dailyImage.img_bucket,
-                                    group_category: dailyImage.group_category,
-                                    base64_group: dailyImage.base64_group,
-                                    base64_idol: dailyImage.base64_idol,
-                                    group_name: dailyImage.group_name,
-                                }
-                            }
+                            dailyImage={dailyImage}
                             remainingGuesses={remainingGuesses}
                             gameWon={gameWon}
                             gameLost={gameLost}
@@ -180,9 +169,7 @@ export default function InfinitePage() {
                             hintsRemaining={hintsRemaining}
                             hintUsedOnIdol={hintUsedOnIdol}
                             onHintUse={() => {
-                                consumeHint()
-                                if (dailyImage?.img_bucket)
-                                    setHintUsedOnIdol(dailyImage.img_bucket)
+                                void revealHint()
                             }}
                             showStreakPopup={showStreakPopup}
                             streakMilestone={streakMilestone}
@@ -259,34 +246,8 @@ export default function InfinitePage() {
                 isOpen={showWinModal}
                 onClose={() => setShowWinModal(false)}
                 idolName={correctAnswer}
-                imageUrl={
-                    dailyImage &&
-                    dailyImage.group_category &&
-                    dailyImage.base64_group
-                        ? getImageUrl(
-                              dailyImage.group_type || '',
-                              dailyImage.img_bucket,
-                              'clear',
-                              'unlimited',
-                              dailyImage.group_category,
-                              dailyImage.base64_group
-                          )
-                        : ''
-                }
-                pixelatedImageUrl={
-                    dailyImage &&
-                    dailyImage.group_category &&
-                    dailyImage.base64_group
-                        ? getImageUrl(
-                              dailyImage.group_type || '',
-                              dailyImage.img_bucket,
-                              1,
-                              'unlimited',
-                              dailyImage.group_category,
-                              dailyImage.base64_group
-                          )
-                        : ''
-                }
+                imageUrl={dailyImage?.clearImageUrl || ''}
+                pixelatedImageUrl={dailyImage?.pixelImageUrl || ''}
                 guessCount={
                     maxGuesses - guesses.filter((g) => g === 'empty').length
                 }

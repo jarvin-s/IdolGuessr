@@ -15,7 +15,6 @@ import WinModal from '@/components/modals/WinModal'
 import HangulStartModal from '@/components/modals/HangulStartModal'
 import HangulFilterModal from '@/components/filters/HangulFilterModal'
 import { useHangulGameController } from '@/hooks/useHangulGameController'
-import { getImageUrl } from '@/lib/supabase'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 
@@ -38,7 +37,7 @@ export default function HangulPage() {
         isAnimating,
         handleKeyPress,
         imageRevealed,
-        setImageRevealed,
+        revealHangulHint,
         showConfetti,
         windowDimensions,
         showStats,
@@ -103,21 +102,14 @@ export default function HangulPage() {
                         <HangulDisplay
                             isLoading={isLoading}
                             hangulName={hangulName}
-                            hangulImage={
-                                hangulImage && {
-                                    group_type: hangulImage.group_type || '',
-                                    img_bucket: hangulImage.img_bucket,
-                                    group_category: hangulImage.group_category,
-                                    base64_group: hangulImage.base64_group,
-                                    base64_idol: hangulImage.base64_idol,
-                                    group_name: hangulImage.group_name,
-                                }
-                            }
+                            hangulImage={hangulImage}
                             remainingGuesses={remainingGuesses}
                             gameWon={gameWon}
                             gameLost={gameLost}
                             imageRevealed={imageRevealed}
-                            onRevealImage={() => setImageRevealed(true)}
+                            onRevealImage={() => {
+                                void revealHangulHint()
+                            }}
                             onPass={
                                 !gameWon && !gameLost && skipsRemaining > 0
                                     ? handleSkip
@@ -196,34 +188,8 @@ export default function HangulPage() {
                 isOpen={showWinModal}
                 onClose={() => setShowWinModal(false)}
                 idolName={correctAnswer}
-                imageUrl={
-                    hangulImage &&
-                    hangulImage.group_category &&
-                    hangulImage.base64_group
-                        ? getImageUrl(
-                              hangulImage.group_type || '',
-                              hangulImage.img_bucket,
-                              'clear',
-                              'unlimited',
-                              hangulImage.group_category,
-                              hangulImage.base64_group
-                          )
-                        : ''
-                }
-                pixelatedImageUrl={
-                    hangulImage &&
-                    hangulImage.group_category &&
-                    hangulImage.base64_group
-                        ? getImageUrl(
-                              hangulImage.group_type || '',
-                              hangulImage.img_bucket,
-                              1,
-                              'unlimited',
-                              hangulImage.group_category,
-                              hangulImage.base64_group
-                          )
-                        : ''
-                }
+                imageUrl={hangulImage?.clearImageUrl || ''}
+                pixelatedImageUrl={hangulImage?.pixelImageUrl || ''}
                 guessCount={6 - guesses.filter((g) => g === 'empty').length}
                 isWin={gameWon}
                 guessAttempts={[]}
