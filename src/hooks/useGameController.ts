@@ -1137,8 +1137,6 @@ export function useGameController() {
             window.removeEventListener('keydown', handlePhysicalKeyPress)
     }, [handleKeyPress, disabledLetters])
 
-    const gameModeRef = useRef(gameMode)
-    gameModeRef.current = gameMode
     const hasLoadedInitialRef = useRef(false)
 
     useEffect(() => {
@@ -1229,21 +1227,10 @@ export function useGameController() {
         }
         void loadGame()
 
-        const onFocus = () => {
-            if (gameModeRef.current === 'daily' && loadCurrentRef.current) {
-                void loadCurrentRef.current()
-            }
-        }
-        if (gameMode === 'daily') {
-            window.addEventListener('focus', onFocus)
-            document.addEventListener('visibilitychange', onFocus)
-        }
         resetGuessTimer()
         return () => {
             mounted = false
             clearTimers()
-            window.removeEventListener('focus', onFocus)
-            document.removeEventListener('visibilitychange', onFocus)
         }
     }, [gameMode, pathname, clearTimers])
 
