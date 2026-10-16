@@ -59,6 +59,14 @@ export default function AnnouncementModal() {
                     from happening so bear with me as I&apos;m the only
                     developer working on the app.
                 </p>
+                <p className='mt-4 text-lg leading-relaxed'>
+                    Due to the insane increase in players, I&apos;ve been having
+                    some trouble, so much so that I had to rollback the
+                    database to earlier this morning (8am UTC).
+                </p>
+                <p className='mt-4 text-lg leading-relaxed'>
+                    Sorry for the inconvenience!
+                </p>
                 <p className='mt-4 text-lg'>- IdolGuessr</p>
 
                 <button
