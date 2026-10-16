@@ -4,7 +4,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import localFont from 'next/font/local'
 import GmtPlus2Clock from '@/components/faq/GmtPlus2Clock'
-import ThemeToggle from '@/components/theme/ThemeToggle'
 import {
     DIFFICULTIES,
     DIFFICULTY_DESCRIPTIONS,
@@ -283,10 +282,6 @@ export default function FaqPage() {
                         height={50}
                         className='h-10 w-auto dark:invert'
                     />
-                </div>
-
-                <div className='mb-6 flex justify-center'>
-                    <ThemeToggle />
                 </div>
 
                 <h1
