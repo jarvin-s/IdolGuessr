@@ -4,7 +4,6 @@ import './globals.css'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { themeInitScript } from '@/components/theme/theme'
-import AnnouncementModal from '@/components/modals/AnnouncementModal'
 
 const proximaNovaRegular = localFont({
     src: '../../public/fonts/proximanova_regular.ttf',
@@ -75,7 +74,6 @@ export default function RootLayout({
                 <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
                 <ThemeProvider>
                     {children}
-                    <AnnouncementModal />
                     <Analytics />
                 </ThemeProvider>
             </body>
