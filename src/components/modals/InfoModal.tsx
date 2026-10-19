@@ -196,7 +196,7 @@ export default function InfoModal({
                         <InstagramIcon />
                     </a>
                     <a
-                        href='https://tiktok.com/@idolguessr.fun'
+                        href='https://tiktok.com/@idolguessr'
                         target='_blank'
                         rel='noopener noreferrer'
                         className='flex items-center justify-center transition-opacity hover:opacity-70'
