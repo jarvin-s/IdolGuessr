@@ -17,6 +17,8 @@ import IndexModal from '@/components/modals/IndexModal'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import idolNames from '@/data/idolNames.json'
+import IdolTextInput from '@/components/input/IdolTextInput'
+import { useInputMode } from '@/utils/inputMode'
 
 const idolNamesSet = new Set(idolNames.map((name: string) => name.toUpperCase()))
 
@@ -65,6 +67,7 @@ export default function Home() {
         setShowWinModal,
         stats,
         statsLoaded,
+        todayCompleted,
         todayCompletionData,
         loadGuessAttempts,
         skipsRemaining,
@@ -82,6 +85,8 @@ export default function Home() {
         unlimitedCurrentStreak,
         unlimitedMaxStreak,
     } = useGameController()
+
+    const [inputMode, , inputModeReady] = useInputMode()
 
     const isInHistoryMode = historyDate !== null && historyImage !== null
 
@@ -288,7 +293,7 @@ export default function Home() {
 
     return (
         <div className='fixed inset-0 flex flex-col justify-center overflow-hidden bg-white dark:bg-zinc-950'>
-            <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:dark:border-zinc-700 sm:shadow-lg'>
+            <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[1400px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:dark:border-zinc-700 sm:shadow-lg'>
                 {isInHistoryMode ? (
                     <div className='flex w-full flex-shrink-0 flex-col gap-3 p-4'>
                         <div className='flex w-full items-center justify-between'>
@@ -386,21 +391,40 @@ export default function Home() {
                         />
                     </div>
 
-                    <GuessInput
-                        currentGuess={isInHistoryMode ? historyCurrentGuess : currentGuess}
-                        correctAnswer={isInHistoryMode ? historyCorrectAnswer : correctAnswer}
-                        gameWon={isInHistoryMode ? historyGameWon : gameWon}
-                        gameLost={isInHistoryMode ? historyGameLost : gameLost}
-                        lastIncorrectGuess={isInHistoryMode ? historyLastIncorrectGuess : lastIncorrectGuess}
-                        isAnimating={isInHistoryMode ? historyIsAnimating : isAnimating}
-                        notInList={isInHistoryMode ? historyNotInList : notInList}
-                    />
+                    {!inputModeReady ? (
+                        <div className='flex-shrink-0 pb-4 invisible' aria-hidden='true' />
+                    ) : inputMode === 'text' && !isInHistoryMode ? (
+                        <div className='flex-shrink-0 pb-4'>
+                            <IdolTextInput
+                                onSubmit={(guess) => handleKeyPress('ENTER', guess)}
+                                disabled={gameWon || gameLost || (gameMode === 'daily' && todayCompleted)}
+                                busy={isAnimating}
+                                isAnimating={isAnimating}
+                                notInList={notInList}
+                                gameWon={gameWon}
+                                gameLost={gameLost}
+                                correctAnswer={correctAnswer}
+                            />
+                        </div>
+                    ) : (
+                        <>
+                            <GuessInput
+                                currentGuess={isInHistoryMode ? historyCurrentGuess : currentGuess}
+                                correctAnswer={isInHistoryMode ? historyCorrectAnswer : correctAnswer}
+                                gameWon={isInHistoryMode ? historyGameWon : gameWon}
+                                gameLost={isInHistoryMode ? historyGameLost : gameLost}
+                                lastIncorrectGuess={isInHistoryMode ? historyLastIncorrectGuess : lastIncorrectGuess}
+                                isAnimating={isInHistoryMode ? historyIsAnimating : isAnimating}
+                                notInList={isInHistoryMode ? historyNotInList : notInList}
+                            />
 
-                    <OnScreenKeyboard
-                        onKeyPress={isInHistoryMode ? handleHistoryKeyPress : handleKeyPress}
-                        disabledLetters={isInHistoryMode ? historyDisabledLetters : disabledLetters}
-                        className='flex-shrink-0 pb-4'
-                    />
+                            <OnScreenKeyboard
+                                onKeyPress={isInHistoryMode ? handleHistoryKeyPress : handleKeyPress}
+                                disabledLetters={isInHistoryMode ? historyDisabledLetters : disabledLetters}
+                                className='flex-shrink-0 pb-4'
+                            />
+                        </>
+                    )}
                 </div>
             </div>
 

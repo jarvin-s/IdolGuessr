@@ -16,6 +16,8 @@ import InfiniteStartModal from '@/components/modals/InfiniteStartModal'
 import FilterModal from '@/components/filters/FilterModal'
 import { useGameController } from '@/hooks/useGameController'
 import { getImageUrl } from '@/lib/supabase'
+import IdolTextInput from '@/components/input/IdolTextInput'
+import { useInputMode } from '@/utils/inputMode'
 import {
     loadSavedDifficulty,
     saveDifficulty,
@@ -33,6 +35,7 @@ export default function InfinitePage() {
     const [startOpen, setStartOpen] = useState(false)
     const [showFilterModal, setShowFilterModal] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
+    const [inputMode, , inputModeReady] = useInputMode()
     const {
         handleGameModeChange,
         timer,
@@ -196,20 +199,39 @@ export default function InfinitePage() {
                         />
                     </div>
 
-                    <GuessInput
-                        currentGuess={currentGuess}
-                        correctAnswer={correctAnswer}
-                        gameWon={gameWon}
-                        gameLost={gameLost}
-                        lastIncorrectGuess={lastIncorrectGuess}
-                        isAnimating={isAnimating}
-                        notInList={notInList}
-                    />
+                    {!inputModeReady ? (
+                        <div className='flex-shrink-0 pb-4 invisible' aria-hidden='true' />
+                    ) : inputMode === 'text' ? (
+                        <div className='flex-shrink-0 pb-4'>
+                            <IdolTextInput
+                                onSubmit={(guess) => handleKeyPress('ENTER', guess)}
+                                disabled={gameWon || gameLost}
+                                busy={isAnimating}
+                                isAnimating={isAnimating}
+                                notInList={notInList}
+                                gameWon={gameWon}
+                                gameLost={gameLost}
+                                correctAnswer={correctAnswer}
+                            />
+                        </div>
+                    ) : (
+                        <>
+                            <GuessInput
+                                currentGuess={currentGuess}
+                                correctAnswer={correctAnswer}
+                                gameWon={gameWon}
+                                gameLost={gameLost}
+                                lastIncorrectGuess={lastIncorrectGuess}
+                                isAnimating={isAnimating}
+                                notInList={notInList}
+                            />
 
-                    <OnScreenKeyboard
-                        onKeyPress={handleKeyPress}
-                        className='flex-shrink-0 pb-4'
-                    />
+                            <OnScreenKeyboard
+                                onKeyPress={handleKeyPress}
+                                className='flex-shrink-0 pb-4'
+                            />
+                        </>
+                    )}
                 </div>
             </div>
 

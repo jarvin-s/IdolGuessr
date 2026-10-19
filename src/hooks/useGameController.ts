@@ -900,18 +900,19 @@ export function useGameController() {
     }, [skipsRemaining, loadNextUnlimited])
 
     const handleKeyPress = useCallback(
-        (key: string) => {
+        (key: string, guessOverride?: string) => {
             if (gameMode === 'daily' && todayCompleted) return
 
             if (key === 'ENTER') {
+                const activeGuess = guessOverride ?? currentGuess
                 if (
-                    currentGuess.trim() &&
+                    activeGuess.trim() &&
                     guesses.some((g) => g === 'empty') &&
                     !isAnimating &&
                     !gameWon &&
                     !gameLost
                 ) {
-                    const normalizedGuess = currentGuess.toUpperCase().trim()
+                    const normalizedGuess = activeGuess.toUpperCase().trim()
 
                     if (!idolNamesSet.has(normalizedGuess)) {
                         setNotInList(true)
