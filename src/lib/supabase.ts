@@ -459,14 +459,8 @@ export async function adminSetStatus(ticketId: string, status: TicketStatus): Pr
   if (error) throw error
 }
 
-const CLEAR_IMAGE_WIDTH = 800
-const CLEAR_IMAGE_QUALITY = 75
-
-function publicImageUrl(objectPath: string, fileName: string): string {
+function publicImageUrl(objectPath: string): string {
   const normalizedUrl = supabaseUrl.replace(/\/+$/, '')
-  if (fileName === 'clear.png') {
-    return `${normalizedUrl}/storage/v1/render/image/public/${objectPath}?width=${CLEAR_IMAGE_WIDTH}&quality=${CLEAR_IMAGE_QUALITY}&format=webp`
-  }
   return `${normalizedUrl}/storage/v1/object/public/${objectPath}`
 }
 
@@ -494,13 +488,11 @@ export function getImageUrl(
     }
     return publicImageUrl(
       `images/unlimited/${groupCategory}/${base64Group}/${imgBucket}/${fileName}`,
-      fileName,
     )
   }
 
   return publicImageUrl(
     `images/${mode}/${groupType}/${imgBucket}/${fileName}`,
-    fileName,
   )
 }
 
@@ -522,7 +514,6 @@ export function getHangulImageUrl(
   const fileName = imageType === 'hint' ? 'hint.png' : 'clear.png';
   return publicImageUrl(
     `images/hangul/${groupCategory}/${base64Group}/${imgBucket}/${fileName}`,
-    fileName,
   );
 }
 
