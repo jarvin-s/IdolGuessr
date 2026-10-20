@@ -172,37 +172,43 @@ export default function InfoModal({
                 </div>
 
                 <div className='mt-6 border-t border-gray-200 pt-4 dark:border-zinc-700'>
-                    <p className='mb-3 text-sm text-gray-500 dark:text-zinc-400'>
+                    <p className='mb-3 text-lg font-semibold text-black dark:text-zinc-100'>
                         Appearance
                     </p>
                     <ThemeToggle />
                 </div>
 
                 <div className='mt-6 border-t border-gray-200 pt-4 dark:border-zinc-700'>
-                    <p className='mb-3 text-sm text-gray-500 dark:text-zinc-400'>
-                        Guess input
-                    </p>
-                    <div className='grid grid-cols-2 gap-2'>
-                        {(
-                            [
-                                { value: 'keyboard', label: 'On-screen keyboard' },
-                                { value: 'text', label: 'Type your guess' },
-                            ] as const
-                        ).map((option) => (
-                            <button
-                                key={option.value}
-                                type='button'
-                                onClick={() => setInputMode(option.value)}
-                                aria-pressed={inputMode === option.value}
-                                className={`rounded-lg border p-3 text-sm font-semibold transition-colors ${
-                                    inputMode === option.value
-                                        ? 'border-green-400 bg-green-400/10 text-black dark:text-zinc-100'
-                                        : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
-                                }`}
-                            >
-                                {option.label}
-                            </button>
-                        ))}
+                    <div className='flex items-center justify-between gap-4'>
+                        <p className='text-lg font-semibold text-black dark:text-zinc-100'>
+                            On-screen keyboard
+                        </p>
+                        <div
+                            className='grid shrink-0 grid-cols-2 gap-2'
+                            role='group'
+                            aria-label='On-screen keyboard'
+                        >
+                            {(
+                                [
+                                    { value: 'keyboard', label: 'ON' },
+                                    { value: 'text', label: 'OFF' },
+                                ] as const
+                            ).map((option) => (
+                                <button
+                                    key={option.value}
+                                    type='button'
+                                    onClick={() => setInputMode(option.value)}
+                                    aria-pressed={inputMode === option.value}
+                                    className={`min-w-[3.25rem] rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
+                                        inputMode === option.value
+                                            ? 'border-green-400 bg-green-400/10 text-black dark:text-zinc-100'
+                                            : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
+                                    }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
