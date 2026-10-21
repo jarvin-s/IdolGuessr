@@ -6,6 +6,11 @@ import GameHeader from '@/components/game/GameHeader'
 import GameImage from '@/components/game/GameImage'
 import GuessInput from '@/components/game/GuessInput'
 import OnScreenKeyboard from '@/components/input/OnScreenKeyboard'
+import IdolTextInput from '@/components/input/IdolTextInput'
+import InfoModal from '@/components/modals/InfoModal'
+import HelpModal from '@/components/modals/HelpModal'
+import FeedbackModal from '@/components/modals/FeedbackModal'
+import { useInputMode } from '@/utils/inputMode'
 import ChallengeProgress from '@/components/challenge/ChallengeProgress'
 import ChallengeCompleteModal from '@/components/challenge/ChallengeCompleteModal'
 import ChallengeIntroModal from '@/components/challenge/ChallengeIntroModal'
@@ -42,6 +47,10 @@ export default function ChallengePlayPage() {
     } = useChallengeController(challengeId)
 
     const [showIntro, setShowIntro] = useState(false)
+    const [showInfo, setShowInfo] = useState(false)
+    const [showHelp, setShowHelp] = useState(false)
+    const [showFeedback, setShowFeedback] = useState(false)
+    const [inputMode, , inputModeReady] = useInputMode()
 
     useEffect(() => {
         if (challenge && currentIndex === 0 && !isLoading && results.length === 0) {
@@ -126,7 +135,7 @@ export default function ChallengePlayPage() {
                     <GameHeader
                         timer={`${currentIndex + 1}/${totalIdols}`}
                         onShowStats={() => {}}
-                        onShowInfo={() => {}}
+                        onShowInfo={() => setShowInfo(true)}
                         gameMode={'unlimited'}
                         onGameModeChange={() => {}}
                         showModeToggle={false}
@@ -170,23 +179,76 @@ export default function ChallengePlayPage() {
                             />
                         </div>
 
-                        <GuessInput
-                            currentGuess={currentGuess}
-                            correctAnswer={correctAnswer}
-                            gameWon={gameWon}
-                            gameLost={gameLost}
-                            lastIncorrectGuess={lastIncorrectGuess}
-                            isAnimating={isAnimating}
-                            notInList={notInList}
-                        />
+                        {!inputModeReady ? (
+                            <div className='flex-shrink-0 pb-4 invisible' aria-hidden='true' />
+                        ) : inputMode === 'text' ? (
+                            <div className='flex-shrink-0 pb-4'>
+                                <IdolTextInput
+                                    onSubmit={(guess) => handleKeyPress('ENTER', guess)}
+                                    disabled={gameWon || gameLost}
+                                    busy={isAnimating}
+                                    isAnimating={isAnimating}
+                                    notInList={notInList}
+                                    gameWon={gameWon}
+                                    gameLost={gameLost}
+                                    correctAnswer={correctAnswer}
+                                    revealOnWin
+                                />
+                            </div>
+                        ) : (
+                            <>
+                                <GuessInput
+                                    currentGuess={currentGuess}
+                                    correctAnswer={correctAnswer}
+                                    gameWon={gameWon}
+                                    gameLost={gameLost}
+                                    lastIncorrectGuess={lastIncorrectGuess}
+                                    isAnimating={isAnimating}
+                                    notInList={notInList}
+                                />
 
-                        <OnScreenKeyboard
-                            onKeyPress={handleKeyPress}
-                            className='flex-shrink-0 pb-4'
-                        />
+                                <OnScreenKeyboard
+                                    onKeyPress={handleKeyPress}
+                                    className='flex-shrink-0 pb-4'
+                                />
+                            </>
+                        )}
                     </div>
                 </div>
             )}
+
+            <InfoModal
+                isOpen={showInfo}
+                onClose={() => setShowInfo(false)}
+                onShowFeedback={() => {
+                    setShowInfo(false)
+                    setShowFeedback(true)
+                }}
+                onShowHelp={() => {
+                    setShowInfo(false)
+                    setShowHelp(true)
+                }}
+                onShowHistory={() => {}}
+                gameMode='unlimited'
+            />
+
+            <HelpModal
+                isOpen={showHelp}
+                onClose={() => setShowHelp(false)}
+                onBack={() => {
+                    setShowHelp(false)
+                    setShowInfo(true)
+                }}
+            />
+
+            <FeedbackModal
+                isOpen={showFeedback}
+                onClose={() => setShowFeedback(false)}
+                onBack={() => {
+                    setShowFeedback(false)
+                    setShowInfo(true)
+                }}
+            />
 
             <ChallengeCompleteModal
                 isOpen={isComplete}

@@ -135,14 +135,20 @@ export default function GameHeader({
                         </button>
 
                         {onShowInfo && (
-                            <button
-                                onClick={onShowInfo}
-                                className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
-                                aria-label='View Info'
-                            >
-                                <InfoIcon />
-                            </button>
+                            <div className="relative">
+                                <button
+                                    onClick={onShowInfo}
+                                    className='flex h-10 w-10 border border-pink-600 cursor-pointer items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
+                                    aria-label='View Info'
+                                >
+                                    <InfoIcon />
+                                </button>
+                                <span className="absolute -top-1 left-1/2 -translate-x-1/2 bg-pink-600 text-white text-[6px] font-bold px-2 py-[2px] rounded-full shadow-lg uppercase">
+                                    New
+                                </span>
+                            </div>
                         )}
+                   
 
                         {showModeToggle && (
                             <button
