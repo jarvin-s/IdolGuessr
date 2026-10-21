@@ -1,16 +1,13 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import idolNames from '@/data/idolNames.json'
 
 const LISTBOX_ID = 'idol-guess-suggestions'
 
 interface IdolTextInputProps {
     onSubmit: (guess: string) => void
-    // Round is over (won/lost/already completed). Sets the HTML disabled attribute.
     disabled?: boolean
-    // Temporarily ignore submits (e.g. during the wrong-guess animation) WITHOUT
-    // disabling the input, so it keeps focus.
     busy?: boolean
     className?: string
     isAnimating?: boolean
@@ -18,6 +15,7 @@ interface IdolTextInputProps {
     gameWon?: boolean
     gameLost?: boolean
     correctAnswer?: string
+    revealOnWin?: boolean
 }
 
 export default function IdolTextInput({
@@ -30,6 +28,7 @@ export default function IdolTextInput({
     gameWon = false,
     gameLost = false,
     correctAnswer = '',
+    revealOnWin = false,
 }: IdolTextInputProps) {
     const [value, setValue] = useState('')
     const [open, setOpen] = useState(false)
@@ -40,6 +39,7 @@ export default function IdolTextInput({
     const wasAnimatingRef = useRef(false)
     const incorrectTimerRef = useRef<number | null>(null)
     const restoreFocusRef = useRef(false)
+    const lastSubmittedRef = useRef('')
 
     const suggestions = useMemo(() => {
         const query = value.trim().toUpperCase()
@@ -79,22 +79,28 @@ export default function IdolTextInput({
     const submit = (guess: string) => {
         const trimmed = guess.trim()
         if (!trimmed || disabled || busy) return
+        lastSubmittedRef.current = trimmed
         onSubmit(trimmed)
         // Keep the typed name on a wrong guess so the player can edit it
-        // with backspace (matches the keyboard's behavior). It's cleared
-        // when the round ends or a new idol starts (see effect below).
+        // with backspace (matches the keyboard's behavior). A correct guess
+        // in unlimited/challenge keeps it too, until the next idol starts.
         setOpen(false)
         setActiveIndex(-1)
     }
 
-    // Clear the text only when the round ends or moves to a new idol.
-    useEffect(() => {
-        if (gameWon || gameLost) setValue('')
-    }, [gameWon, gameLost])
+    const showingCorrect = revealOnWin && gameWon
 
+    // Clear the text when the round is lost, or when a mode that does not
+    // hold the answer is won. A held win keeps the name that was submitted.
     useEffect(() => {
+        if (gameLost || (gameWon && !revealOnWin)) setValue('')
+    }, [gameWon, gameLost, revealOnWin])
+
+    useLayoutEffect(() => {
+        if (showingCorrect) return
         setValue('')
-    }, [correctAnswer])
+        lastSubmittedRef.current = ''
+    }, [correctAnswer, showingCorrect])
 
     useEffect(() => {
         if (!restoreFocusRef.current) return
@@ -158,13 +164,22 @@ export default function IdolTextInput({
         : showIncorrect
           ? 'INCORRECT'
           : ''
+    const winName = (
+        lastSubmittedRef.current ||
+        value ||
+        correctAnswer
+    ).trim()
 
-    const borderClass = feedback
-        ? 'border-red-400'
-        : 'border-gray-300 dark:border-zinc-600'
-    const bgClass = feedback
-        ? 'bg-red-400'
-        : 'bg-gray-200 dark:bg-zinc-800'
+    const borderClass = showingCorrect
+        ? 'border-green-400'
+        : feedback
+          ? 'border-red-400'
+          : 'border-gray-300 dark:border-zinc-600'
+    const bgClass = showingCorrect
+        ? 'bg-green-400'
+        : feedback
+          ? 'bg-red-400'
+          : 'bg-gray-200 dark:bg-zinc-800'
 
     return (
         <div className={`relative w-full flex-shrink-0 ${className}`}>
@@ -181,18 +196,20 @@ export default function IdolTextInput({
                     autoCorrect='off'
                     autoCapitalize='characters'
                     spellCheck={false}
-                    value={feedback || value}
-                    readOnly={!!feedback}
+                    value={
+                        showingCorrect ? winName : feedback || value
+                    }
+                    readOnly={!!feedback || showingCorrect}
                     disabled={disabled}
                     placeholder="WHAT'S YOUR GUESS?"
                     onChange={(e) => {
-                        if (feedback) return
+                        if (feedback || showingCorrect) return
                         setValue(e.target.value)
                         setOpen(true)
                     }}
                     onFocus={() => {
                         restoreFocusRef.current = true
-                        if (!feedback) setOpen(true)
+                        if (!feedback && !showingCorrect) setOpen(true)
                     }}
                     onBlur={() => setOpen(false)}
                     onKeyDown={handleKeyDown}
@@ -200,25 +217,29 @@ export default function IdolTextInput({
                     aria-controls={LISTBOX_ID}
                     aria-expanded={open && suggestions.length > 0}
                     aria-autocomplete='list'
-                    className={`w-full bg-transparent px-4 py-3 text-lg font-bold tracking-wider uppercase outline-none disabled:opacity-50 ${
-                        feedback
-                            ? 'text-white placeholder:text-white/70'
-                            : 'text-black placeholder:text-black/30 dark:text-zinc-100 dark:placeholder:text-zinc-100/30'
+                    className={`w-full bg-transparent px-4 py-3 text-lg font-bold tracking-wider uppercase outline-none ${
+                        showingCorrect
+                            ? 'text-white disabled:opacity-100'
+                            : feedback
+                              ? 'text-white placeholder:text-white/70 disabled:opacity-50'
+                              : 'text-black placeholder:text-black/30 disabled:opacity-50 dark:text-zinc-100 dark:placeholder:text-zinc-100/30'
                     }`}
                 />
-                <button
-                    type='button'
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => submit(value)}
-                    disabled={disabled || busy || !!feedback || !value.trim()}
-                    tabIndex={-1}
-                    className='mr-2 rounded-full bg-pink-600 px-3 py-2 text-lg font-bold text-white transition-colors hover:bg-pink-500 disabled:cursor-not-allowed disabled:opacity-40'
-                >
-                    GUESS
-                </button>
+                {!showingCorrect && (
+                    <button
+                        type='button'
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => submit(value)}
+                        disabled={disabled || busy || !!feedback || !value.trim()}
+                        tabIndex={-1}
+                        className='mr-2 rounded-full bg-pink-600 px-3 py-2 text-lg font-bold text-white transition-colors hover:bg-pink-500 disabled:cursor-not-allowed disabled:opacity-40'
+                    >
+                        GUESS
+                    </button>
+                )}
             </div>
 
-            {open && !feedback && suggestions.length > 0 && (
+            {open && !feedback && !showingCorrect && suggestions.length > 0 && (
                 <ul
                     ref={listRef}
                     id={LISTBOX_ID}

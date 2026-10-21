@@ -192,6 +192,7 @@ export default function ChallengePlayPage() {
                                     gameWon={gameWon}
                                     gameLost={gameLost}
                                     correctAnswer={correctAnswer}
+                                    revealOnWin
                                 />
                             </div>
                         ) : (

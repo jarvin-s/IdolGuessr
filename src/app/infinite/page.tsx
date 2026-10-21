@@ -212,6 +212,7 @@ export default function InfinitePage() {
                                 gameWon={gameWon}
                                 gameLost={gameLost}
                                 correctAnswer={correctAnswer}
+                                revealOnWin
                             />
                         </div>
                     ) : (
