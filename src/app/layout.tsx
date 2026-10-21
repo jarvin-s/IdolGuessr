@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
+import Script from 'next/script'
 import './globals.css'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
@@ -76,6 +77,18 @@ export default function RootLayout({
                     {children}
                     <Analytics />
                 </ThemeProvider>
+                <Script
+                    src='https://www.googletagmanager.com/gtag/js?id=G-6V9ZCS0XZP'
+                    strategy='afterInteractive'
+                />
+                <Script id='google-analytics' strategy='afterInteractive'>
+                    {`
+                        window.dataLayer = window.dataLayer || [];
+                        function gtag(){dataLayer.push(arguments);}
+                        gtag('js', new Date());
+                        gtag('config', 'G-6V9ZCS0XZP');
+                    `}
+                </Script>
             </body>
         </html>
     )
