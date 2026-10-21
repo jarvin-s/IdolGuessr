@@ -39,6 +39,7 @@ export default function IdolTextInput({
     const listRef = useRef<HTMLUListElement>(null)
     const wasAnimatingRef = useRef(false)
     const incorrectTimerRef = useRef<number | null>(null)
+    const restoreFocusRef = useRef(false)
 
     const suggestions = useMemo(() => {
         const query = value.trim().toUpperCase()
@@ -95,17 +96,13 @@ export default function IdolTextInput({
         setValue('')
     }, [correctAnswer])
 
-    // Keep focus on the input for the next round: when it becomes enabled
-    // again after a round ends, restore focus so the player can keep typing.
     useEffect(() => {
+        if (!restoreFocusRef.current) return
         if (!disabled && !gameWon && !gameLost) {
             inputRef.current?.focus()
         }
     }, [disabled, gameWon, gameLost, correctAnswer])
 
-    // A wrong in-list guess starts the shake. Show "INCORRECT" for a second,
-    // then reveal the name the player typed. The timer is not tied to
-    // isAnimating, which only lasts for the shake.
     useEffect(() => {
         const started = isAnimating && !wasAnimatingRef.current
         wasAnimatingRef.current = isAnimating
@@ -194,6 +191,7 @@ export default function IdolTextInput({
                         setOpen(true)
                     }}
                     onFocus={() => {
+                        restoreFocusRef.current = true
                         if (!feedback) setOpen(true)
                     }}
                     onBlur={() => setOpen(false)}

@@ -32,10 +32,10 @@ export default function InfoModal({
 
     return (
         <div className='bg-opacity-50 fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='modal-fade-in relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white dark:bg-zinc-900 p-6'>
+            <div className='modal-fade-in relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6 dark:bg-zinc-900'>
                 <button
                     onClick={onClose}
-                    className='absolute top-4 right-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
+                    className='absolute top-4 right-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                     aria-label='Close Info'
                 >
                     <svg
@@ -65,7 +65,7 @@ export default function InfoModal({
                 <div className='mt-6 space-y-3'>
                     <Link
                         href='/faq'
-                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                     >
                         <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                             <FaqIcon />
@@ -84,7 +84,7 @@ export default function InfoModal({
                     </Link>
                     <button
                         onClick={onShowHelp}
-                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                     >
                         <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                             <HelpIcon />
@@ -105,7 +105,7 @@ export default function InfoModal({
                     {gameMode === 'daily' && (
                         <button
                             onClick={onShowHistory}
-                            className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
+                            className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                         >
                             <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                                 <HistoryIcon />
@@ -125,7 +125,7 @@ export default function InfoModal({
                     )}
                     <button
                         onClick={onShowFeedback}
-                        className='relative flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        className='relative flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                     >
                         <div className='relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                             <FeedbackIcon />
@@ -152,7 +152,7 @@ export default function InfoModal({
 
                     <Link
                         href='/changelog'
-                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                     >
                         <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                             <ChangelogIcon />
@@ -183,6 +183,9 @@ export default function InfoModal({
                         <p className='text-lg font-semibold text-black dark:text-zinc-100'>
                             On-screen keyboard
                         </p>
+                        <span className='ml-2 inline-block rounded-full border border-pink-500 bg-pink-500/10 px-2 py-[2px] text-xs font-bold text-pink-600 uppercase'>
+                            New
+                        </span>
                         <div
                             className='grid shrink-0 grid-cols-2 gap-2'
                             role='group'
