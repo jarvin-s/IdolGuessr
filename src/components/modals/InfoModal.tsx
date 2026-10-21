@@ -2,6 +2,7 @@ import Link from 'next/link'
 import localFont from 'next/font/local'
 import { useFeedbackUnread } from '@/hooks/useFeedbackUnread'
 import ThemeToggle from '@/components/theme/ThemeToggle'
+import { useInputMode } from '@/utils/inputMode'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -25,15 +26,16 @@ export default function InfoModal({
     gameMode = 'daily',
 }: InfoModalProps) {
     const feedbackUnread = useFeedbackUnread(isOpen)
+    const [inputMode, setInputMode] = useInputMode()
 
     if (!isOpen) return null
 
     return (
         <div className='bg-opacity-50 fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='modal-fade-in relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white dark:bg-zinc-900 p-6'>
+            <div className='modal-fade-in relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6 dark:bg-zinc-900'>
                 <button
                     onClick={onClose}
-                    className='absolute top-4 right-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
+                    className='absolute top-4 right-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                     aria-label='Close Info'
                 >
                     <svg
@@ -63,7 +65,7 @@ export default function InfoModal({
                 <div className='mt-6 space-y-3'>
                     <Link
                         href='/faq'
-                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                     >
                         <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                             <FaqIcon />
@@ -82,7 +84,7 @@ export default function InfoModal({
                     </Link>
                     <button
                         onClick={onShowHelp}
-                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                     >
                         <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                             <HelpIcon />
@@ -103,7 +105,7 @@ export default function InfoModal({
                     {gameMode === 'daily' && (
                         <button
                             onClick={onShowHistory}
-                            className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
+                            className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                         >
                             <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                                 <HistoryIcon />
@@ -123,7 +125,7 @@ export default function InfoModal({
                     )}
                     <button
                         onClick={onShowFeedback}
-                        className='relative flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        className='relative flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                     >
                         <div className='relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                             <FeedbackIcon />
@@ -150,7 +152,7 @@ export default function InfoModal({
 
                     <Link
                         href='/changelog'
-                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 dark:border-zinc-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                     >
                         <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                             <ChangelogIcon />
@@ -170,10 +172,47 @@ export default function InfoModal({
                 </div>
 
                 <div className='mt-6 border-t border-gray-200 pt-4 dark:border-zinc-700'>
-                    <p className='mb-3 text-sm text-gray-500 dark:text-zinc-400'>
+                    <p className='mb-3 text-lg font-semibold text-black dark:text-zinc-100'>
                         Appearance
                     </p>
                     <ThemeToggle />
+                </div>
+
+                <div className='mt-6 border-t border-gray-200 pt-4 dark:border-zinc-700'>
+                    <div className='flex items-center justify-between gap-4'>
+                        <p className='text-lg font-semibold text-black dark:text-zinc-100'>
+                            On-screen keyboard
+                        </p>
+                        <span className='ml-2 inline-block rounded-full border border-pink-500 bg-pink-500/10 px-2 py-[2px] text-xs font-bold text-pink-600 uppercase'>
+                            New
+                        </span>
+                        <div
+                            className='grid shrink-0 grid-cols-2 gap-2'
+                            role='group'
+                            aria-label='On-screen keyboard'
+                        >
+                            {(
+                                [
+                                    { value: 'keyboard', label: 'ON' },
+                                    { value: 'text', label: 'OFF' },
+                                ] as const
+                            ).map((option) => (
+                                <button
+                                    key={option.value}
+                                    type='button'
+                                    onClick={() => setInputMode(option.value)}
+                                    aria-pressed={inputMode === option.value}
+                                    className={`min-w-[3.25rem] rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
+                                        inputMode === option.value
+                                            ? 'border-green-400 bg-green-400/10 text-black dark:text-zinc-100'
+                                            : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
+                                    }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
                 <div className='mt-6 flex justify-center gap-4 border-t border-gray-200 pt-4 dark:border-zinc-700'>
@@ -196,7 +235,7 @@ export default function InfoModal({
                         <InstagramIcon />
                     </a>
                     <a
-                        href='https://tiktok.com/@idolguessr.fun'
+                        href='https://tiktok.com/@idolguessr'
                         target='_blank'
                         rel='noopener noreferrer'
                         className='flex items-center justify-center transition-opacity hover:opacity-70'

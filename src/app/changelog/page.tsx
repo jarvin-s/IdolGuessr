@@ -15,6 +15,10 @@ export const metadata: Metadata = {
 
 const entries: { date: string; changes: string[] }[] = [
     {
+        date: 'October 21, 2026',
+        changes: ['Added on-screen keyboard toggle'],
+    },
+    {
         date: 'October 12, 2026',
         changes: ['Added FAQ section', 'Added Dark mode'],
     },

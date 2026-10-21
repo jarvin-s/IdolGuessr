@@ -202,18 +202,19 @@ export function useChallengeController(challengeId: string) {
 
   const guessAttemptsRef = useRef<string[]>([])
 
-  const handleKeyPress = useCallback((key: string) => {
+  const handleKeyPress = useCallback((key: string, guessOverride?: string) => {
     if (isComplete || !currentIdol) return
 
     if (key === 'ENTER') {
+      const activeGuess = guessOverride ?? currentGuess
       if (
-        currentGuess.trim() &&
+        activeGuess.trim() &&
         guesses.some((g) => g === 'empty') &&
         !isAnimating &&
         !gameWon &&
         !gameLost
       ) {
-        const normalizedGuess = currentGuess.toUpperCase().trim()
+        const normalizedGuess = activeGuess.toUpperCase().trim()
 
         if (!idolNamesSet.has(normalizedGuess)) {
           setNotInList(true)
