@@ -459,6 +459,67 @@ export async function adminSetStatus(ticketId: string, status: TicketStatus): Pr
   if (error) throw error
 }
 
+export interface Announcement {
+  id: string
+  message: string
+  display_seconds: number | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+const announcementColumns = 'id, message, display_seconds, is_active, created_at, updated_at'
+
+export async function getActiveAnnouncement(): Promise<Announcement | null> {
+  const { data, error } = await supabase
+    .from('announcements')
+    .select(announcementColumns)
+    .eq('is_active', true)
+    .maybeSingle()
+  if (error) throw error
+  return (data as Announcement | null) ?? null
+}
+
+export async function adminListAnnouncements(): Promise<Announcement[]> {
+  const { data, error } = await supabase
+    .from('announcements')
+    .select(announcementColumns)
+    .order('created_at', { ascending: false })
+    .limit(10)
+  if (error) throw error
+  return (data ?? []) as Announcement[]
+}
+
+export async function adminPublishAnnouncement(
+  message: string,
+  displaySeconds: number | null,
+): Promise<void> {
+  const trimmed = message.trim()
+  if (!trimmed) throw new Error('Message is empty')
+  const { error } = await supabase.from('announcements').insert({
+    message: trimmed,
+    display_seconds: displaySeconds,
+    is_active: true,
+  })
+  if (error) throw error
+}
+
+export async function adminActivateAnnouncement(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('announcements')
+    .update({ is_active: true })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function adminClearAnnouncement(): Promise<void> {
+  const { error } = await supabase
+    .from('announcements')
+    .update({ is_active: false })
+    .eq('is_active', true)
+  if (error) throw error
+}
+
 function publicImageUrl(objectPath: string): string {
   const normalizedUrl = supabaseUrl.replace(/\/+$/, '')
   return `${normalizedUrl}/storage/v1/object/public/${objectPath}`
