@@ -102,7 +102,7 @@ export default function ChallengeResultsPage() {
     const hasPlayed = results.some((r) => r.session_id === sessionId)
 
     return (
-        <div className='min-h-screen bg-gradient-to-b from-pink-50 dark:from-pink-950 to-white dark:to-zinc-950'>
+        <div className='min-h-screen bg-gradient-to-b from-pink-50 to-white dark:from-pink-950 dark:to-zinc-950'>
             {copied && (
                 <div className='fade-in-from-top fixed top-4 left-1/2 z-50 -translate-x-1/2'>
                     <div className='rounded-full bg-pink-600 px-6 py-3'>
@@ -140,8 +140,8 @@ export default function ChallengeResultsPage() {
 
                 {/* If user hasn't played yet */}
                 {!hasPlayed && (
-                    <div className='mb-6 rounded-lg bg-pink-100 p-6 text-center'>
-                        <p className='mb-4 text-lg font-medium'>
+                    <div className='mb-6 text-center'>
+                        <p className='mb-4 text-lg font-medium text-zinc-900 dark:text-white'>
                             You haven&apos;t played this challenge yet!
                         </p>
                         <button
@@ -185,7 +185,7 @@ export default function ChallengeResultsPage() {
                         currentSessionId={sessionId}
                     />
                 ) : (
-                    <div className='rounded-lg bg-gray-100 dark:bg-zinc-800 p-8 text-center'>
+                    <div className='rounded-lg bg-gray-100 p-8 text-center dark:bg-zinc-800'>
                         <p className='text-gray-600 dark:text-zinc-400'>
                             No results yet. Be the first to play!
                         </p>
@@ -196,7 +196,7 @@ export default function ChallengeResultsPage() {
                 <div className='mt-8 text-center'>
                     <button
                         onClick={() => router.push('/')}
-                        className='cursor-pointer text-gray-500 dark:text-zinc-400 underline hover:text-gray-700 dark:hover:text-zinc-200'
+                        className='cursor-pointer text-gray-500 underline hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200'
                     >
                         Back to IdolGuessr
                     </button>
