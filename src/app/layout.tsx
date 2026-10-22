@@ -3,6 +3,7 @@ import localFont from 'next/font/local'
 import Script from 'next/script'
 import './globals.css'
 import { Analytics } from '@vercel/analytics/next'
+import LiveAnnouncementBanner from '@/components/announcements/LiveAnnouncementBanner'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { themeInitScript } from '@/components/theme/theme'
 
@@ -75,6 +76,7 @@ export default function RootLayout({
                 <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
                 <ThemeProvider>
                     {children}
+                    <LiveAnnouncementBanner />
                     <Analytics />
                 </ThemeProvider>
                 <Script
