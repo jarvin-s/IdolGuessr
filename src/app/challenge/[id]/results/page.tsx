@@ -12,6 +12,7 @@ import {
     type Challenge,
     type ChallengeResult,
 } from '@/lib/supabase'
+import { formatGenFilter } from '@/utils/genFilter'
 
 export default function ChallengeResultsPage() {
     const params = useParams()
@@ -134,7 +135,8 @@ export default function ChallengeResultsPage() {
                             ? 'All groups'
                             : challenge.group_filter === 'boy-group'
                               ? 'Boy groups'
-                              : 'Girl groups'}
+                              : 'Girl groups'}{' '}
+                        • {formatGenFilter(challenge.gen_filter)}
                     </p>
                 </div>
 
