@@ -127,6 +127,7 @@ export default function ChallengePlayPage() {
                     isOpen={showIntro}
                     idolCount={challenge.idol_count}
                     groupFilter={challenge.group_filter}
+                    genFilter={challenge.gen_filter}
                     onStart={handleStartChallenge}
                 />
             )}

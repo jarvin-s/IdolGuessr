@@ -183,8 +183,9 @@ export default function FilterModal({
     }
 
     return (
-        <div className='fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='modal-fade-in relative w-full max-w-sm rounded-md bg-white dark:bg-zinc-900 p-10'>
+        <div className='fixed inset-0 z-[300] overflow-y-auto bg-black/40 p-4'>
+            <div className='flex min-h-full items-center justify-center'>
+            <div className='modal-fade-in relative w-full max-w-sm rounded-md bg-white p-10 dark:bg-zinc-900'>
                 {/* Close button in top right of modal */}
                 <button
                     onClick={onClose}
@@ -226,16 +227,13 @@ export default function FilterModal({
                                 setGroupDropdownOpen(false)
                                 setGenDropdownOpen(false)
                             }}
-                            className='flex w-full cursor-pointer items-center justify-between border border-pink-500 bg-white dark:bg-zinc-900 px-3 py-2 text-left font-medium transition-all'
+                            className='flex w-full cursor-pointer items-center justify-between border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-left font-medium transition-all'
                         >
                             <span>{DIFFICULTY_LABELS[selectedDifficulty]}</span>
                             <ChevronDownIcon
                                 className={`h-5 w-5 transition-transform ${difficultyDropdownOpen ? 'rotate-180' : ''}`}
                             />
                         </button>
-                        <span className='absolute -top-2 -right-2 z-10 rounded-full bg-pink-500 px-2.5 py-0.5 text-xs text-white'>
-                            NEW
-                        </span>
                         {difficultyDropdownOpen && (
                             <div className='absolute z-10 mt-1 w-full border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg'>
                                 {DIFFICULTIES.map((option) => (
@@ -333,7 +331,7 @@ export default function FilterModal({
                             />
                         </button>
                         {genDropdownOpen && (
-                            <div className='absolute z-10 mt-1 w-full border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg'>
+                            <div className='mt-1 max-h-40 w-full overflow-y-auto border-2 border-gray-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900'>
                                 {INFINITE_GEN_OPTIONS.map((option) => (
                                     <button
                                         key={option.value}
@@ -373,6 +371,7 @@ export default function FilterModal({
                         Start
                     </button>
                 </div>
+            </div>
             </div>
         </div>
     )

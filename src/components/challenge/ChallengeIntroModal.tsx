@@ -1,9 +1,12 @@
 'use client'
 
+import { formatGenFilter } from '@/utils/genFilter'
+
 interface ChallengeIntroModalProps {
     isOpen: boolean
     idolCount: number
     groupFilter: string
+    genFilter?: number[] | null
     onStart: () => void
 }
 
@@ -11,6 +14,7 @@ export default function ChallengeIntroModal({
     isOpen,
     idolCount,
     groupFilter,
+    genFilter,
     onStart,
 }: ChallengeIntroModalProps) {
     if (!isOpen) return null
@@ -54,6 +58,12 @@ export default function ChallengeIntroModal({
                             Group type:
                             <span className='font-bold text-black dark:text-zinc-100'>
                                 {getGroupFilterText()}
+                            </span>
+                        </div>
+                        <div className='flex items-center gap-1'>
+                            Generation:
+                            <span className='font-bold text-black dark:text-zinc-100'>
+                                {formatGenFilter(genFilter)}
                             </span>
                         </div>
                     </div>
