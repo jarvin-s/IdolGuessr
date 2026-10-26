@@ -11,7 +11,11 @@ import FeedbackModal from '@/components/modals/FeedbackModal'
 import InfoModal from '@/components/modals/InfoModal'
 import HistoryModal from '@/components/modals/HistoryModal'
 import WinModal from '@/components/modals/WinModal'
-import { getImageUrl, getDailyImageByDate, type HistoryDailyImage } from '@/lib/supabase'
+import {
+    getImageUrl,
+    getDailyImageByDate,
+    type HistoryDailyImage,
+} from '@/lib/supabase'
 import { useGameController } from '@/hooks/useGameController'
 import IndexModal from '@/components/modals/IndexModal'
 import { useRouter } from 'next/navigation'
@@ -20,7 +24,39 @@ import idolNames from '@/data/idolNames.json'
 import IdolTextInput from '@/components/input/IdolTextInput'
 import { useInputMode } from '@/utils/inputMode'
 
-const idolNamesSet = new Set(idolNames.map((name: string) => name.toUpperCase()))
+const idolNamesSet = new Set(
+    idolNames.map((name: string) => name.toUpperCase())
+)
+
+function ChosenByName({ name, url }: { name: string; url?: string | null }) {
+    const href = creditHref(url)
+    if (!href) {
+        return <span className='font-bold text-white'>{name}</span>
+    }
+    return (
+        <a
+            href={href}
+            target='_blank'
+            rel='noopener noreferrer'
+            className='font-bold text-white underline decoration-white/40 underline-offset-2 hover:decoration-white'
+        >
+            {name}
+        </a>
+    )
+}
+
+function creditHref(url?: string | null): string | null {
+    const trimmed = url?.trim()
+    if (!trimmed) return null
+    try {
+        const parsed = new URL(trimmed)
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')
+            return null
+        return parsed.href
+    } catch {
+        return null
+    }
+}
 
 export default function Home() {
     const router = useRouter()
@@ -28,14 +64,21 @@ export default function Home() {
     const [showInfo, setShowInfo] = useState(false)
     const [showHistory, setShowHistory] = useState(false)
     const [historyDate, setHistoryDate] = useState<string | null>(null)
-    const [historyImage, setHistoryImage] = useState<HistoryDailyImage | null>(null)
-    const [historyGuesses, setHistoryGuesses] = useState<Array<'correct' | 'incorrect' | 'empty'>>(['empty', 'empty', 'empty', 'empty', 'empty', 'empty'])
+    const [historyImage, setHistoryImage] = useState<HistoryDailyImage | null>(
+        null
+    )
+    const [historyGuesses, setHistoryGuesses] = useState<
+        Array<'correct' | 'incorrect' | 'empty'>
+    >(['empty', 'empty', 'empty', 'empty', 'empty', 'empty'])
     const [historyGameWon, setHistoryGameWon] = useState(false)
     const [historyGameLost, setHistoryGameLost] = useState(false)
     const [historyCurrentGuess, setHistoryCurrentGuess] = useState('')
-    const [historyLastIncorrectGuess, setHistoryLastIncorrectGuess] = useState('')
+    const [historyLastIncorrectGuess, setHistoryLastIncorrectGuess] =
+        useState('')
     const [historyIsAnimating, setHistoryIsAnimating] = useState(false)
-    const [historyDisabledLetters, setHistoryDisabledLetters] = useState<Set<string>>(new Set())
+    const [historyDisabledLetters, setHistoryDisabledLetters] = useState<
+        Set<string>
+    >(new Set())
     const [historyNotInList, setHistoryNotInList] = useState(false)
     const hasShownWinModalRef = useRef(false)
     const {
@@ -91,7 +134,9 @@ export default function Home() {
     const isInHistoryMode = historyDate !== null && historyImage !== null
 
     const historyCorrectAnswer = historyImage?.name?.toUpperCase() || ''
-    const historyRemainingGuesses = historyGuesses.filter((g) => g === 'empty').length
+    const historyRemainingGuesses = historyGuesses.filter(
+        (g) => g === 'empty'
+    ).length
 
     // Past idol games are no longer saved to localStorage - users must recomplete on refresh
 
@@ -105,9 +150,16 @@ export default function Home() {
             setHistoryLastIncorrectGuess('')
             setHistoryIsAnimating(false)
             setHistoryNotInList(false)
-            
+
             // Always start fresh - no localStorage saving for past idols
-            setHistoryGuesses(['empty', 'empty', 'empty', 'empty', 'empty', 'empty'])
+            setHistoryGuesses([
+                'empty',
+                'empty',
+                'empty',
+                'empty',
+                'empty',
+                'empty',
+            ])
             setHistoryGameWon(false)
             setHistoryGameLost(false)
             setHistoryDisabledLetters(new Set())
@@ -117,7 +169,14 @@ export default function Home() {
     const handleExitHistoryMode = useCallback(() => {
         setHistoryDate(null)
         setHistoryImage(null)
-        setHistoryGuesses(['empty', 'empty', 'empty', 'empty', 'empty', 'empty'])
+        setHistoryGuesses([
+            'empty',
+            'empty',
+            'empty',
+            'empty',
+            'empty',
+            'empty',
+        ])
         setHistoryGameWon(false)
         setHistoryGameLost(false)
         setHistoryCurrentGuess('')
@@ -127,101 +186,137 @@ export default function Home() {
         setHistoryNotInList(false)
     }, [])
 
-    const handleHistoryKeyPress = useCallback((key: string) => {
-        if (!historyDate || !historyImage) return
-        
-        if (key === 'ENTER') {
-            if (
-                historyCurrentGuess.trim() &&
-                historyGuesses.some((g) => g === 'empty') &&
-                !historyIsAnimating &&
-                !historyGameWon &&
-                !historyGameLost
-            ) {
-                const normalizedGuess = historyCurrentGuess.toUpperCase().trim()
-                
-                if (!idolNamesSet.has(normalizedGuess)) {
-                    setHistoryNotInList(true)
+    const handleHistoryKeyPress = useCallback(
+        (key: string) => {
+            if (!historyDate || !historyImage) return
+
+            if (key === 'ENTER') {
+                if (
+                    historyCurrentGuess.trim() &&
+                    historyGuesses.some((g) => g === 'empty') &&
+                    !historyIsAnimating &&
+                    !historyGameWon &&
+                    !historyGameLost
+                ) {
+                    const normalizedGuess = historyCurrentGuess
+                        .toUpperCase()
+                        .trim()
+
+                    if (!idolNamesSet.has(normalizedGuess)) {
+                        setHistoryNotInList(true)
+                        setHistoryIsAnimating(true)
+                        setTimeout(() => {
+                            setHistoryIsAnimating(false)
+                            setTimeout(() => setHistoryNotInList(false), 1000)
+                        }, 500)
+                        return
+                    }
+
+                    const normalizedName =
+                        historyImage.name?.toUpperCase().trim() || ''
+                    const isCorrect = normalizedGuess === normalizedName
+
                     setHistoryIsAnimating(true)
-                    setTimeout(() => {
+
+                    if (!isCorrect) {
+                        setHistoryLastIncorrectGuess(normalizedGuess)
+                        setHistoryCurrentGuess('')
+
+                        const correctLetters = new Set(normalizedName.split(''))
+                        const incorrectLettersInGuess = normalizedGuess
+                            .split('')
+                            .filter((letter) => !correctLetters.has(letter))
+
+                        const newDisabledLetters = new Set(
+                            historyDisabledLetters
+                        )
+                        incorrectLettersInGuess.forEach((letter) =>
+                            newDisabledLetters.add(letter)
+                        )
+                        setHistoryDisabledLetters(newDisabledLetters)
+
+                        setTimeout(() => {
+                            setHistoryIsAnimating(false)
+                            setHistoryGuesses((prev) => {
+                                const newGuesses = [...prev] as Array<
+                                    'correct' | 'incorrect' | 'empty'
+                                >
+                                const emptyIndex = newGuesses.findIndex(
+                                    (g) => g === 'empty'
+                                )
+                                if (emptyIndex === -1) return prev
+                                newGuesses[emptyIndex] = 'incorrect'
+
+                                const remainingAfterThis = newGuesses.filter(
+                                    (g) => g === 'empty'
+                                ).length
+                                if (remainingAfterThis === 0) {
+                                    setTimeout(() => {
+                                        setHistoryGameLost(true)
+                                        // Win modal disabled for past idols
+                                    }, 300)
+                                }
+                                return newGuesses
+                            })
+                        }, 500)
+                    } else {
+                        const emptyIndex = historyGuesses.findIndex(
+                            (g) => g === 'empty'
+                        )
+                        setHistoryGameWon(true)
                         setHistoryIsAnimating(false)
-                        setTimeout(() => setHistoryNotInList(false), 1000)
-                    }, 500)
-                    return
-                }
-
-                const normalizedName = historyImage.name?.toUpperCase().trim() || ''
-                const isCorrect = normalizedGuess === normalizedName
-
-                setHistoryIsAnimating(true)
-
-                if (!isCorrect) {
-                    setHistoryLastIncorrectGuess(normalizedGuess)
-                    setHistoryCurrentGuess('')
-
-                    const correctLetters = new Set(normalizedName.split(''))
-                    const incorrectLettersInGuess = normalizedGuess
-                        .split('')
-                        .filter((letter) => !correctLetters.has(letter))
-
-                    const newDisabledLetters = new Set(historyDisabledLetters)
-                    incorrectLettersInGuess.forEach((letter) => newDisabledLetters.add(letter))
-                    setHistoryDisabledLetters(newDisabledLetters)
-
-                    setTimeout(() => {
-                        setHistoryIsAnimating(false)
+                        setHistoryCurrentGuess('')
                         setHistoryGuesses((prev) => {
-                            const newGuesses = [...prev] as Array<'correct' | 'incorrect' | 'empty'>
-                            const emptyIndex = newGuesses.findIndex((g) => g === 'empty')
+                            const newGuesses = [...prev] as Array<
+                                'correct' | 'incorrect' | 'empty'
+                            >
                             if (emptyIndex === -1) return prev
-                            newGuesses[emptyIndex] = 'incorrect'
-                            
-                            const remainingAfterThis = newGuesses.filter((g) => g === 'empty').length
-                            if (remainingAfterThis === 0) {
-                                setTimeout(() => {
-                                    setHistoryGameLost(true)
-                                    // Win modal disabled for past idols
-                                }, 300)
-                            }
+                            newGuesses[emptyIndex] = 'correct'
+                            // Win modal disabled for past idols
                             return newGuesses
                         })
-                    }, 500)
-                } else {
-                    const emptyIndex = historyGuesses.findIndex((g) => g === 'empty')
-                    setHistoryGameWon(true)
-                    setHistoryIsAnimating(false)
-                    setHistoryCurrentGuess('')
-                    setHistoryGuesses((prev) => {
-                        const newGuesses = [...prev] as Array<'correct' | 'incorrect' | 'empty'>
-                        if (emptyIndex === -1) return prev
-                        newGuesses[emptyIndex] = 'correct'
-                        // Win modal disabled for past idols
-                        return newGuesses
-                    })
+                    }
+                }
+            } else if (key === '✕') {
+                if (!historyGameWon && !historyGameLost) {
+                    if (
+                        historyCurrentGuess === '' &&
+                        historyLastIncorrectGuess
+                    ) {
+                        setHistoryCurrentGuess(
+                            historyLastIncorrectGuess.slice(0, -1)
+                        )
+                        setHistoryLastIncorrectGuess('')
+                    } else {
+                        setHistoryCurrentGuess((prev) => prev.slice(0, -1))
+                    }
+                }
+            } else {
+                if (
+                    historyGuesses.some((g) => g === 'empty') &&
+                    !historyIsAnimating &&
+                    !historyGameWon &&
+                    !historyGameLost &&
+                    historyCurrentGuess.length < 20
+                ) {
+                    if (historyLastIncorrectGuess)
+                        setHistoryLastIncorrectGuess('')
+                    setHistoryCurrentGuess((prev) => prev + key)
                 }
             }
-        } else if (key === '✕') {
-            if (!historyGameWon && !historyGameLost) {
-                if (historyCurrentGuess === '' && historyLastIncorrectGuess) {
-                    setHistoryCurrentGuess(historyLastIncorrectGuess.slice(0, -1))
-                    setHistoryLastIncorrectGuess('')
-                } else {
-                    setHistoryCurrentGuess((prev) => prev.slice(0, -1))
-                }
-            }
-        } else {
-            if (
-                historyGuesses.some((g) => g === 'empty') &&
-                !historyIsAnimating &&
-                !historyGameWon &&
-                !historyGameLost &&
-                historyCurrentGuess.length < 20
-            ) {
-                if (historyLastIncorrectGuess) setHistoryLastIncorrectGuess('')
-                setHistoryCurrentGuess((prev) => prev + key)
-            }
-        }
-    }, [historyDate, historyImage, historyCurrentGuess, historyGuesses, historyIsAnimating, historyGameWon, historyGameLost, historyLastIncorrectGuess, historyDisabledLetters])
+        },
+        [
+            historyDate,
+            historyImage,
+            historyCurrentGuess,
+            historyGuesses,
+            historyIsAnimating,
+            historyGameWon,
+            historyGameLost,
+            historyLastIncorrectGuess,
+            historyDisabledLetters,
+        ]
+    )
 
     // Handle physical keyboard for history mode
     useEffect(() => {
@@ -252,7 +347,8 @@ export default function Home() {
             }
         }
         window.addEventListener('keydown', handlePhysicalKeyPress)
-        return () => window.removeEventListener('keydown', handlePhysicalKeyPress)
+        return () =>
+            window.removeEventListener('keydown', handlePhysicalKeyPress)
     }, [isInHistoryMode, handleHistoryKeyPress, historyDisabledLetters])
 
     useEffect(() => {
@@ -283,26 +379,36 @@ export default function Home() {
 
     const formatHistoryDate = (dateStr: string) => {
         const date = new Date(dateStr + 'T00:00:00')
-        return date.toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        return date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
         })
     }
 
     return (
         <div className='fixed inset-0 flex flex-col justify-center overflow-hidden bg-white dark:bg-zinc-950'>
-            <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[1400px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:dark:border-zinc-700 sm:shadow-lg'>
+            <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[1400px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:shadow-lg sm:dark:border-zinc-700'>
                 {isInHistoryMode ? (
                     <div className='flex w-full flex-shrink-0 flex-col gap-3 p-4'>
                         <div className='flex w-full items-center justify-between'>
                             <button
                                 onClick={handleExitHistoryMode}
-                                className='flex items-center cursor-pointer gap-2 rounded-full bg-gray-100 dark:bg-zinc-800 px-3 py-2 text-sm font-medium text-gray-600 dark:text-zinc-400 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
+                                className='flex cursor-pointer items-center gap-2 rounded-full bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
                             >
-                                <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10 19l-7-7m0 0l7-7m-7 7h18' />
+                                <svg
+                                    className='h-4 w-4'
+                                    fill='none'
+                                    stroke='currentColor'
+                                    viewBox='0 0 24 24'
+                                >
+                                    <path
+                                        strokeLinecap='round'
+                                        strokeLinejoin='round'
+                                        strokeWidth={2}
+                                        d='M10 19l-7-7m0 0l7-7m-7 7h18'
+                                    />
                                 </svg>
                                 Back to today
                             </button>
@@ -335,6 +441,20 @@ export default function Home() {
                     />
                 )}
 
+                {gameMode === 'daily' &&
+                    !isInHistoryMode &&
+                    dailyImage?.chosen_by?.trim() && (
+                        <p className='text-md font-bold -mt-2 px-4 pb-2 text-center'>
+                            Today&apos;s idol was brought to you by{' '}
+                            <span className='inline-block rounded-full bg-pink-600/90 px-2 py-1 dark:bg-pink-600/90'>
+                                <ChosenByName
+                                    name={dailyImage.chosen_by.trim()}
+                                    url={dailyImage.chosen_by_url}
+                                />
+                            </span>
+                        </p>
+                    )}
+
                 <div className='flex min-h-0 w-full flex-1 flex-col px-4'>
                     <div className='flex min-h-0 w-full flex-1 flex-col items-center'>
                         <GameImage
@@ -342,25 +462,36 @@ export default function Home() {
                             dailyImage={
                                 isInHistoryMode && historyImage
                                     ? {
-                                          group_type: historyImage.group_type || '',
+                                          group_type:
+                                              historyImage.group_type || '',
                                           img_bucket: historyImage.img_bucket,
-                                          group_category: historyImage.group_category,
-                                          base64_group: historyImage.base64_group,
+                                          group_category:
+                                              historyImage.group_category,
+                                          base64_group:
+                                              historyImage.base64_group,
                                           base64_idol: historyImage.base64_idol,
                                           group_name: historyImage.group_name,
                                       }
                                     : dailyImage && {
-                                          group_type: dailyImage.group_type || '',
+                                          group_type:
+                                              dailyImage.group_type || '',
                                           img_bucket: dailyImage.img_bucket,
-                                          group_category: dailyImage.group_category,
+                                          group_category:
+                                              dailyImage.group_category,
                                           base64_group: dailyImage.base64_group,
                                           base64_idol: dailyImage.base64_idol,
                                           group_name: dailyImage.group_name,
                                       }
                             }
-                            remainingGuesses={isInHistoryMode ? historyRemainingGuesses : remainingGuesses}
+                            remainingGuesses={
+                                isInHistoryMode
+                                    ? historyRemainingGuesses
+                                    : remainingGuesses
+                            }
                             gameWon={isInHistoryMode ? historyGameWon : gameWon}
-                            gameLost={isInHistoryMode ? historyGameLost : gameLost}
+                            gameLost={
+                                isInHistoryMode ? historyGameLost : gameLost
+                            }
                             gameMode={gameMode}
                             onPass={
                                 !isInHistoryMode &&
@@ -392,12 +523,21 @@ export default function Home() {
                     </div>
 
                     {!inputModeReady ? (
-                        <div className='flex-shrink-0 pb-4 invisible' aria-hidden='true' />
+                        <div
+                            className='invisible flex-shrink-0 pb-4'
+                            aria-hidden='true'
+                        />
                     ) : inputMode === 'text' && !isInHistoryMode ? (
                         <div className='flex-shrink-0 pb-4'>
                             <IdolTextInput
-                                onSubmit={(guess) => handleKeyPress('ENTER', guess)}
-                                disabled={gameWon || gameLost || (gameMode === 'daily' && todayCompleted)}
+                                onSubmit={(guess) =>
+                                    handleKeyPress('ENTER', guess)
+                                }
+                                disabled={
+                                    gameWon ||
+                                    gameLost ||
+                                    (gameMode === 'daily' && todayCompleted)
+                                }
                                 busy={isAnimating}
                                 isAnimating={isAnimating}
                                 notInList={notInList}
@@ -409,18 +549,50 @@ export default function Home() {
                     ) : (
                         <>
                             <GuessInput
-                                currentGuess={isInHistoryMode ? historyCurrentGuess : currentGuess}
-                                correctAnswer={isInHistoryMode ? historyCorrectAnswer : correctAnswer}
-                                gameWon={isInHistoryMode ? historyGameWon : gameWon}
-                                gameLost={isInHistoryMode ? historyGameLost : gameLost}
-                                lastIncorrectGuess={isInHistoryMode ? historyLastIncorrectGuess : lastIncorrectGuess}
-                                isAnimating={isInHistoryMode ? historyIsAnimating : isAnimating}
-                                notInList={isInHistoryMode ? historyNotInList : notInList}
+                                currentGuess={
+                                    isInHistoryMode
+                                        ? historyCurrentGuess
+                                        : currentGuess
+                                }
+                                correctAnswer={
+                                    isInHistoryMode
+                                        ? historyCorrectAnswer
+                                        : correctAnswer
+                                }
+                                gameWon={
+                                    isInHistoryMode ? historyGameWon : gameWon
+                                }
+                                gameLost={
+                                    isInHistoryMode ? historyGameLost : gameLost
+                                }
+                                lastIncorrectGuess={
+                                    isInHistoryMode
+                                        ? historyLastIncorrectGuess
+                                        : lastIncorrectGuess
+                                }
+                                isAnimating={
+                                    isInHistoryMode
+                                        ? historyIsAnimating
+                                        : isAnimating
+                                }
+                                notInList={
+                                    isInHistoryMode
+                                        ? historyNotInList
+                                        : notInList
+                                }
                             />
 
                             <OnScreenKeyboard
-                                onKeyPress={isInHistoryMode ? handleHistoryKeyPress : handleKeyPress}
-                                disabledLetters={isInHistoryMode ? historyDisabledLetters : disabledLetters}
+                                onKeyPress={
+                                    isInHistoryMode
+                                        ? handleHistoryKeyPress
+                                        : handleKeyPress
+                                }
+                                disabledLetters={
+                                    isInHistoryMode
+                                        ? historyDisabledLetters
+                                        : disabledLetters
+                                }
                                 className='flex-shrink-0 pb-4'
                             />
                         </>
