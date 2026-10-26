@@ -445,7 +445,7 @@ export default function Home() {
                     !isInHistoryMode &&
                     dailyImage?.chosen_by?.trim() && (
                         <p className='text-md font-bold -mt-2 px-4 pb-2 text-center'>
-                            Today&apos;s idol was brought to you by{' '}
+                            Today&apos;s idol was chosen by{' '}
                             <span className='inline-block rounded-full bg-pink-600/90 px-2 py-1 dark:bg-pink-600/90'>
                                 <ChosenByName
                                     name={dailyImage.chosen_by.trim()}
