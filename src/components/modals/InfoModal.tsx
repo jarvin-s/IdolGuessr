@@ -183,9 +183,6 @@ export default function InfoModal({
                         <p className='text-lg font-semibold text-black dark:text-zinc-100'>
                             On-screen keyboard
                         </p>
-                        <span className='ml-2 inline-block rounded-full border border-pink-500 bg-pink-500/10 px-2 py-[2px] text-xs font-bold text-pink-600 uppercase'>
-                            New
-                        </span>
                         <div
                             className='grid shrink-0 grid-cols-2 gap-2'
                             role='group'

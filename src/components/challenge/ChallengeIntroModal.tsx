@@ -65,7 +65,7 @@ export default function ChallengeIntroModal({
                             <span className='font-bold text-black dark:text-zinc-100'>
                                 {formatGenFilter(genFilter)}
                             </span>
-                        </div>
+                        </div>                        
                     </div>
                 </div>
             </div>
