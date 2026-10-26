@@ -21,6 +21,8 @@ export interface DailyImage {
   base64_idol?: string
   hangul_name?: string
   gen?: number
+  chosen_by?: string | null
+  chosen_by_url?: string | null
 }
 
 export interface HangulImage extends DailyImage {
@@ -35,6 +37,8 @@ export interface CurrentDaily {
   img_bucket: string;
   end_at: string;
   server_now: string;
+  chosen_by: string | null;
+  chosen_by_url: string | null;
 }
 
 export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed'

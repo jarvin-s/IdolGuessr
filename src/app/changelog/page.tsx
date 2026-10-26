@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import localFont from 'next/font/local'
-import ThemeToggle from '@/components/theme/ThemeToggle'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -14,6 +13,10 @@ export const metadata: Metadata = {
 }
 
 const entries: { date: string; changes: string[] }[] = [
+    {
+        date: 'October 26, 2026',
+        changes: ['Added shoutouts for who picked today\'s idol'],
+    },
     {
         date: 'October 21, 2026',
         changes: ['Added on-screen keyboard toggle'],
@@ -100,10 +103,6 @@ export default function ChangelogPage() {
                         height={50}
                         className='h-10 w-auto dark:invert'
                     />
-                </div>
-
-                <div className='mb-6 flex justify-center'>
-                    <ThemeToggle />
                 </div>
 
                 <h1
