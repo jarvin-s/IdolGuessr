@@ -82,7 +82,20 @@ export const IMAGE_MODE_STORAGE_KEY = 'idol-guessr-image-mode'
 
 export const IMAGE_MODE_LABELS: Record<ImageMode, string> = {
     pixelated: 'Pixelated',
-    zoom: 'Zoom',
+    zoom: 'Zoomed',
+}
+
+const ZOOMED_NOTICE_KEY = 'idol-guessr-zoomed-mode-notice-seen'
+
+export function shouldShowZoomedNotice(mode: ImageMode): boolean {
+    if (mode !== 'zoom' || typeof window === 'undefined') return false
+    try {
+        if (localStorage.getItem(ZOOMED_NOTICE_KEY)) return false
+        localStorage.setItem(ZOOMED_NOTICE_KEY, 'true')
+        return true
+    } catch {
+        return false
+    }
 }
 
 export function isImageMode(value: unknown): value is ImageMode {

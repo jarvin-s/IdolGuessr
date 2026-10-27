@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import ZoomedModeModal from '@/components/modals/ZoomedModeModal'
 import {
     DIFFICULTIES,
     DIFFICULTY_DESCRIPTIONS,
@@ -7,6 +8,7 @@ import {
     loadSavedDifficulty,
     loadSavedImageMode,
     saveImageMode,
+    shouldShowZoomedNotice,
     type ImageMode,
     type InfiniteDifficulty,
 } from '@/utils/difficulty'
@@ -65,6 +67,7 @@ export default function FilterModal({
     const [genDropdownOpen, setGenDropdownOpen] = useState(false)
     const [difficultyDropdownOpen, setDifficultyDropdownOpen] = useState(false)
     const [imageModeDropdownOpen, setImageModeDropdownOpen] = useState(false)
+    const [showZoomedNotice, setShowZoomedNotice] = useState(false)
 
     const groupDropdownRef = useRef<HTMLDivElement>(null)
     const genDropdownRef = useRef<HTMLDivElement>(null)
@@ -215,6 +218,7 @@ export default function FilterModal({
     }
 
     return (
+        <>
         <div className='fixed inset-0 z-[300] overflow-y-auto bg-black/40 p-4'>
             <div className='flex min-h-full items-center justify-center'>
             <div className='modal-fade-in relative w-full max-w-sm rounded-md bg-white p-10 dark:bg-zinc-900'>
@@ -331,6 +335,9 @@ export default function FilterModal({
                                         onClick={() => {
                                             setSelectedImageMode(option)
                                             setImageModeDropdownOpen(false)
+                                            if (shouldShowZoomedNotice(option)) {
+                                                setShowZoomedNotice(true)
+                                            }
                                         }}
                                         className={`w-full cursor-pointer px-3 py-2 text-left transition-all hover:bg-gray-50 dark:hover:bg-zinc-800 ${
                                             selectedImageMode === option
@@ -458,6 +465,11 @@ export default function FilterModal({
             </div>
             </div>
         </div>
+        <ZoomedModeModal
+            isOpen={showZoomedNotice}
+            onClose={() => setShowZoomedNotice(false)}
+        />
+        </>
     )
 }
 
