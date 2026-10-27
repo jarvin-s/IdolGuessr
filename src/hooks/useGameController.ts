@@ -991,6 +991,7 @@ export function useGameController() {
 
                         setTimeout(() => {
                             setIsAnimating(false)
+                            setLastIncorrectGuess('')
                             const emptyIndex = guesses.findIndex(
                                 (g) => g === 'empty'
                             )
@@ -1084,12 +1085,7 @@ export function useGameController() {
                 }
             } else if (key === '✕') {
                 if (!gameWon && !gameLost) {
-                    if (currentGuess === '' && lastIncorrectGuess) {
-                        setCurrentGuess(lastIncorrectGuess.slice(0, -1))
-                        setLastIncorrectGuess('')
-                    } else {
-                        setCurrentGuess((prev) => prev.slice(0, -1))
-                    }
+                    setCurrentGuess((prev) => prev.slice(0, -1))
                 }
             } else {
                 if (

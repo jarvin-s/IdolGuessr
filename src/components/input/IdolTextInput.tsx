@@ -81,9 +81,6 @@ export default function IdolTextInput({
         if (!trimmed || disabled || busy) return
         lastSubmittedRef.current = trimmed
         onSubmit(trimmed)
-        // Keep the typed name on a wrong guess so the player can edit it
-        // with backspace (matches the keyboard's behavior). A correct guess
-        // in unlimited/challenge keeps it too, until the next idol starts.
         setOpen(false)
         setActiveIndex(-1)
     }
@@ -114,6 +111,8 @@ export default function IdolTextInput({
         wasAnimatingRef.current = isAnimating
         if (!started || notInList || gameWon || gameLost) return
 
+        // A wrong idol is cleared so the next guess starts empty.
+        setValue('')
         setShowIncorrect(true)
         setOpen(false)
         if (incorrectTimerRef.current !== null) {
