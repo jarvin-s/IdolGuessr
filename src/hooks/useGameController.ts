@@ -20,6 +20,9 @@ import {
     emptyGuesses,
     getDifficultyConfig,
     saveDifficulty,
+    loadSavedImageMode,
+    saveImageMode,
+    type ImageMode,
     type InfiniteDifficulty,
 } from '@/utils/difficulty'
 import {
@@ -68,6 +71,14 @@ export function useGameController() {
     const [showGameOver, setShowGameOver] = useState(false)
     const isSwitchingModeRef = useRef(false)
     const [difficulty, setDifficulty] = useState<InfiniteDifficulty>('normal')
+    const [imageMode, setImageModeState] = useState<ImageMode>('pixelated')
+    const setImageMode = useCallback((mode: ImageMode) => {
+        setImageModeState(mode)
+        saveImageMode(mode)
+    }, [])
+    useEffect(() => {
+        setImageModeState(loadSavedImageMode())
+    }, [])
     const {
         maxGuesses,
         hints: hintCount,
@@ -106,7 +117,7 @@ export function useGameController() {
         loadGuessAttempts,
     } = useGameProgress(dailyImage, correctAnswer, gameMode)
 
-    const unlimitedStats = useUnlimitedStats(difficulty)
+    const unlimitedStats = useUnlimitedStats(difficulty, imageMode)
 
     const [timer, setTimer] = useState('00:00:00')
     const serverOffsetRef = useRef<number>(0)
@@ -121,7 +132,8 @@ export function useGameController() {
         | ((
               filterOverride?: 'boy-group' | 'girl-group' | 'both',
               genFilterOverride?: number[],
-              difficultyOverride?: InfiniteDifficulty
+              difficultyOverride?: InfiniteDifficulty,
+              imageModeOverride?: ImageMode
           ) => Promise<void>)
         | null
     >(null)
@@ -228,10 +240,12 @@ export function useGameController() {
         async (
             filterOverride?: 'boy-group' | 'girl-group' | 'both',
             genFilterOverride?: number[],
-            difficultyOverride?: InfiniteDifficulty
+            difficultyOverride?: InfiniteDifficulty,
+            imageModeOverride?: ImageMode
         ) => {
             if (loadUnlimitedRef.current) return
             loadUnlimitedRef.current = true
+            const activeImageMode = imageModeOverride ?? imageMode
 
             const filterForApi =
                 filterOverride !== undefined ? filterOverride : groupFilter
@@ -246,14 +260,16 @@ export function useGameController() {
                 milestones.filter((m) => m <= currentStreak).pop() || 0
             lastStreakMilestoneRef.current = lastMilestone
 
-            const savedGameState =
-                unlimitedStats.loadGameState(activeDifficulty)
+            const savedGameState = unlimitedStats.loadGameState(
+                activeDifficulty,
+                activeImageMode
+            )
             const savedDifficulty = savedGameState?.difficulty ?? 'normal'
             const savedMatchesDifficulty =
                 !!savedGameState && savedDifficulty === activeDifficulty
 
             if (savedGameState && !savedMatchesDifficulty) {
-                unlimitedStats.clearGameState(activeDifficulty)
+                unlimitedStats.clearGameState(activeDifficulty, activeImageMode)
             }
 
             if (savedGameState && savedMatchesDifficulty) {
@@ -263,7 +279,7 @@ export function useGameController() {
                     savedGameState.base64Group
 
                 if (!isValidSavedState) {
-                    unlimitedStats.clearGameState(activeDifficulty)
+                    unlimitedStats.clearGameState(activeDifficulty, activeImageMode)
                     const newImages = await getMultipleRandomUnlimitedImages(
                         5,
                         currentFilter,
@@ -305,13 +321,15 @@ export function useGameController() {
                     base64_group: savedGameState.base64Group,
                     base64_idol: savedGameState.base64Idol,
                     group_name: savedGameState.groupName,
+                    zoom_x: savedGameState.zoomX,
+                    zoom_y: savedGameState.zoomY,
                 }
 
                 if (
                     currentFilter !== null &&
                     savedImage.group_category !== currentFilter
                 ) {
-                    unlimitedStats.clearGameState(activeDifficulty)
+                    unlimitedStats.clearGameState(activeDifficulty, activeImageMode)
                     const newImages = await getMultipleRandomUnlimitedImages(
                         5,
                         currentFilter,
@@ -485,6 +503,7 @@ export function useGameController() {
             groupFilter,
             genFilter,
             difficulty,
+            imageMode,
         ]
     )
 
@@ -495,8 +514,10 @@ export function useGameController() {
             mode: 'daily' | 'unlimited',
             filter?: 'boy-group' | 'girl-group' | 'both',
             genFilterParam?: number[],
-            difficultyParam?: InfiniteDifficulty
+            difficultyParam?: InfiniteDifficulty,
+            imageModeParam?: ImageMode
         ) => {
+            if (imageModeParam) setImageMode(imageModeParam)
             const nextDifficulty = difficultyParam ?? difficulty
             const difficultyChanged =
                 mode === 'unlimited' && nextDifficulty !== difficulty
@@ -524,6 +545,8 @@ export function useGameController() {
                         ? encodeIdolName(dailyImage.alt_name)
                         : undefined,
                     groupName: dailyImage.group_name,
+                    zoomX: dailyImage.zoom_x,
+                    zoomY: dailyImage.zoom_y,
                     difficulty,
                     hintsRemaining,
                     hintUsedOnIdol: hintUsedOnIdol || undefined,
@@ -540,6 +563,8 @@ export function useGameController() {
                         base64_group: img.base64_group,
                         base64_idol: img.base64_idol,
                         group_name: img.group_name,
+                        zoom_x: img.zoom_x,
+                        zoom_y: img.zoom_y,
                     })),
                     currentImageIndex: currentImageIndex,
                 })
@@ -618,7 +643,8 @@ export function useGameController() {
                     void loadUnlimitedRefFunc.current(
                         filter,
                         genFilterParam,
-                        nextDifficulty
+                        nextDifficulty,
+                        imageModeParam ?? imageMode
                     )
                 }
             }
@@ -641,6 +667,8 @@ export function useGameController() {
             skipsRemaining,
             pathname,
             difficulty,
+            imageMode,
+            setImageMode,
         ]
     )
 
@@ -650,8 +678,10 @@ export function useGameController() {
             overrideHintsRemaining?: number,
             overrideGroupFilter?: 'boy-group' | 'girl-group' | 'both',
             overrideGenFilter?: number[],
-            overrideDifficulty?: InfiniteDifficulty
+            overrideDifficulty?: InfiniteDifficulty,
+            overrideImageMode?: ImageMode
         ) => {
+            const activeImageMode = overrideImageMode ?? imageMode
             const effectiveFilter = overrideGroupFilter ?? groupFilter
             const effectiveGenFilter = overrideGenFilter ?? genFilter
             const activeDifficulty = overrideDifficulty ?? difficulty
@@ -663,7 +693,7 @@ export function useGameController() {
                 if (hasGuesses) {
                     const currentStreak = unlimitedStats.stats.currentStreak
                     if (currentStreak >= 1 && !hasTrackedCurrentGame.current) {
-                        void trackUnlimitedGame(currentStreak, activeDifficulty)
+                        void trackUnlimitedGame(currentStreak, activeDifficulty, imageMode)
                         hasTrackedCurrentGame.current = true
                     }
                     unlimitedStats.updateStats(false, true, true)
@@ -708,6 +738,8 @@ export function useGameController() {
                     ? encodeIdolName(row.alt_name)
                     : undefined,
                 groupName: row.group_name,
+                zoomX: row.zoom_x,
+                zoomY: row.zoom_y,
                 difficulty: activeDifficulty,
                 hintsRemaining: finalHintsRemaining,
                 skipsRemaining: finalSkipsRemaining,
@@ -723,6 +755,8 @@ export function useGameController() {
                     base64_group: img.base64_group,
                     base64_idol: img.base64_idol,
                     group_name: img.group_name,
+                    zoom_x: img.zoom_x,
+                    zoom_y: img.zoom_y,
                 })),
                 currentImageIndex: nextImageIndex,
             })
@@ -744,7 +778,8 @@ export function useGameController() {
 
                 unlimitedStats.saveGameState(
                     buildGameState(row, nextImageIndex, prefetchedImages),
-                    activeDifficulty
+                    activeDifficulty,
+                    activeImageMode
                 )
 
                 if (prefetchedImages.length > nextImageIndex) {
@@ -758,7 +793,7 @@ export function useGameController() {
                         img.src = getImageUrl(
                             nextRow.group_type || '',
                             nextRow.img_bucket,
-                            1,
+                            activeImageMode === 'zoom' ? 'clear' : 1,
                             'unlimited',
                             nextRow.group_category,
                             nextRow.base64_group
@@ -814,7 +849,8 @@ export function useGameController() {
                                 nextImageIndex + 1,
                                 updatedPrefetched
                             ),
-                            activeDifficulty
+                            activeDifficulty,
+                            activeImageMode
                         )
 
                         newImages.forEach((img) => {
@@ -825,6 +861,7 @@ export function useGameController() {
             }
         },
         [
+            imageMode,
             prefetchedImages,
             currentImageIndex,
             setGuesses,
@@ -846,14 +883,19 @@ export function useGameController() {
         (
             overrideGroupFilter?: 'boy-group' | 'girl-group' | 'both',
             overrideGenFilter?: number[],
-            overrideDifficulty?: InfiniteDifficulty
+            overrideDifficulty?: InfiniteDifficulty,
+            overrideImageMode?: ImageMode
         ) => {
+            if (overrideImageMode) setImageMode(overrideImageMode)
             setShowGameOver(false)
             const nextDifficulty = overrideDifficulty ?? difficulty
             const nextConfig = getDifficultyConfig(nextDifficulty)
+            const nextImageMode = overrideImageMode ?? imageMode
             unlimitedStats.clearGameState(difficulty)
+            if (nextDifficulty !== difficulty || nextImageMode !== imageMode) {
+                unlimitedStats.clearGameState(nextDifficulty, nextImageMode)
+            }
             if (nextDifficulty !== difficulty) {
-                unlimitedStats.clearGameState(nextDifficulty)
                 setDifficulty(nextDifficulty)
                 saveDifficulty(nextDifficulty)
             }
@@ -885,10 +927,11 @@ export function useGameController() {
                 nextConfig.hints,
                 overrideGroupFilter,
                 overrideGenFilter,
-                nextDifficulty
+                nextDifficulty,
+                overrideImageMode
             )
         },
-        [loadNextUnlimited, unlimitedStats, difficulty]
+        [loadNextUnlimited, unlimitedStats, difficulty, imageMode, setImageMode]
     )
 
     const handleSkip = useCallback(() => {
@@ -971,6 +1014,7 @@ export function useGameController() {
 
                         setTimeout(() => {
                             setIsAnimating(false)
+                            setLastIncorrectGuess('')
                             const emptyIndex = guesses.findIndex(
                                 (g) => g === 'empty'
                             )
@@ -1007,7 +1051,8 @@ export function useGameController() {
                                         ) {
                                             void trackUnlimitedGame(
                                                 currentStreak,
-                                                difficulty
+                                                difficulty,
+                                                imageMode
                                             )
                                             hasTrackedCurrentGame.current = true
                                         }
@@ -1063,12 +1108,7 @@ export function useGameController() {
                 }
             } else if (key === '✕') {
                 if (!gameWon && !gameLost) {
-                    if (currentGuess === '' && lastIncorrectGuess) {
-                        setCurrentGuess(lastIncorrectGuess.slice(0, -1))
-                        setLastIncorrectGuess('')
-                    } else {
-                        setCurrentGuess((prev) => prev.slice(0, -1))
-                    }
+                    setCurrentGuess((prev) => prev.slice(0, -1))
                 }
             } else {
                 if (
@@ -1084,6 +1124,7 @@ export function useGameController() {
             }
         },
         [
+            imageMode,
             currentGuess,
             guesses,
             isAnimating,
@@ -1283,6 +1324,9 @@ export function useGameController() {
                         group_category: savedGameState.groupCategory,
                         base64_group: savedGameState.base64Group,
                         base64_idol: savedGameState.base64Idol,
+                        group_name: savedGameState.groupName,
+                        zoom_x: savedGameState.zoomX,
+                        zoom_y: savedGameState.zoomY,
                     }
                     if (
                         groupFilter &&
@@ -1440,6 +1484,8 @@ export function useGameController() {
                     ? encodeIdolName(dailyImage.alt_name)
                     : undefined,
                 groupName: dailyImage.group_name,
+                zoomX: dailyImage.zoom_x,
+                zoomY: dailyImage.zoom_y,
                 difficulty,
                 hintsRemaining,
                 hintUsedOnIdol: hintUsedOnIdol || undefined,
@@ -1456,6 +1502,8 @@ export function useGameController() {
                     base64_group: img.base64_group,
                     base64_idol: img.base64_idol,
                     group_name: img.group_name,
+                    zoom_x: img.zoom_x,
+                    zoom_y: img.zoom_y,
                 })),
                 currentImageIndex: currentImageIndex,
             })
@@ -1520,6 +1568,8 @@ export function useGameController() {
         maxHints: hintCount,
         maxSkips: skipCount,
         difficulty,
+        imageMode,
+        setImageMode,
         setHintUsed: (used: boolean) => {
             if (used) setHintsRemaining(0)
         },

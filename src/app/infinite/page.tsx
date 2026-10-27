@@ -20,7 +20,10 @@ import IdolTextInput from '@/components/input/IdolTextInput'
 import { useInputMode } from '@/utils/inputMode'
 import {
     loadSavedDifficulty,
+    loadSavedImageMode,
     saveDifficulty,
+    saveImageMode,
+    type ImageMode,
     type InfiniteDifficulty,
 } from '@/utils/difficulty'
 import {
@@ -38,6 +41,8 @@ export default function InfinitePage() {
     const [inputMode, , inputModeReady] = useInputMode()
     const {
         handleGameModeChange,
+        imageMode,
+        setImageMode,
         timer,
         isLoading,
         dailyImage,
@@ -89,16 +94,18 @@ export default function InfinitePage() {
     const handleStart = (
         groupFilter: GroupFilter,
         genFilter: number[],
-        difficulty: InfiniteDifficulty
+        difficulty: InfiniteDifficulty,
+        selectedImageMode: ImageMode
     ) => {
         try {
             localStorage.setItem('idol-guessr-group-filter', groupFilter)
             localStorage.setItem('idol-guessr-gen-filter', JSON.stringify(genFilter))
             saveDifficulty(difficulty)
+            saveImageMode(selectedImageMode)
         } catch {
             // Ignore localStorage errors
         }
-        handleGameModeChange('unlimited', groupFilter, genFilter, difficulty)
+        handleGameModeChange('unlimited', groupFilter, genFilter, difficulty, selectedImageMode)
         setStartOpen(false)
     }
 
@@ -107,7 +114,6 @@ export default function InfinitePage() {
             const savedGroupFilter = localStorage.getItem('idol-guessr-group-filter')
             const savedGenFilter = localStorage.getItem('idol-guessr-gen-filter')
 
-            // Parse gen filter with validation
             let parsedGenFilter = DEFAULT_INFINITE_GEN_FILTER
             if (savedGenFilter) {
                 try {
@@ -121,9 +127,11 @@ export default function InfinitePage() {
             }
 
             const savedDifficulty = loadSavedDifficulty()
+            const savedImageMode = loadSavedImageMode()
+            setImageMode(savedImageMode)
 
             if (savedGroupFilter === 'boy-group' || savedGroupFilter === 'girl-group' || savedGroupFilter === 'both') {
-                handleGameModeChange('unlimited', savedGroupFilter as GroupFilter, parsedGenFilter, savedDifficulty)
+                handleGameModeChange('unlimited', savedGroupFilter as GroupFilter, parsedGenFilter, savedDifficulty, savedImageMode)
                 setStartOpen(false)
             } else {
                 setStartOpen(true)
@@ -162,8 +170,11 @@ export default function InfinitePage() {
                                     base64_group: dailyImage.base64_group,
                                     base64_idol: dailyImage.base64_idol,
                                     group_name: dailyImage.group_name,
+                                    zoom_x: dailyImage.zoom_x,
+                                    zoom_y: dailyImage.zoom_y,
                                 }
                             }
+                            imageMode={imageMode}
                             remainingGuesses={remainingGuesses}
                             gameWon={gameWon}
                             gameLost={gameLost}
@@ -243,6 +254,7 @@ export default function InfinitePage() {
                 statsLoaded={unlimitedStatsLoaded}
                 gameMode={'unlimited'}
                 difficulty={difficulty}
+                imageMode={imageMode}
             />
 
             <HelpModal
@@ -343,8 +355,9 @@ export default function InfinitePage() {
                 onConfirm={() => {
                     setShowFilterModal(false)
                 }}
-                onPlayAgain={(groupFilter, genFilter, difficulty) => {
-                    handlePlayAgain(groupFilter, genFilter, difficulty)
+                onPlayAgain={(groupFilter, genFilter, difficulty, mode) => {
+                    setImageMode(mode)
+                    handlePlayAgain(groupFilter, genFilter, difficulty, mode)
                 }}
             />
 

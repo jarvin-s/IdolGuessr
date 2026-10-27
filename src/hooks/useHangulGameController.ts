@@ -468,6 +468,7 @@ export function useHangulGameController() {
 
                         setTimeout(() => {
                             setIsAnimating(false)
+                            setLastIncorrectGuess('')
                             setGuesses((prev) => {
                                 const newGuesses = [...prev]
                                 const emptyIndex = newGuesses.findIndex((g) => g === 'empty')
@@ -520,12 +521,7 @@ export function useHangulGameController() {
                 }
             } else if (key === '✕') {
                 if (!gameWon && !gameLost) {
-                    if (currentGuess === '' && lastIncorrectGuess) {
-                        setCurrentGuess(lastIncorrectGuess.slice(0, -1))
-                        setLastIncorrectGuess('')
-                    } else {
-                        setCurrentGuess((prev) => prev.slice(0, -1))
-                    }
+                    setCurrentGuess((prev) => prev.slice(0, -1))
                 }
             } else if (/^[A-Z0-9]$/.test(key)) {
                 if (

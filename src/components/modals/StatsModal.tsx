@@ -3,6 +3,7 @@ import UserStats, { loadUnlimitedStats } from '../stats/UserStats'
 import {
     DIFFICULTIES,
     DIFFICULTY_LABELS,
+    type ImageMode,
     type InfiniteDifficulty,
 } from '@/utils/difficulty'
 
@@ -14,6 +15,7 @@ interface StatsModalProps {
     statsLoaded: boolean
     gameMode?: 'daily' | 'unlimited' | 'hangul'
     difficulty?: InfiniteDifficulty
+    imageMode?: ImageMode
 }
 
 export default function StatsModal({
@@ -23,6 +25,7 @@ export default function StatsModal({
     statsLoaded,
     gameMode = 'daily',
     difficulty = 'normal',
+    imageMode = 'pixelated',
 }: StatsModalProps) {
     const [selectedDifficulty, setSelectedDifficulty] =
         useState<InfiniteDifficulty>(difficulty)
@@ -36,7 +39,7 @@ export default function StatsModal({
     const isUnlimited = gameMode === 'unlimited'
     const shownStats =
         isUnlimited && selectedDifficulty !== difficulty
-            ? loadUnlimitedStats(selectedDifficulty)
+            ? loadUnlimitedStats(selectedDifficulty, imageMode)
             : stats
 
     const difficultyTabs = isUnlimited ? (

@@ -23,6 +23,8 @@ export interface DailyImage {
   gen?: number
   chosen_by?: string | null
   chosen_by_url?: string | null
+  zoom_x?: number | null
+  zoom_y?: number | null
 }
 
 export interface HangulImage extends DailyImage {
@@ -600,6 +602,7 @@ export interface UnlimitedGameData {
   session_id: string
   streak: number
   difficulty: 'easy' | 'normal' | 'hard' | 'challenger'
+  mode: 'pixelated' | 'zoom'
 }
 
 export interface HangulGameData {
@@ -675,7 +678,8 @@ export function resetGuessTimer(): void {
 
 export async function trackUnlimitedGame(
   streak: number,
-  difficulty: UnlimitedGameData['difficulty'] = 'normal'
+  difficulty: UnlimitedGameData['difficulty'] = 'normal',
+  mode: UnlimitedGameData['mode'] = 'pixelated'
 ): Promise<void> {
   if (streak < 1) {
     return
@@ -686,6 +690,7 @@ export async function trackUnlimitedGame(
       session_id: getOrCreateSessionId(),
       streak: streak,
       difficulty,
+      mode,
     }
 
     const { error } = await supabase.from('unlimited_game_tracking').insert(gameData)
