@@ -237,6 +237,7 @@ export default function Home() {
 
                         setTimeout(() => {
                             setHistoryIsAnimating(false)
+                            setHistoryLastIncorrectGuess('')
                             setHistoryGuesses((prev) => {
                                 const newGuesses = [...prev] as Array<
                                     'correct' | 'incorrect' | 'empty'
@@ -279,17 +280,7 @@ export default function Home() {
                 }
             } else if (key === '✕') {
                 if (!historyGameWon && !historyGameLost) {
-                    if (
-                        historyCurrentGuess === '' &&
-                        historyLastIncorrectGuess
-                    ) {
-                        setHistoryCurrentGuess(
-                            historyLastIncorrectGuess.slice(0, -1)
-                        )
-                        setHistoryLastIncorrectGuess('')
-                    } else {
-                        setHistoryCurrentGuess((prev) => prev.slice(0, -1))
-                    }
+                    setHistoryCurrentGuess((prev) => prev.slice(0, -1))
                 }
             } else {
                 if (

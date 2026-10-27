@@ -47,6 +47,8 @@ export interface UnlimitedGameState {
     encodedIdolName: string
     encodedAltName?: string
     groupName?: string
+    zoomX?: number | null
+    zoomY?: number | null
     difficulty?: InfiniteDifficulty
     hintUsed?: boolean
     hintsRemaining?: number
@@ -64,6 +66,8 @@ export interface UnlimitedGameState {
         base64_group?: string
         base64_idol?: string
         group_name?: string
+        zoom_x?: number | null
+        zoom_y?: number | null
     }>
     currentImageIndex?: number
 }
@@ -388,25 +392,27 @@ export function useUnlimitedStats(difficulty: InfiniteDifficulty = 'normal', mod
         })
     }
 
-    const saveGameState = useCallback((gameState: UnlimitedGameState, forDifficulty?: InfiniteDifficulty) => {
+    const resolveGameStateKey = useCallback(
+        (forDifficulty?: InfiniteDifficulty, forMode?: ImageMode) =>
+            forDifficulty || forMode
+                ? unlimitedGameStateKey(forDifficulty ?? difficulty, forMode ?? mode)
+                : gameStateKeyRef.current,
+        [difficulty, mode]
+    )
+
+    const saveGameState = useCallback((gameState: UnlimitedGameState, forDifficulty?: InfiniteDifficulty, forMode?: ImageMode) => {
         if (typeof window === 'undefined') return
         try {
-            const key = forDifficulty
-                ? unlimitedGameStateKey(forDifficulty, mode)
-                : gameStateKeyRef.current
-            localStorage.setItem(key, JSON.stringify(gameState))
+            localStorage.setItem(resolveGameStateKey(forDifficulty, forMode), JSON.stringify(gameState))
         } catch (error) {
             console.error('Error saving unlimited game state:', error)
         }
-    }, [mode])
+    }, [resolveGameStateKey])
 
-    const loadGameState = useCallback((forDifficulty?: InfiniteDifficulty): UnlimitedGameState | null => {
+    const loadGameState = useCallback((forDifficulty?: InfiniteDifficulty, forMode?: ImageMode): UnlimitedGameState | null => {
         if (typeof window === 'undefined') return null
         try {
-            const key = forDifficulty
-                ? unlimitedGameStateKey(forDifficulty, mode)
-                : gameStateKeyRef.current
-            const savedState = localStorage.getItem(key)
+            const savedState = localStorage.getItem(resolveGameStateKey(forDifficulty, forMode))
             if (savedState) {
                 return JSON.parse(savedState) as UnlimitedGameState
             }
@@ -414,19 +420,16 @@ export function useUnlimitedStats(difficulty: InfiniteDifficulty = 'normal', mod
             console.error('Error loading unlimited game state:', error)
         }
         return null
-    }, [mode])
+    }, [resolveGameStateKey])
 
-    const clearGameState = useCallback((forDifficulty?: InfiniteDifficulty) => {
+    const clearGameState = useCallback((forDifficulty?: InfiniteDifficulty, forMode?: ImageMode) => {
         if (typeof window === 'undefined') return
         try {
-            const key = forDifficulty
-                ? unlimitedGameStateKey(forDifficulty, mode)
-                : gameStateKeyRef.current
-            localStorage.removeItem(key)
+            localStorage.removeItem(resolveGameStateKey(forDifficulty, forMode))
         } catch (error) {
             console.error('Error clearing unlimited game state:', error)
         }
-    }, [mode])
+    }, [resolveGameStateKey])
 
     return { stats, isLoaded, updateStats, saveGameState, loadGameState, clearGameState }
 }
