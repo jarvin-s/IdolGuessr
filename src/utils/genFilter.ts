@@ -20,6 +20,14 @@ export function isValidInfiniteGenFilter(value: unknown): value is number[] {
     )
 }
 
+export function formatGenFilter(genFilter?: number[] | null): string {
+    if (!genFilter || genFilter.length === 0) return 'All Gens'
+    const selected = [...new Set(genFilter)].sort((a, b) => a - b)
+    const includesAll = INFINITE_GEN_VALUES.every((gen) => selected.includes(gen))
+    if (includesAll) return 'All Gens'
+    return selected.map((gen) => `Gen ${gen}`).join(', ')
+}
+
 export function isActiveInfiniteGenFilter(genFilter?: number[]): boolean {
     return (
         !!genFilter &&

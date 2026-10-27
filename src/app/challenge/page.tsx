@@ -13,13 +13,17 @@ export default function ChallengePage() {
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleCreate = async (idolCount: IdolCount, groupFilter: GroupFilter) => {
+  const handleCreate = async (
+    idolCount: IdolCount,
+    groupFilter: GroupFilter,
+    genFilter: number[]
+  ) => {
     setIsCreating(true)
     setError(null)
 
     try {
       const sessionId = getOrCreateSessionId()
-      const challengeId = await createChallenge(sessionId, idolCount, groupFilter)
+      const challengeId = await createChallenge(sessionId, idolCount, groupFilter, genFilter)
 
       if (challengeId) {
         router.push(`/challenge/${challengeId}`)
@@ -29,7 +33,11 @@ export default function ChallengePage() {
       }
     } catch (err) {
       console.error('Error creating challenge:', err)
-      setError('Failed to create challenge. Please try again.')
+      setError(
+        err instanceof Error && err.message === 'not_enough_idols'
+          ? 'Not enough idols for these filters. Try fewer idols or more generations.'
+          : 'Failed to create challenge. Please try again.'
+      )
       setIsCreating(false)
     }
   }

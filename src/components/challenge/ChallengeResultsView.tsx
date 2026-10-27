@@ -43,8 +43,8 @@ export default function ChallengeResultsView({
                                 key={result.session_id}
                                 className={`flex items-center justify-between rounded-lg p-3 ${
                                     isMe
-                                        ? 'border-2 border-pink-400 bg-pink-100'
-                                        : 'bg-gray-100 dark:bg-zinc-800'
+                                        ? 'border-2 border-pink-400 bg-white dark:bg-zinc-900'
+                                        : 'bg-gray-100 dark:bg-zinc-900'
                                 }`}
                             >
                                 <div className='flex items-center gap-3'>
@@ -53,7 +53,7 @@ export default function ChallengeResultsView({
                                     >
                                         #{index + 1}
                                     </span>
-                                    <span className='font-medium'>
+                                    <span className='font-medium text-gray-500 dark:text-zinc-200'>
                                         {displayName}
                                         {isMe && displayName !== 'You' && (
                                             <span className='ml-1 text-pink-600'>
@@ -63,11 +63,11 @@ export default function ChallengeResultsView({
                                     </span>
                                 </div>
                                 <div className='text-right'>
-                                    <span className='text-lg font-bold'>
+                                    <span className='text-lg font-bold text-gray-500 dark:text-zinc-200'>
                                         {result.total_correct}/
                                         {challenge.idol_count}
                                     </span>
-                                    <span className='ml-2'>correct</span>
+                                    <span className='ml-2 text-gray-500 dark:text-zinc-200'>correct</span>
                                 </div>
                             </div>
                         )

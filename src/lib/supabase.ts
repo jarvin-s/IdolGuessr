@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { isActiveInfiniteGenFilter } from '@/utils/genFilter'
+import { INFINITE_GEN_VALUES, isActiveInfiniteGenFilter } from '@/utils/genFilter'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -826,6 +826,7 @@ export interface Challenge {
   id: string
   idol_count: number
   group_filter: string
+  gen_filter: number[] | null
   created_at: string
   expires_at: string
   idols: ChallengeIdol[]
@@ -849,22 +850,32 @@ export interface ChallengeResult {
 export async function createChallenge(
   sessionId: string,
   idolCount: number,
-  groupFilter: 'boy-group' | 'girl-group' | 'both' = 'both'
+  groupFilter: 'boy-group' | 'girl-group' | 'both' = 'both',
+  genFilter?: number[] | null
 ): Promise<string | null> {
+  const includesAllGens =
+    !genFilter ||
+    INFINITE_GEN_VALUES.every((gen) => genFilter.includes(gen))
+
   try {
     const { data, error } = await supabase.rpc('create_challenge', {
       p_session_id: sessionId,
       p_idol_count: idolCount,
-      p_group_filter: groupFilter
+      p_group_filter: groupFilter,
+      p_gen_filter: includesAllGens ? null : genFilter,
     })
 
     if (error) {
+      if (error.message.includes('not_enough_idols')) {
+        throw new Error('not_enough_idols')
+      }
       console.error('Error creating challenge:', error)
       return null
     }
 
     return data as string
   } catch (error) {
+    if (error instanceof Error && error.message === 'not_enough_idols') throw error
     console.error('Error creating challenge:', error)
     return null
   }
@@ -890,6 +901,7 @@ export async function getChallenge(challengeId: string): Promise<Challenge | nul
       id: row.id,
       idol_count: row.idol_count,
       group_filter: row.group_filter,
+      gen_filter: row.gen_filter ?? null,
       created_at: row.created_at,
       expires_at: row.expires_at,
       idols: row.idols || []

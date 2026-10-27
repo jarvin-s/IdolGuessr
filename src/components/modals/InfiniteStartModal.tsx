@@ -108,8 +108,9 @@ export default function InfiniteStartModal({
     }
 
     return (
-        <div className='fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='modal-fade-in relative w-full max-w-sm rounded-md bg-white dark:bg-zinc-900 p-10'>
+        <div className='fixed inset-0 z-[300] overflow-y-auto bg-black/40 p-4'>
+            <div className='flex min-h-full items-center justify-center'>
+            <div className='modal-fade-in relative w-full max-w-sm rounded-md bg-white p-10 dark:bg-zinc-900'>
                 <div className='mb-4 flex items-center justify-center gap-2'>
                     <InfiniteIcon />
                     <h2 className='text-xl font-bold uppercase md:text-2xl'>
@@ -266,7 +267,7 @@ export default function InfiniteStartModal({
                             />
                         </button>
                         {genDropdownOpen && (
-                            <div className='absolute z-10 mt-1 w-full border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg'>
+                            <div className='mt-1 max-h-40 w-full overflow-y-auto border-2 border-gray-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900'>
                                 {INFINITE_GEN_OPTIONS.map((option) => (
                                     <button
                                         key={option.value}
@@ -306,6 +307,7 @@ export default function InfiniteStartModal({
                         Start
                     </button>
                 </div>
+            </div>
             </div>
         </div>
     )
