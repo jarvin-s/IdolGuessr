@@ -86,12 +86,14 @@ export default function IdolTextInput({
     }
 
     const showingCorrect = revealOnWin && gameWon
+    const answer = correctAnswer.trim()
+    const showingLoss = gameLost
+    const lossMessage = `Nice try! It was ${answer}`
 
-    // Clear the text when the round is lost, or when a mode that does not
-    // hold the answer is won. A held win keeps the name that was submitted.
+    // Clear a leftover guess when a mode that does not hold the answer is won.
     useEffect(() => {
-        if (gameLost || (gameWon && !revealOnWin)) setValue('')
-    }, [gameWon, gameLost, revealOnWin])
+        if (gameWon && !revealOnWin) setValue('')
+    }, [gameWon, revealOnWin])
 
     useLayoutEffect(() => {
         if (showingCorrect) return
@@ -158,11 +160,13 @@ export default function IdolTextInput({
         }
     }
 
-    const feedback = notInList
-        ? 'NOT IN IDOL LIST'
-        : showIncorrect
-          ? 'INCORRECT'
-          : ''
+    const feedback = showingLoss
+        ? ''
+        : notInList
+          ? 'NOT IN IDOL LIST'
+          : showIncorrect
+            ? 'INCORRECT'
+            : ''
     const winName = (
         lastSubmittedRef.current ||
         value ||
@@ -171,12 +175,12 @@ export default function IdolTextInput({
 
     const borderClass = showingCorrect
         ? 'border-green-400'
-        : feedback
+        : showingLoss || feedback
           ? 'border-red-400'
           : 'border-gray-300 dark:border-zinc-600'
     const bgClass = showingCorrect
         ? 'bg-green-400'
-        : feedback
+        : showingLoss || feedback
           ? 'bg-red-400'
           : 'bg-gray-200 dark:bg-zinc-800'
 
@@ -196,19 +200,23 @@ export default function IdolTextInput({
                     autoCapitalize='characters'
                     spellCheck={false}
                     value={
-                        showingCorrect ? winName : feedback || value
+                        showingLoss
+                            ? lossMessage
+                            : showingCorrect
+                              ? winName
+                              : feedback || value
                     }
-                    readOnly={!!feedback || showingCorrect}
+                    readOnly={!!feedback || showingCorrect || showingLoss}
                     disabled={disabled}
                     placeholder="WHAT'S YOUR GUESS?"
                     onChange={(e) => {
-                        if (feedback || showingCorrect) return
+                        if (feedback || showingCorrect || showingLoss) return
                         setValue(e.target.value)
                         setOpen(true)
                     }}
                     onFocus={() => {
                         restoreFocusRef.current = true
-                        if (!feedback && !showingCorrect) setOpen(true)
+                        if (!feedback && !showingCorrect && !showingLoss) setOpen(true)
                     }}
                     onBlur={() => setOpen(false)}
                     onKeyDown={handleKeyDown}
@@ -216,15 +224,17 @@ export default function IdolTextInput({
                     aria-controls={LISTBOX_ID}
                     aria-expanded={open && suggestions.length > 0}
                     aria-autocomplete='list'
-                    className={`w-full bg-transparent px-4 py-3 text-lg font-bold tracking-wider uppercase outline-none ${
-                        showingCorrect
+                    className={`w-full bg-transparent px-4 py-3 text-lg font-bold tracking-wider outline-none ${
+                        showingLoss ? 'normal-case' : 'uppercase'
+                    } ${
+                        showingCorrect || showingLoss
                             ? 'text-white disabled:opacity-100'
                             : feedback
                               ? 'text-white placeholder:text-white/70 disabled:opacity-50'
                               : 'text-black placeholder:text-black/30 disabled:opacity-50 dark:text-zinc-100 dark:placeholder:text-zinc-100/30'
                     }`}
                 />
-                {!showingCorrect && (
+                {!showingCorrect && !showingLoss && (
                     <button
                         type='button'
                         onMouseDown={(e) => e.preventDefault()}
@@ -238,7 +248,7 @@ export default function IdolTextInput({
                 )}
             </div>
 
-            {open && !feedback && !showingCorrect && suggestions.length > 0 && (
+            {open && !feedback && !showingCorrect && !showingLoss && suggestions.length > 0 && (
                 <ul
                     ref={listRef}
                     id={LISTBOX_ID}
