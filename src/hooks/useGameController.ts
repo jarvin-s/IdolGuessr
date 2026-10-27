@@ -20,6 +20,9 @@ import {
     emptyGuesses,
     getDifficultyConfig,
     saveDifficulty,
+    loadSavedImageMode,
+    saveImageMode,
+    type ImageMode,
     type InfiniteDifficulty,
 } from '@/utils/difficulty'
 import {
@@ -68,6 +71,14 @@ export function useGameController() {
     const [showGameOver, setShowGameOver] = useState(false)
     const isSwitchingModeRef = useRef(false)
     const [difficulty, setDifficulty] = useState<InfiniteDifficulty>('normal')
+    const [imageMode, setImageModeState] = useState<ImageMode>('pixelated')
+    const setImageMode = useCallback((mode: ImageMode) => {
+        setImageModeState(mode)
+        saveImageMode(mode)
+    }, [])
+    useEffect(() => {
+        setImageModeState(loadSavedImageMode())
+    }, [])
     const {
         maxGuesses,
         hints: hintCount,
@@ -106,7 +117,7 @@ export function useGameController() {
         loadGuessAttempts,
     } = useGameProgress(dailyImage, correctAnswer, gameMode)
 
-    const unlimitedStats = useUnlimitedStats(difficulty)
+    const unlimitedStats = useUnlimitedStats(difficulty, imageMode)
 
     const [timer, setTimer] = useState('00:00:00')
     const serverOffsetRef = useRef<number>(0)
@@ -495,8 +506,10 @@ export function useGameController() {
             mode: 'daily' | 'unlimited',
             filter?: 'boy-group' | 'girl-group' | 'both',
             genFilterParam?: number[],
-            difficultyParam?: InfiniteDifficulty
+            difficultyParam?: InfiniteDifficulty,
+            imageModeParam?: ImageMode
         ) => {
+            if (imageModeParam) setImageMode(imageModeParam)
             const nextDifficulty = difficultyParam ?? difficulty
             const difficultyChanged =
                 mode === 'unlimited' && nextDifficulty !== difficulty
@@ -641,6 +654,7 @@ export function useGameController() {
             skipsRemaining,
             pathname,
             difficulty,
+            setImageMode,
         ]
     )
 
@@ -650,8 +664,10 @@ export function useGameController() {
             overrideHintsRemaining?: number,
             overrideGroupFilter?: 'boy-group' | 'girl-group' | 'both',
             overrideGenFilter?: number[],
-            overrideDifficulty?: InfiniteDifficulty
+            overrideDifficulty?: InfiniteDifficulty,
+            overrideImageMode?: ImageMode
         ) => {
+            const activeImageMode = overrideImageMode ?? imageMode
             const effectiveFilter = overrideGroupFilter ?? groupFilter
             const effectiveGenFilter = overrideGenFilter ?? genFilter
             const activeDifficulty = overrideDifficulty ?? difficulty
@@ -663,7 +679,7 @@ export function useGameController() {
                 if (hasGuesses) {
                     const currentStreak = unlimitedStats.stats.currentStreak
                     if (currentStreak >= 1 && !hasTrackedCurrentGame.current) {
-                        void trackUnlimitedGame(currentStreak, activeDifficulty)
+                        void trackUnlimitedGame(currentStreak, activeDifficulty, imageMode)
                         hasTrackedCurrentGame.current = true
                     }
                     unlimitedStats.updateStats(false, true, true)
@@ -758,7 +774,7 @@ export function useGameController() {
                         img.src = getImageUrl(
                             nextRow.group_type || '',
                             nextRow.img_bucket,
-                            1,
+                            activeImageMode === 'zoom' ? 'clear' : 1,
                             'unlimited',
                             nextRow.group_category,
                             nextRow.base64_group
@@ -825,6 +841,7 @@ export function useGameController() {
             }
         },
         [
+            imageMode,
             prefetchedImages,
             currentImageIndex,
             setGuesses,
@@ -846,8 +863,10 @@ export function useGameController() {
         (
             overrideGroupFilter?: 'boy-group' | 'girl-group' | 'both',
             overrideGenFilter?: number[],
-            overrideDifficulty?: InfiniteDifficulty
+            overrideDifficulty?: InfiniteDifficulty,
+            overrideImageMode?: ImageMode
         ) => {
+            if (overrideImageMode) setImageMode(overrideImageMode)
             setShowGameOver(false)
             const nextDifficulty = overrideDifficulty ?? difficulty
             const nextConfig = getDifficultyConfig(nextDifficulty)
@@ -885,10 +904,11 @@ export function useGameController() {
                 nextConfig.hints,
                 overrideGroupFilter,
                 overrideGenFilter,
-                nextDifficulty
+                nextDifficulty,
+                overrideImageMode
             )
         },
-        [loadNextUnlimited, unlimitedStats, difficulty]
+        [loadNextUnlimited, unlimitedStats, difficulty, setImageMode]
     )
 
     const handleSkip = useCallback(() => {
@@ -1007,7 +1027,8 @@ export function useGameController() {
                                         ) {
                                             void trackUnlimitedGame(
                                                 currentStreak,
-                                                difficulty
+                                                difficulty,
+                                                imageMode
                                             )
                                             hasTrackedCurrentGame.current = true
                                         }
@@ -1084,6 +1105,7 @@ export function useGameController() {
             }
         },
         [
+            imageMode,
             currentGuess,
             guesses,
             isAnimating,
@@ -1520,6 +1542,8 @@ export function useGameController() {
         maxHints: hintCount,
         maxSkips: skipCount,
         difficulty,
+        imageMode,
+        setImageMode,
         setHintUsed: (used: boolean) => {
             if (used) setHintsRemaining(0)
         },

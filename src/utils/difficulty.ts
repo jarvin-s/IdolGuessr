@@ -75,3 +75,50 @@ export function saveDifficulty(difficulty: InfiniteDifficulty): void {
         // Ignore storage errors
     }
 }
+
+export type ImageMode = 'pixelated' | 'zoom'
+
+export const IMAGE_MODE_STORAGE_KEY = 'idol-guessr-image-mode'
+
+export const IMAGE_MODE_LABELS: Record<ImageMode, string> = {
+    pixelated: 'Pixelated',
+    zoom: 'Zoom',
+}
+
+export function isImageMode(value: unknown): value is ImageMode {
+    return value === 'pixelated' || value === 'zoom'
+}
+
+export function loadSavedImageMode(): ImageMode {
+    if (typeof window === 'undefined') return 'pixelated'
+    try {
+        const saved = localStorage.getItem(IMAGE_MODE_STORAGE_KEY)
+        if (isImageMode(saved)) return saved
+    } catch {
+        // Ignore storage errors
+    }
+    return 'pixelated'
+}
+
+export function saveImageMode(mode: ImageMode): void {
+    if (typeof window === 'undefined') return
+    try {
+        localStorage.setItem(IMAGE_MODE_STORAGE_KEY, mode)
+    } catch {
+        // Ignore storage errors
+    }
+}
+
+// Scale applied to clear.png for each guess count. Index = guesses used.
+const ZOOM_SCALES_6 = [5, 3.5, 2.5, 1.8, 1.3, 1]
+const ZOOM_SCALES_3 = [4, 2.5, 1.6, 1]
+
+export function getZoomScale(
+    guessesUsed: number,
+    maxGuesses: number,
+    roundEnded: boolean
+): number {
+    if (roundEnded) return 1
+    const scales = maxGuesses <= 3 ? ZOOM_SCALES_3 : ZOOM_SCALES_6
+    return scales[Math.min(guessesUsed, scales.length - 1)]
+}

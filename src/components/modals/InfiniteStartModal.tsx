@@ -3,8 +3,11 @@ import {
     DIFFICULTIES,
     DIFFICULTY_DESCRIPTIONS,
     DIFFICULTY_LABELS,
+    IMAGE_MODE_LABELS,
     getDifficultyConfig,
     loadSavedDifficulty,
+    loadSavedImageMode,
+    type ImageMode,
     type InfiniteDifficulty,
 } from '@/utils/difficulty'
 import {
@@ -20,9 +23,12 @@ interface InfiniteStartModalProps {
     onStart: (
         groupFilter: GroupFilter,
         genFilter: number[],
-        difficulty: InfiniteDifficulty
+        difficulty: InfiniteDifficulty,
+        imageMode: ImageMode
     ) => void
 }
+
+const IMAGE_MODES: ImageMode[] = ['pixelated', 'zoom']
 
 const GROUP_OPTIONS: { value: GroupFilter; label: string }[] = [
     { value: 'both', label: 'Both' },
@@ -41,13 +47,18 @@ export default function InfiniteStartModal({
     )
     const [selectedDifficulty, setSelectedDifficulty] =
         useState<InfiniteDifficulty>(() => loadSavedDifficulty())
+    const [selectedImageMode, setSelectedImageMode] = useState<ImageMode>(() =>
+        loadSavedImageMode()
+    )
     const [groupDropdownOpen, setGroupDropdownOpen] = useState(false)
     const [genDropdownOpen, setGenDropdownOpen] = useState(false)
     const [difficultyDropdownOpen, setDifficultyDropdownOpen] = useState(false)
+    const [imageModeDropdownOpen, setImageModeDropdownOpen] = useState(false)
 
     const groupDropdownRef = useRef<HTMLDivElement>(null)
     const genDropdownRef = useRef<HTMLDivElement>(null)
     const difficultyDropdownRef = useRef<HTMLDivElement>(null)
+    const imageModeDropdownRef = useRef<HTMLDivElement>(null)
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -70,6 +81,12 @@ export default function InfiniteStartModal({
             ) {
                 setDifficultyDropdownOpen(false)
             }
+            if (
+                imageModeDropdownRef.current &&
+                !imageModeDropdownRef.current.contains(event.target as Node)
+            ) {
+                setImageModeDropdownOpen(false)
+            }
         }
 
         document.addEventListener('mousedown', handleClickOutside)
@@ -81,7 +98,7 @@ export default function InfiniteStartModal({
 
     const handleStart = () => {
         if (selectedGens.length === 0) return // Require at least one gen
-        onStart(selectedGroupFilter, selectedGens, selectedDifficulty)
+        onStart(selectedGroupFilter, selectedGens, selectedDifficulty, selectedImageMode)
     }
 
     const toggleGen = (gen: number) => {
@@ -126,7 +143,7 @@ export default function InfiniteStartModal({
                         <li className='flex items-start gap-2'>
                             <span>•</span>
                             <span>
-                                Guess the (pixelated) idol&apos;s name in{' '}
+                                Guess the {selectedImageMode === 'zoom' ? 'zoomed-in' : 'pixelated'} idol&apos;s name in{' '}
                                 {getDifficultyConfig(selectedDifficulty).maxGuesses}{' '}
                                 tries.
                             </span>
@@ -200,6 +217,55 @@ export default function InfiniteStartModal({
                     <p className='mt-1 text-xs text-gray-500 dark:text-zinc-400'>
                         {DIFFICULTY_DESCRIPTIONS[selectedDifficulty]}
                     </p>
+                </div>
+
+                <div className='mb-4'>
+                    <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-zinc-300'>
+                        Image Style
+                        <span className='rounded-full bg-pink-500 px-1.5 py-0.5 text-[10px] font-bold leading-none tracking-wide text-white uppercase'>
+                            New
+                        </span>
+                    </label>
+                    <div ref={imageModeDropdownRef} className='relative'>
+                        <button
+                            type='button'
+                            onClick={() => {
+                                setImageModeDropdownOpen(!imageModeDropdownOpen)
+                                setDifficultyDropdownOpen(false)
+                                setGroupDropdownOpen(false)
+                                setGenDropdownOpen(false)
+                            }}
+                            className='flex w-full cursor-pointer items-center justify-between border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-left font-medium transition-all hover:border-gray-300 dark:hover:border-zinc-500'
+                        >
+                            <span>{IMAGE_MODE_LABELS[selectedImageMode]}</span>
+                            <ChevronDownIcon
+                                className={`h-5 w-5 transition-transform ${imageModeDropdownOpen ? 'rotate-180' : ''}`}
+                            />
+                        </button>
+                        {imageModeDropdownOpen && (
+                            <div className='absolute z-10 mt-1 w-full border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg'>
+                                {IMAGE_MODES.map((option) => (
+                                    <button
+                                        key={option}
+                                        type='button'
+                                        onClick={() => {
+                                            setSelectedImageMode(option)
+                                            setImageModeDropdownOpen(false)
+                                        }}
+                                        className={`w-full cursor-pointer px-3 py-2 text-left transition-all hover:bg-gray-50 dark:hover:bg-zinc-800 ${
+                                            selectedImageMode === option
+                                                ? 'bg-gray-100 dark:bg-zinc-800'
+                                                : ''
+                                        }`}
+                                    >
+                                        <span className='block font-medium'>
+                                            {IMAGE_MODE_LABELS[option]}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Group Type Dropdown */}

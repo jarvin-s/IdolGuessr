@@ -1,4 +1,5 @@
 import { getImageUrl } from '@/lib/supabase'
+import { getZoomScale, type ImageMode } from '@/utils/difficulty'
 import StreakPopup from './StreakPopup'
 import GameOverModal from './GameOverModal'
 import Image from 'next/image'
@@ -18,6 +19,8 @@ interface GameImageProps {
         base64_group?: string
         base64_idol?: string
         group_name?: string
+        zoom_x?: number | null
+        zoom_y?: number | null
     } | null
     remainingGuesses: number
     gameWon: boolean
@@ -39,6 +42,7 @@ interface GameImageProps {
     highestStreak?: number
     onPlayAgain?: () => void
     guesses?: Array<'empty' | 'correct' | 'incorrect'>
+    imageMode?: ImageMode
 }
 
 export default function GameImage({
@@ -63,6 +67,7 @@ export default function GameImage({
     highestStreak = 0,
     onPlayAgain,
     guesses = [],
+    imageMode = 'pixelated',
 }: GameImageProps) {
     const [isEntering, setIsEntering] = useState(false)
     const [showMinusOne, setShowMinusOne] = useState(false)
@@ -155,6 +160,25 @@ export default function GameImage({
               )
             : []
 
+    const isZoom = imageMode === 'zoom'
+    const zoomUrl =
+        isZoom && dailyImage && hasValidData
+            ? getImageUrl(
+                  dailyImage.group_type || '',
+                  dailyImage.img_bucket,
+                  'clear',
+                  gameMode,
+                  dailyImage.group_category,
+                  dailyImage.base64_group
+              )
+            : ''
+    const zoomScale = getZoomScale(
+        maxGuesses - remainingGuesses,
+        maxGuesses,
+        roundEnded
+    )
+    const zoomOrigin = `${dailyImage?.zoom_x ?? 50}% ${dailyImage?.zoom_y ?? 50}%`
+
     const targetIndex = imageSlots.indexOf(targetImageNumber)
     let currentIndex = targetIndex
     if (!loadedSlots.includes(targetImageNumber)) {
@@ -183,6 +207,41 @@ export default function GameImage({
                 {isLoading || !hasValidData ? (
                     <div className='flex h-full w-full items-center justify-center'>
                         <div className='text-gray-400 dark:text-zinc-500'>Loading...</div>
+                    </div>
+                ) : dailyImage && isZoom ? (
+                    <div
+                        className='absolute inset-0 transition-transform duration-[1500ms] ease-out'
+                        style={{
+                            transform: isEntering
+                                ? 'translateY(-100%)'
+                                : 'translateY(0)',
+                            zIndex: isEntering ? 100 : 10,
+                        }}
+                        key={dailyImage.img_bucket}
+                    >
+                        <div className='absolute inset-0 overflow-hidden rounded-lg'>
+                            <Image
+                                src={zoomUrl}
+                                alt='Daily idol'
+                                width={600}
+                                height={600}
+                                className='pointer-events-none rounded-lg object-cover transition-transform duration-700 ease-out'
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    transform: `scale(${zoomScale})`,
+                                    transformOrigin: zoomOrigin,
+                                }}
+                                unoptimized
+                                priority
+                                onLoad={() =>
+                                    markSlotLoaded(dailyImage.img_bucket, 'clear')
+                                }
+                                onError={() =>
+                                    markSlotLoaded(dailyImage.img_bucket, 'clear')
+                                }
+                            />
+                        </div>
                     </div>
                 ) : dailyImage ? (
                     <div

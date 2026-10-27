@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import FilterModal from '../filters/FilterModal'
-import type { InfiniteDifficulty } from '@/utils/difficulty'
+import type { ImageMode, InfiniteDifficulty } from '@/utils/difficulty'
 
 interface GameHeaderProps {
     timer: string
@@ -12,7 +12,8 @@ interface GameHeaderProps {
         mode: 'daily' | 'unlimited',
         filter?: 'boy-group' | 'girl-group' | 'both',
         genFilter?: number[],
-        difficulty?: InfiniteDifficulty
+        difficulty?: InfiniteDifficulty,
+        imageMode?: ImageMode
     ) => void
     showModeToggle?: boolean
     currentStreak?: number
@@ -175,9 +176,15 @@ export default function GameHeader({
                 <FilterModal
                     isOpen={showFilterModal}
                     onClose={() => setShowFilterModal(false)}
-                    onConfirm={(filter, genFilter, difficulty) => {
+                    onConfirm={(filter, genFilter, difficulty, imageMode) => {
                         setShowFilterModal(false)
-                        onGameModeChange('unlimited', filter, genFilter, difficulty)
+                        onGameModeChange(
+                            'unlimited',
+                            filter,
+                            genFilter,
+                            difficulty,
+                            imageMode
+                        )
                     }}
                 />
             )}
