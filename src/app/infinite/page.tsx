@@ -105,8 +105,7 @@ export default function InfinitePage() {
         } catch {
             // Ignore localStorage errors
         }
-        setImageMode(selectedImageMode)
-        handleGameModeChange('unlimited', groupFilter, genFilter, difficulty)
+        handleGameModeChange('unlimited', groupFilter, genFilter, difficulty, selectedImageMode)
         setStartOpen(false)
     }
 
@@ -115,7 +114,6 @@ export default function InfinitePage() {
             const savedGroupFilter = localStorage.getItem('idol-guessr-group-filter')
             const savedGenFilter = localStorage.getItem('idol-guessr-gen-filter')
 
-            // Parse gen filter with validation
             let parsedGenFilter = DEFAULT_INFINITE_GEN_FILTER
             if (savedGenFilter) {
                 try {
@@ -129,10 +127,11 @@ export default function InfinitePage() {
             }
 
             const savedDifficulty = loadSavedDifficulty()
-            setImageMode(loadSavedImageMode())
+            const savedImageMode = loadSavedImageMode()
+            setImageMode(savedImageMode)
 
             if (savedGroupFilter === 'boy-group' || savedGroupFilter === 'girl-group' || savedGroupFilter === 'both') {
-                handleGameModeChange('unlimited', savedGroupFilter as GroupFilter, parsedGenFilter, savedDifficulty)
+                handleGameModeChange('unlimited', savedGroupFilter as GroupFilter, parsedGenFilter, savedDifficulty, savedImageMode)
                 setStartOpen(false)
             } else {
                 setStartOpen(true)
