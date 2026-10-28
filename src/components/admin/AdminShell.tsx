@@ -67,7 +67,9 @@ export default function AdminShell({
         ? 'Feedback tickets'
         : pathname.startsWith('/admin/announcements')
           ? 'Announcements'
-          : 'Admin'
+          : pathname.startsWith('/admin/giveaways')
+            ? 'Giveaways'
+            : 'Admin'
 
     return (
         <main className='min-h-screen overflow-x-hidden bg-gray-50 p-3 sm:p-8 dark:bg-zinc-950'>
@@ -80,7 +82,7 @@ export default function AdminShell({
                             {title}
                         </h1>
                         {authState === 'admin' && (
-                            <nav className='flex gap-2'>
+                            <nav className='flex flex-wrap gap-2'>
                                 <Link
                                     href='/admin/tickets'
                                     className={navClass(
@@ -98,6 +100,14 @@ export default function AdminShell({
                                     )}
                                 >
                                     Announcements
+                                </Link>
+                                <Link
+                                    href='/admin/giveaways'
+                                    className={navClass(
+                                        pathname.startsWith('/admin/giveaways')
+                                    )}
+                                >
+                                    Giveaways
                                 </Link>
                             </nav>
                         )}

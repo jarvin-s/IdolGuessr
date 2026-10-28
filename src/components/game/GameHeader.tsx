@@ -1,7 +1,9 @@
-import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import FilterModal from '../filters/FilterModal'
+import GiveawayModal from '../modals/GiveawayModal'
+import { getOpenGiveaway, type OpenGiveaway } from '@/lib/supabase'
 import type { ImageMode, InfiniteDifficulty } from '@/utils/difficulty'
+import Image from 'next/image'
 
 interface GameHeaderProps {
     timer: string
@@ -36,6 +38,22 @@ export default function GameHeader({
     isChallenge = false,
 }: GameHeaderProps) {
     const [showFilterModal, setShowFilterModal] = useState(false)
+    const [openGiveaway, setOpenGiveaway] = useState<OpenGiveaway | null>(null)
+    const [showGiveaway, setShowGiveaway] = useState(false)
+
+    useEffect(() => {
+        let cancelled = false
+        getOpenGiveaway()
+            .then((round) => {
+                if (!cancelled) setOpenGiveaway(round)
+            })
+            .catch(() => {
+                if (!cancelled) setOpenGiveaway(null)
+            })
+        return () => {
+            cancelled = true
+        }
+    }, [])
 
     return (
         <>
@@ -50,10 +68,10 @@ export default function GameHeader({
                             aria-label='Go to home screen'
                         >
                             <Image
-                                src='/images/idolguessr-logo.png'
-                                alt='IdolGuessr Logo'
-                                width={150}
-                                height={50}
+                                width={40}
+                                height={40}
+                                src='/icons/icon.svg'
+                                alt='IdolGuessr'
                                 className='h-10 w-auto dark:invert'
                             />
                         </button>
@@ -62,7 +80,7 @@ export default function GameHeader({
                     {isChallenge && (
                         <div className='flex items-center justify-end'>
                             <div className='rounded-full bg-gradient-to-r from-pink-500 to-pink-600 px-3.5 py-1.5'>
-                                <h1 className='text-[12px] md:text-sm font-bold tracking-widest text-white uppercase'>
+                                <h1 className='text-[12px] font-bold tracking-widest text-white uppercase md:text-sm'>
                                     Challenge
                                 </h1>
                             </div>
@@ -106,6 +124,16 @@ export default function GameHeader({
                             </div>
                         )}
 
+                        {openGiveaway && (
+                            <button
+                                onClick={() => setShowGiveaway(true)}
+                                className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-pink-500 text-white transition-colors hover:bg-pink-600'
+                                aria-label='Enter the daily idol giveaway'
+                            >
+                                <GiftIcon />
+                            </button>
+                        )}
+
                         {(gameMode === 'unlimited' || gameMode === 'hangul') &&
                             !isChallenge &&
                             currentStreak !== undefined &&
@@ -122,31 +150,30 @@ export default function GameHeader({
                             onClick={() => {
                                 onLogoClick?.()
                             }}
-                            className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
+                            className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                         >
                             <HomeIcon />
                         </button>
 
                         <button
                             onClick={onShowStats}
-                            className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
+                            className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                             aria-label='View Statistics'
                         >
                             <StatsIcon />
                         </button>
 
                         {onShowInfo && (
-                            <div className="relative">
+                            <div className='relative'>
                                 <button
                                     onClick={onShowInfo}
-                                    className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
+                                    className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                                     aria-label='View Info'
                                 >
                                     <InfoIcon />
                                 </button>
                             </div>
                         )}
-                   
 
                         {showModeToggle && (
                             <button
@@ -172,6 +199,13 @@ export default function GameHeader({
                 </div>
             </div>
 
+            {showGiveaway && openGiveaway && (
+                <GiveawayModal
+                    round={openGiveaway}
+                    onClose={() => setShowGiveaway(false)}
+                />
+            )}
+
             {showModeToggle && (
                 <FilterModal
                     isOpen={showFilterModal}
@@ -189,6 +223,25 @@ export default function GameHeader({
                 />
             )}
         </>
+    )
+}
+
+function GiftIcon() {
+    return (
+        <svg
+            className='h-5 w-5'
+            viewBox='0 0 24 24'
+            fill='none'
+            stroke='currentColor'
+        >
+            <rect x='3' y='8' width='18' height='4' rx='1' strokeWidth={2} />
+            <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5'
+            />
+        </svg>
     )
 }
 
@@ -210,7 +263,11 @@ function StatsIcon() {
     )
 }
 
-function GameModeIcon({ gameMode }: { gameMode: 'daily' | 'unlimited' | 'hangul' }) {
+function GameModeIcon({
+    gameMode,
+}: {
+    gameMode: 'daily' | 'unlimited' | 'hangul'
+}) {
     if (gameMode === 'unlimited' || gameMode === 'hangul') {
         return (
             <svg

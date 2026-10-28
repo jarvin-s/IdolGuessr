@@ -526,6 +526,164 @@ export async function adminClearAnnouncement(): Promise<void> {
   if (error) throw error
 }
 
+export type GiveawayStatus = 'open' | 'closed' | 'drawn' | 'fulfilled'
+export type GiveawayPlatform = 'instagram' | 'tiktok'
+
+export interface OpenGiveaway {
+  id: string
+  title: string
+  entry_count: number
+}
+
+export interface GiveawayWinner {
+  id: string
+  platform: GiveawayPlatform
+  handle: string
+}
+
+export interface GiveawayRound {
+  id: string
+  title: string
+  status: GiveawayStatus
+  created_at: string
+  closed_at: string | null
+  drawn_at: string | null
+  winner_entry_id: string | null
+  chosen_idol: string | null
+  target_play_date: string | null
+  entry_count: number
+  winner: GiveawayWinner | null
+}
+
+export interface GiveawayEntry {
+  id: string
+  round_id: string
+  platform: GiveawayPlatform
+  handle: string
+  created_at: string
+}
+
+export function giveawayProfileUrl(platform: GiveawayPlatform, handle: string): string {
+  return platform === 'instagram'
+    ? `https://instagram.com/${handle}`
+    : `https://tiktok.com/@${handle}`
+}
+
+export async function getOpenGiveaway(): Promise<OpenGiveaway | null> {
+  const { data, error } = await supabase.rpc('get_open_giveaway')
+  if (error) throw error
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) return null
+  return {
+    id: row.id,
+    title: row.title,
+    entry_count: Number(row.entry_count ?? 0),
+  }
+}
+
+export async function enterGiveaway(platform: GiveawayPlatform, handle: string): Promise<void> {
+  const { error } = await supabase.rpc('enter_giveaway', {
+    p_platform: platform,
+    p_handle: handle,
+    p_session_id: getOrCreateSessionId(),
+  })
+  if (error) throw error
+}
+
+type GiveawayRoundRow = Omit<GiveawayRound, 'entry_count' | 'winner'> & {
+  entries?: { count: number }[] | null
+  winner?: GiveawayWinner | GiveawayWinner[] | null
+}
+
+function mapGiveawayRound(row: GiveawayRoundRow): GiveawayRound {
+  const winner = Array.isArray(row.winner) ? (row.winner[0] ?? null) : (row.winner ?? null)
+  return {
+    id: row.id,
+    title: row.title,
+    status: row.status,
+    created_at: row.created_at,
+    closed_at: row.closed_at,
+    drawn_at: row.drawn_at,
+    winner_entry_id: row.winner_entry_id,
+    chosen_idol: row.chosen_idol,
+    target_play_date: row.target_play_date,
+    entry_count: Number(row.entries?.[0]?.count ?? 0),
+    winner,
+  }
+}
+
+const giveawayRoundColumns = `
+  id, title, status, created_at, closed_at, drawn_at, winner_entry_id, chosen_idol, target_play_date,
+  entries:giveaway_entries!giveaway_entries_round_id_fkey(count),
+  winner:giveaway_entries!giveaway_rounds_winner_entry_id_fkey(id, platform, handle)
+`
+
+export async function adminListGiveaways(): Promise<GiveawayRound[]> {
+  const { data, error } = await supabase
+    .from('giveaway_rounds')
+    .select(giveawayRoundColumns)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return ((data ?? []) as GiveawayRoundRow[]).map(mapGiveawayRound)
+}
+
+export async function adminOpenGiveaway(title: string): Promise<void> {
+  const trimmed = title.trim()
+  if (!trimmed) throw new Error('Title is required')
+  const { error } = await supabase.from('giveaway_rounds').insert({ title: trimmed })
+  if (error?.code === '23505') throw new Error('A giveaway is already open')
+  if (error) throw error
+}
+
+export async function adminCloseGiveaway(id: string): Promise<void> {
+  const { data, error } = await supabase
+    .from('giveaway_rounds')
+    .update({ status: 'closed', closed_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('status', 'open')
+    .select('id')
+  if (error) throw error
+  if (!data?.length) throw new Error('This giveaway is not open')
+}
+
+export async function adminListEntries(roundId: string): Promise<GiveawayEntry[]> {
+  const { data, error } = await supabase
+    .from('giveaway_entries')
+    .select('id, round_id, platform, handle, created_at')
+    .eq('round_id', roundId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as GiveawayEntry[]
+}
+
+export async function adminDrawGiveaway(roundId: string): Promise<GiveawayWinner> {
+  const { data, error } = await supabase.rpc('admin_draw_giveaway', {
+    p_round_id: roundId,
+  })
+  if (error) throw error
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) throw new Error('No winner was drawn')
+  return {
+    id: row.entry_id,
+    platform: row.platform,
+    handle: row.handle,
+  }
+}
+
+export async function adminFulfillGiveaway(
+  roundId: string,
+  idol: string,
+  playDate: string,
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc('admin_fulfill_giveaway', {
+    p_round_id: roundId,
+    p_idol: idol,
+    p_play_date: playDate,
+  })
+  if (error) throw error
+  return data === true
+}
+
 function publicImageUrl(objectPath: string): string {
   const normalizedUrl = supabaseUrl.replace(/\/+$/, '')
   return `${normalizedUrl}/storage/v1/object/public/${objectPath}`

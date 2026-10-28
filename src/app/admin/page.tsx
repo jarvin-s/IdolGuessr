@@ -24,6 +24,15 @@ export default function AdminHomePage() {
                     Publish a live message to everyone on the site.
                 </p>
             </Link>
+            <Link
+                href='/admin/giveaways'
+                className='rounded-lg bg-white p-6 shadow-sm transition-colors hover:bg-gray-100 dark:bg-zinc-900 dark:hover:bg-zinc-800'
+            >
+                <h2 className={`${proximaNovaBold.className} text-lg uppercase`}>Giveaways</h2>
+                <p className='mt-2 text-sm text-gray-600 dark:text-zinc-400'>
+                    Run a raffle and credit the winner&apos;s idol pick.
+                </p>
+            </Link>
         </div>
     )
 }
