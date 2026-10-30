@@ -21,9 +21,10 @@ function entryErrorMessage(err: unknown): string {
         message.includes('already entered') ||
         message.includes('does not look') ||
         message.includes('No giveaway') ||
-        message.includes('Pick Instagram')
+        message.includes('Pick Instagram') ||
+        message.includes("too late")
     ) {
-        return message
+        return message.includes('too late') ? "You're too late. But don't worry more giveaways are coming!" : message
     }
     return 'Could not enter the giveaway. Try again.'
 }
@@ -40,6 +41,7 @@ export default function GiveawayModal({
     const [isEntered, setIsEntered] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const countdown = useCountdown(round.ends_at)
 
     useEffect(() => {
         try {
@@ -53,6 +55,10 @@ export default function GiveawayModal({
         event.preventDefault()
         const trimmed = handle.trim()
         if (!trimmed) return
+        if (countdown?.ended) {
+            setError("You're too late.")
+            return
+        }
         setIsSubmitting(true)
         setError(null)
         try {
@@ -78,6 +84,7 @@ export default function GiveawayModal({
 
     const entryLabel =
         round.entry_count === 1 ? '1 entry' : `${round.entry_count} entries`
+    const signupsClosed = countdown?.ended === true
 
     return (
         <div className='fixed inset-0 z-[600] flex items-center justify-center bg-black/40 p-4'>
@@ -105,6 +112,16 @@ export default function GiveawayModal({
                 <h1 className={`${proximaNovaBold.className} pr-10 text-2xl uppercase`}>
                     Daily idol giveaway
                 </h1>
+                {countdown && (
+                    <div className='mt-4 rounded-lg bg-pink-50 px-4 py-4 text-center dark:bg-pink-500/10'>
+                        <p className='text-xs font-medium tracking-widest text-pink-700 uppercase dark:text-pink-300'>
+                            Sign-ups end in
+                        </p>
+                        <p className='mt-1 font-mono text-4xl font-bold tracking-wide text-pink-600 dark:text-pink-200'>
+                            {countdown.label}
+                        </p>
+                    </div>
+                )}
                 <p className='mt-3 text-sm leading-relaxed text-gray-700 dark:text-zinc-300'>
                     Enter with your Instagram or TikTok. One winner is drawn and gets to
                     choose the idol for a day. We&apos;ll message the winner on the account
@@ -130,11 +147,13 @@ export default function GiveawayModal({
                                 active={platform === 'instagram'}
                                 onClick={() => setPlatform('instagram')}
                                 label='Instagram'
+                                disabled={signupsClosed}
                             />
                             <PlatformButton
                                 active={platform === 'tiktok'}
                                 onClick={() => setPlatform('tiktok')}
                                 label='TikTok'
+                                disabled={signupsClosed}
                             />
                         </div>
                         <input
@@ -143,12 +162,21 @@ export default function GiveawayModal({
                             placeholder='@username'
                             autoComplete='off'
                             required
-                            className='w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:focus:ring-zinc-300'
+                            disabled={signupsClosed}
+                            className='w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-800 dark:focus:ring-zinc-300'
                         />
-                        {error && <p className='text-sm text-red-600'>{error}</p>}
+                        {(signupsClosed || error) && (
+                            <p className='text-sm text-red-600'>
+                                {signupsClosed ? "You're too late." : error}
+                            </p>
+                        )}
                         <button
                             type='submit'
-                            disabled={isSubmitting || handle.trim().length === 0}
+                            disabled={
+                                signupsClosed ||
+                                isSubmitting ||
+                                handle.trim().length === 0
+                            }
                             className='w-full cursor-pointer rounded-full bg-pink-500 px-4 py-2 font-medium text-white transition-colors hover:bg-pink-600 disabled:cursor-not-allowed disabled:bg-pink-400'
                         >
                             {isSubmitting ? 'Entering...' : 'Enter giveaway'}
@@ -160,23 +188,53 @@ export default function GiveawayModal({
     )
 }
 
+function useCountdown(endsAt: string | null) {
+    const [now, setNow] = useState(() => Date.now())
+
+    useEffect(() => {
+        if (!endsAt) return
+        const id = window.setInterval(() => setNow(Date.now()), 1000)
+        return () => window.clearInterval(id)
+    }, [endsAt])
+
+    if (!endsAt) return null
+    const endsMs = new Date(endsAt).getTime()
+    if (Number.isNaN(endsMs)) return null
+    const remainingMs = endsMs - now
+    return {
+        label: formatRemaining(remainingMs),
+        ended: remainingMs <= 0,
+    }
+}
+
+function formatRemaining(ms: number) {
+    const seconds = Math.floor(Math.max(0, ms) / 1000)
+    const hours = String(Math.floor(seconds / 3600)).padStart(2, '0')
+    const minutes = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0')
+    const secs = String(seconds % 60).padStart(2, '0')
+    return `${hours}:${minutes}:${secs}`
+}
+
 function PlatformButton({
     active,
     onClick,
     label,
+    disabled = false,
 }: {
     active: boolean
     onClick: () => void
     label: string
+    disabled?: boolean
 }) {
     return (
         <button
             type='button'
             onClick={onClick}
+            disabled={disabled}
             className={
                 active
-                    ? 'cursor-pointer rounded-full bg-pink-500 px-3 py-2 text-sm font-medium text-white'
-                    : 'cursor-pointer rounded-full bg-gray-100 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
+                    ? 'cursor-pointer rounded-full bg-pink-500 px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60'
+                    : 'cursor-pointer rounded-full bg-gray-100 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
             }
         >
             {label}

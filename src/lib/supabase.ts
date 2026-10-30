@@ -533,6 +533,7 @@ export interface OpenGiveaway {
   id: string
   title: string
   entry_count: number
+  ends_at: string | null
 }
 
 export interface GiveawayWinner {
@@ -551,6 +552,7 @@ export interface GiveawayRound {
   winner_entry_id: string | null
   chosen_idol: string | null
   target_play_date: string | null
+  ends_at: string | null
   entry_count: number
   winner: GiveawayWinner | null
 }
@@ -578,6 +580,7 @@ export async function getOpenGiveaway(): Promise<OpenGiveaway | null> {
     id: row.id,
     title: row.title,
     entry_count: Number(row.entry_count ?? 0),
+    ends_at: row.ends_at ?? null,
   }
 }
 
@@ -607,13 +610,14 @@ function mapGiveawayRound(row: GiveawayRoundRow): GiveawayRound {
     winner_entry_id: row.winner_entry_id,
     chosen_idol: row.chosen_idol,
     target_play_date: row.target_play_date,
+    ends_at: row.ends_at,
     entry_count: Number(row.entries?.[0]?.count ?? 0),
     winner,
   }
 }
 
 const giveawayRoundColumns = `
-  id, title, status, created_at, closed_at, drawn_at, winner_entry_id, chosen_idol, target_play_date,
+  id, title, status, created_at, closed_at, drawn_at, winner_entry_id, chosen_idol, target_play_date, ends_at,
   entries:giveaway_entries!giveaway_entries_round_id_fkey(count),
   winner:giveaway_entries!giveaway_rounds_winner_entry_id_fkey(id, platform, handle)
 `
@@ -627,12 +631,33 @@ export async function adminListGiveaways(): Promise<GiveawayRound[]> {
   return ((data ?? []) as GiveawayRoundRow[]).map(mapGiveawayRound)
 }
 
-export async function adminOpenGiveaway(title: string): Promise<void> {
+function giveawayEndsAt(endsAt: string): string {
+  const ends = new Date(endsAt)
+  if (Number.isNaN(ends.getTime())) throw new Error('End time is required')
+  if (ends.getTime() <= Date.now()) throw new Error('End time must be in the future')
+  return ends.toISOString()
+}
+
+export async function adminOpenGiveaway(title: string, endsAt: string): Promise<void> {
   const trimmed = title.trim()
   if (!trimmed) throw new Error('Title is required')
-  const { error } = await supabase.from('giveaway_rounds').insert({ title: trimmed })
+  const { error } = await supabase.from('giveaway_rounds').insert({
+    title: trimmed,
+    ends_at: giveawayEndsAt(endsAt),
+  })
   if (error?.code === '23505') throw new Error('A giveaway is already open')
   if (error) throw error
+}
+
+export async function adminSetGiveawayEndsAt(id: string, endsAt: string): Promise<void> {
+  const { data, error } = await supabase
+    .from('giveaway_rounds')
+    .update({ ends_at: giveawayEndsAt(endsAt) })
+    .eq('id', id)
+    .eq('status', 'open')
+    .select('id')
+  if (error) throw error
+  if (!data?.length) throw new Error('This giveaway is not open')
 }
 
 export async function adminCloseGiveaway(id: string): Promise<void> {

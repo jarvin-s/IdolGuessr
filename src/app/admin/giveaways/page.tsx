@@ -8,6 +8,7 @@ import {
     adminListEntries,
     adminListGiveaways,
     adminOpenGiveaway,
+    adminSetGiveawayEndsAt,
     giveawayProfileUrl,
     type GiveawayEntry,
     type GiveawayRound,
@@ -34,7 +35,8 @@ function actionError(err: unknown, fallback: string): string {
         message.includes('Idol name') ||
         message.includes('Play date') ||
         message.includes('Draw a winner') ||
-        message.includes('Title is required')
+        message.includes('Title is required') ||
+        message.includes('End time')
     ) {
         return message
     }
@@ -43,6 +45,7 @@ function actionError(err: unknown, fallback: string): string {
 
 export default function AdminGiveawaysPage() {
     const [title, setTitle] = useState('')
+    const [endsAt, setEndsAt] = useState('')
     const [rounds, setRounds] = useState<GiveawayRound[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isOpening, setIsOpening] = useState(false)
@@ -69,12 +72,13 @@ export default function AdminGiveawaysPage() {
 
     const openRound = async (event: React.FormEvent) => {
         event.preventDefault()
-        if (!trimmed) return
+        if (!trimmed || !endsAt) return
         setIsOpening(true)
         setError(null)
         try {
-            await adminOpenGiveaway(trimmed)
+            await adminOpenGiveaway(trimmed, endsAt)
             setTitle('')
+            setEndsAt('')
             await loadRounds()
         } catch (err) {
             console.error('Error opening giveaway:', err)
@@ -102,6 +106,18 @@ export default function AdminGiveawaysPage() {
                         className='w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-lg focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-800 dark:focus:ring-zinc-300'
                     />
                 </label>
+                <label className='block'>
+                    <span className='mb-2 block text-base text-gray-600 dark:text-zinc-400'>
+                        Sign-ups end
+                    </span>
+                    <input
+                        type='datetime-local'
+                        value={endsAt}
+                        onChange={(event) => setEndsAt(event.target.value)}
+                        disabled={hasOpenRound}
+                        className='w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-lg focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-800 dark:focus:ring-zinc-300'
+                    />
+                </label>
                 {hasOpenRound && (
                     <p className='text-base text-gray-500 dark:text-zinc-400'>
                         Close the open giveaway before starting another one.
@@ -110,7 +126,7 @@ export default function AdminGiveawaysPage() {
                 {error && <p className='text-base text-red-600'>{error}</p>}
                 <button
                     type='submit'
-                    disabled={isOpening || hasOpenRound || trimmed.length === 0}
+                    disabled={isOpening || hasOpenRound || trimmed.length === 0 || endsAt.length === 0}
                     className='cursor-pointer rounded-full bg-pink-500 px-4 py-2 text-lg font-medium text-white transition-colors hover:bg-pink-600 disabled:cursor-not-allowed disabled:bg-pink-400'
                 >
                     {isOpening ? 'Opening...' : 'Open giveaway'}
@@ -156,7 +172,28 @@ function GiveawayRoundCard({
     const [entries, setEntries] = useState<GiveawayEntry[] | null>(null)
     const [idol, setIdol] = useState(round.chosen_idol ?? '')
     const [playDate, setPlayDate] = useState(round.target_play_date ?? '')
+    const [endsAt, setEndsAt] = useState(toDatetimeLocal(round.ends_at))
     const [creditNote, setCreditNote] = useState<string | null>(null)
+
+    useEffect(() => {
+        setEndsAt(toDatetimeLocal(round.ends_at))
+    }, [round.ends_at])
+
+    const saveEnd = async (event: React.FormEvent) => {
+        event.preventDefault()
+        if (!endsAt) return
+        setPending('ends')
+        setError(null)
+        try {
+            await adminSetGiveawayEndsAt(round.id, endsAt)
+            await onChanged()
+        } catch (err) {
+            console.error('Error saving giveaway end time:', err)
+            setError(actionError(err, 'Could not save this end time.'))
+        } finally {
+            setPending(null)
+        }
+    }
 
     const run = async (name: string, action: () => Promise<void>) => {
         setPending(name)
@@ -249,6 +286,29 @@ function GiveawayRoundCard({
                         ({round.winner.platform === 'instagram' ? 'Instagram' : 'TikTok'})
                     </span>
                 </p>
+            )}
+
+            {round.status === 'open' && !round.ends_at && (
+                <form onSubmit={saveEnd} className='mt-3 space-y-2'>
+                    <label className='block'>
+                        <span className='mb-2 block text-sm text-gray-500 dark:text-zinc-400'>
+                            Sign-ups end
+                        </span>
+                        <input
+                            type='datetime-local'
+                            value={endsAt}
+                            onChange={(event) => setEndsAt(event.target.value)}
+                            className='w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-lg dark:border-zinc-600 dark:bg-zinc-800'
+                        />
+                    </label>
+                    <button
+                        type='submit'
+                        disabled={pending !== null || endsAt.length === 0}
+                        className='cursor-pointer rounded-full bg-pink-500 px-3 py-1.5 text-base font-medium text-white transition-colors hover:bg-pink-600 disabled:cursor-not-allowed disabled:bg-pink-400'
+                    >
+                        {pending === 'ends' ? 'Saving...' : 'Save end time'}
+                    </button>
+                </form>
             )}
 
             <div className='mt-3 flex flex-wrap gap-2'>
@@ -357,4 +417,12 @@ function GiveawayRoundCard({
             {error && <p className='mt-3 text-base text-red-600'>{error}</p>}
         </li>
     )
+}
+
+function toDatetimeLocal(iso: string | null): string {
+    if (!iso) return ''
+    const date = new Date(iso)
+    if (Number.isNaN(date.getTime())) return ''
+    const pad = (value: number) => String(value).padStart(2, '0')
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
