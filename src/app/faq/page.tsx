@@ -215,6 +215,28 @@ const sections: FaqSection[] = [
         ],
     },
     {
+        title: 'Giveaway',
+        items: [
+            {
+                question: 'How does the daily idol giveaway work?',
+                plainAnswer:
+                    'Enter once with your Instagram or TikTok from the gift button on the Daily page. One winner is drawn and picks that day\'s idol photo. Photo rules and how to get credited are on the giveaway FAQ.',
+                answer: (
+                    <p>
+                        Enter once with your Instagram or TikTok from the gift
+                        button on the Daily page. One winner is drawn and picks
+                        that day&apos;s idol photo. Photo rules and how to get
+                        credited are on the{' '}
+                        <Link href='/faq/giveaway' className='underline'>
+                            giveaway FAQ
+                        </Link>
+                        .
+                    </p>
+                ),
+            },
+        ],
+    },
+    {
         title: 'Help',
         items: [
             {

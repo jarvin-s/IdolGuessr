@@ -20,5 +20,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
             url: `${baseUrl}/challenge`,
             lastModified: new Date(),
         },
+        {
+            url: `${baseUrl}/faq`,
+            lastModified: new Date(),
+        },
+        {
+            url: `${baseUrl}/faq/giveaway`,
+            lastModified: new Date(),
+        },
     ]
 }

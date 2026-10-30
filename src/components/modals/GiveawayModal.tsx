@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import localFont from 'next/font/local'
 import {
     enterGiveaway,
@@ -111,6 +112,12 @@ export default function GiveawayModal({
                 </p>
                 <p className='mt-2 text-sm font-medium'>{round.title}</p>
                 <p className='mt-1 text-xs text-gray-500 dark:text-zinc-400'>{entryLabel}</p>
+                <Link
+                    href='/faq/giveaway'
+                    className='mt-3 inline-block text-sm text-pink-600 underline dark:text-pink-400'
+                >
+                    How the giveaway works
+                </Link>
 
                 {isEntered ? (
                     <p className='mt-6 rounded-lg bg-pink-50 px-4 py-3 text-sm text-pink-700 dark:bg-pink-500/10 dark:text-pink-300'>
