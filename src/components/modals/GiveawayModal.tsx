@@ -24,7 +24,7 @@ function entryErrorMessage(err: unknown): string {
         message.includes('Pick Instagram') ||
         message.includes("too late")
     ) {
-        return message.includes('too late') ? "You're too late. But don't worry more giveaways are coming!" : message
+        return message.includes('too late') ? "Sorry, you're too late! But don't worry more giveaways are coming!" : message
     }
     return 'Could not enter the giveaway. Try again.'
 }
@@ -56,7 +56,7 @@ export default function GiveawayModal({
         const trimmed = handle.trim()
         if (!trimmed) return
         if (countdown?.ended) {
-            setError("You're too late.")
+            setError("Sorry, you're too late! ")
             return
         }
         setIsSubmitting(true)
@@ -127,11 +127,11 @@ export default function GiveawayModal({
                     choose the idol for a day. We&apos;ll message the winner on the account
                     you enter.
                 </p>
-                <p className='mt-2 text-sm font-medium'>{round.title}</p>
-                <p className='mt-1 text-xs text-gray-500 dark:text-zinc-400'>{entryLabel}</p>
+                <p className='mt-2 text-lg font-bold'>{round.title}</p>
+                <p className='mt-1 text-md text-gray-500 dark:text-zinc-400'>{entryLabel}</p>
                 <Link
                     href='/faq/giveaway'
-                    className='mt-3 inline-block text-sm text-pink-600 underline dark:text-pink-400'
+                    className='mt-3 inline-block text-lg text-pink-600 underline dark:text-pink-400'
                 >
                     How the giveaway works
                 </Link>
@@ -166,8 +166,8 @@ export default function GiveawayModal({
                             className='w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-800 dark:focus:ring-zinc-300'
                         />
                         {(signupsClosed || error) && (
-                            <p className='text-sm text-red-600'>
-                                {signupsClosed ? "You're too late." : error}
+                            <p className='text-lg text-red-500'>
+                                {signupsClosed ? "Sorry, you're too late! " : error}
                             </p>
                         )}
                         <button
