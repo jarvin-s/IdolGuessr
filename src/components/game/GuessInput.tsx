@@ -32,7 +32,7 @@ export default function GuessInput({
         }
         if (gameLost) {
             return {
-                text: `Nice try! It was ${truncateText(correctAnswer)}`,
+                text: `Nice try! It was ${correctAnswer}`,
                 subText: '',
                 textColor: 'text-white',
                 bgColor: 'bg-red-400',
@@ -81,7 +81,7 @@ export default function GuessInput({
                 }`}
                 style={{ minHeight: '3rem' }}
             >
-                <span className={`text-lg select-none ${display.textColor}`}>
+                <span className={`w-full text-lg break-words select-none ${display.textColor}`}>
                     {display.text}
                 </span>
                 {display.subText && (

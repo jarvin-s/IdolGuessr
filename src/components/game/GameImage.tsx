@@ -3,7 +3,7 @@ import { getZoomScale, type ImageMode } from '@/utils/difficulty'
 import StreakPopup from './StreakPopup'
 import GameOverModal from './GameOverModal'
 import Image from 'next/image'
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState, useRef, type CSSProperties } from 'react'
 import localFont from 'next/font/local'
 
 const proximanovaBold = localFont({
@@ -109,13 +109,16 @@ export default function GameImage({
     const loadedSlots =
         loadedState.bucket === currentBucket ? loadedState.slots : []
 
-    const markSlotLoaded = (bucket: string, slot: number | 'clear') => {
-        setLoadedState((prev) => {
-            const prevSlots = prev.bucket === bucket ? prev.slots : []
-            if (prevSlots.includes(slot)) return prev
-            return { bucket, slots: [...prevSlots, slot] }
-        })
-    }
+    const markSlotLoaded = useCallback(
+        (bucket: string, slot: number | 'clear') => {
+            setLoadedState((prev) => {
+                const prevSlots = prev.bucket === bucket ? prev.slots : []
+                if (prevSlots.includes(slot)) return prev
+                return { bucket, slots: [...prevSlots, slot] }
+            })
+        },
+        []
+    )
 
     const getImageNumber = (): number | 'clear' => {
         if (isChallenger) {
@@ -220,11 +223,11 @@ export default function GameImage({
                         key={dailyImage.img_bucket}
                     >
                         <div className='absolute inset-0 overflow-hidden rounded-lg'>
-                            <Image
+                            <SlotImage
                                 src={zoomUrl}
-                                alt='Daily idol'
-                                width={600}
-                                height={600}
+                                bucket={dailyImage.img_bucket}
+                                slot='clear'
+                                onSettled={markSlotLoaded}
                                 className='pointer-events-none rounded-lg object-cover transition-transform duration-700 ease-out'
                                 style={{
                                     width: '100%',
@@ -232,14 +235,7 @@ export default function GameImage({
                                     transform: `scale(${zoomScale})`,
                                     transformOrigin: zoomOrigin,
                                 }}
-                                unoptimized
                                 priority
-                                onLoad={() =>
-                                    markSlotLoaded(dailyImage.img_bucket, 'clear')
-                                }
-                                onError={() =>
-                                    markSlotLoaded(dailyImage.img_bucket, 'clear')
-                                }
                             />
                         </div>
                     </div>
@@ -274,27 +270,14 @@ export default function GameImage({
                                             : 'none',
                                     }}
                                 >
-                                    <Image
+                                    <SlotImage
                                         src={url}
-                                        alt='Daily idol'
-                                        width={600}
-                                        height={600}
+                                        bucket={bucket}
+                                        slot={imageNum}
+                                        onSettled={markSlotLoaded}
                                         className='pointer-events-none rounded-lg object-cover'
-                                        style={{
-                                            width: '100%',
-                                            height: '100%',
-                                        }}
-                                        unoptimized
+                                        style={FILL_STYLE}
                                         priority={index === 0}
-                                        loading={
-                                            index === 0 ? undefined : 'eager'
-                                        }
-                                        onLoad={() =>
-                                            markSlotLoaded(bucket, imageNum)
-                                        }
-                                        onError={() =>
-                                            markSlotLoaded(bucket, imageNum)
-                                        }
                                     />
                                 </div>
                             )
@@ -444,6 +427,48 @@ export default function GameImage({
                 )}
             </div>
         </div>
+    )
+}
+
+const FILL_STYLE: CSSProperties = { width: '100%', height: '100%' }
+
+// next/image re-assigns `src` (and refetches it) whenever onError changes
+// identity, so the handlers must stay stable across re-renders.
+function SlotImage({
+    src,
+    bucket,
+    slot,
+    onSettled,
+    className,
+    style,
+    priority = false,
+}: {
+    src: string
+    bucket: string
+    slot: number | 'clear'
+    onSettled: (bucket: string, slot: number | 'clear') => void
+    className: string
+    style: CSSProperties
+    priority?: boolean
+}) {
+    const handleSettled = useCallback(
+        () => onSettled(bucket, slot),
+        [onSettled, bucket, slot]
+    )
+    return (
+        <Image
+            src={src}
+            alt='Daily idol'
+            width={600}
+            height={600}
+            className={className}
+            style={style}
+            unoptimized
+            priority={priority}
+            loading={priority ? undefined : 'eager'}
+            onLoad={handleSettled}
+            onError={handleSettled}
+        />
     )
 }
 
