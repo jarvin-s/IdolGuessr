@@ -20,20 +20,25 @@ export function useLiveAnnouncement(): Announcement | null {
         }
 
         load()
+        // A new topic each mount. Reusing "live-announcements" returns the channel
+        // React just closed, and subscribe() on that channel never joins.
+        let active = true
         const channel = supabase
-            .channel('live-announcements')
+            .channel(`live-announcements-${crypto.randomUUID()}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, () => {
                 load()
             })
-            .subscribe((status) => {
+            .subscribe((status, err) => {
+                if (!active) return
                 if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                    console.error('Announcement realtime status:', status)
+                    console.error('Announcement realtime status:', status, err ?? '')
                 }
             })
 
         return () => {
             cancelled = true
-            supabase.removeChannel(channel)
+            active = false
+            void supabase.removeChannel(channel)
         }
     }, [])
 

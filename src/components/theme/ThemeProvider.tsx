@@ -13,6 +13,7 @@ import {
     isThemeChoice,
     type ThemeChoice,
 } from './theme'
+import { getProfile, savePlayerSettings } from '@/lib/player'
 
 interface ThemeContextValue {
     theme: ThemeChoice
@@ -25,8 +26,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const [theme, setThemeState] = useState<ThemeChoice>('system')
 
     useEffect(() => {
-        const stored = localStorage.getItem(THEME_STORAGE_KEY)
-        const choice = isThemeChoice(stored) ? stored : 'system'
+        const stored = getProfile()?.theme
+        const cookie = document.cookie.match(/(?:^|; )idol-guessr-theme=([^;]+)/)
+        const fromCookie = cookie ? decodeURIComponent(cookie[1]) : null
+        const choice = isThemeChoice(stored ?? null)
+            ? stored!
+            : isThemeChoice(fromCookie)
+              ? fromCookie
+              : 'system'
         setThemeState(choice)
         applyTheme(choice)
     }, [])
@@ -41,7 +48,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     const setTheme = (choice: ThemeChoice) => {
         setThemeState(choice)
-        localStorage.setItem(THEME_STORAGE_KEY, choice)
+        document.cookie = `${THEME_STORAGE_KEY}=${choice}; path=/; max-age=31536000; samesite=lax`
+        void savePlayerSettings({ theme: choice })
         applyTheme(choice)
     }
 

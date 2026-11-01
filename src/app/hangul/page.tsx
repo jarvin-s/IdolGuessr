@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Confetti from 'react-confetti'
 import GameHeader from '@/components/game/GameHeader'
@@ -15,13 +15,15 @@ import WinModal from '@/components/modals/WinModal'
 import HangulStartModal from '@/components/modals/HangulStartModal'
 import HangulFilterModal from '@/components/filters/HangulFilterModal'
 import { useHangulGameController } from '@/hooks/useHangulGameController'
+import { getHangulGame } from '@/lib/player'
 import { getImageUrl } from '@/lib/supabase'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 
 export default function HangulPage() {
     const router = useRouter()
-    const [startOpen, setStartOpen] = useState(false)
+    const startingRef = useRef(false)
+    const [startOpen, setStartOpen] = useState(() => !getHangulGame())
     const [showFilterModal, setShowFilterModal] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
     const {
@@ -64,22 +66,19 @@ export default function HangulPage() {
         handleStart,
     } = useHangulGameController()
 
-    const onStartGame = (filter: GroupFilter) => {
-        handleStart(filter)
-        setStartOpen(false)
+    const onStartGame = async (filter: GroupFilter) => {
+        if (startingRef.current) return
+        startingRef.current = true
+        try {
+            await handleStart(filter)
+            setStartOpen(false)
+        } finally {
+            startingRef.current = false
+        }
     }
 
     useEffect(() => {
-        try {
-            const savedFilter = localStorage.getItem('idol-guessr-hangul-group-filter')
-            if (savedFilter === 'boy-group' || savedFilter === 'girl-group' || savedFilter === 'both') {
-                setStartOpen(false)
-            } else {
-                setStartOpen(true)
-            }
-        } catch {
-            setStartOpen(true)
-        }
+        setStartOpen(!getHangulGame())
     }, [])
 
     return (

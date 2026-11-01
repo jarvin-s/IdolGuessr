@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Confetti from 'react-confetti'
 import GameHeader from '@/components/game/GameHeader'
@@ -15,6 +15,7 @@ import WinModal from '@/components/modals/WinModal'
 import InfiniteStartModal from '@/components/modals/InfiniteStartModal'
 import FilterModal from '@/components/filters/FilterModal'
 import { useGameController } from '@/hooks/useGameController'
+import { flushPlayerSettingsNow, getProfile, getUnlimitedGame, savePlayerSettings } from '@/lib/player'
 import { getImageUrl } from '@/lib/supabase'
 import IdolTextInput from '@/components/input/IdolTextInput'
 import { useInputMode } from '@/utils/inputMode'
@@ -35,7 +36,10 @@ type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 
 export default function InfinitePage() {
     const router = useRouter()
-    const [startOpen, setStartOpen] = useState(false)
+    const startingRef = useRef(false)
+    const [startOpen, setStartOpen] = useState(
+        () => !getUnlimitedGame(loadSavedDifficulty(), loadSavedImageMode())
+    )
     const [showFilterModal, setShowFilterModal] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
     const [inputMode, , inputModeReady] = useInputMode()
@@ -91,54 +95,60 @@ export default function InfinitePage() {
         guesses,
     } = useGameController()
 
-    const handleStart = (
+    const handleStart = async (
         groupFilter: GroupFilter,
         genFilter: number[],
         difficulty: InfiniteDifficulty,
         selectedImageMode: ImageMode
     ) => {
+        if (startingRef.current) return
+        startingRef.current = true
         try {
-            localStorage.setItem('idol-guessr-group-filter', groupFilter)
-            localStorage.setItem('idol-guessr-gen-filter', JSON.stringify(genFilter))
+            void savePlayerSettings({
+                group_filter: groupFilter,
+                gen_filter: genFilter,
+            })
             saveDifficulty(difficulty)
             saveImageMode(selectedImageMode)
-        } catch {
-            // Ignore localStorage errors
+            await flushPlayerSettingsNow()
+            await handleGameModeChange(
+                'unlimited',
+                groupFilter,
+                genFilter,
+                difficulty,
+                selectedImageMode
+            )
+            setStartOpen(false)
+        } finally {
+            startingRef.current = false
         }
-        handleGameModeChange('unlimited', groupFilter, genFilter, difficulty, selectedImageMode)
-        setStartOpen(false)
     }
 
     useEffect(() => {
-        try {
-            const savedGroupFilter = localStorage.getItem('idol-guessr-group-filter')
-            const savedGenFilter = localStorage.getItem('idol-guessr-gen-filter')
+        const savedDifficulty = loadSavedDifficulty()
+        const savedImageMode = loadSavedImageMode()
+        setImageMode(savedImageMode)
 
-            let parsedGenFilter = DEFAULT_INFINITE_GEN_FILTER
-            if (savedGenFilter) {
-                try {
-                    const parsed = JSON.parse(savedGenFilter)
-                    if (isValidInfiniteGenFilter(parsed)) {
-                        parsedGenFilter = parsed
-                    }
-                } catch {
-                    // Keep default
-                }
-            }
-
-            const savedDifficulty = loadSavedDifficulty()
-            const savedImageMode = loadSavedImageMode()
-            setImageMode(savedImageMode)
-
-            if (savedGroupFilter === 'boy-group' || savedGroupFilter === 'girl-group' || savedGroupFilter === 'both') {
-                handleGameModeChange('unlimited', savedGroupFilter as GroupFilter, parsedGenFilter, savedDifficulty, savedImageMode)
-                setStartOpen(false)
-            } else {
-                setStartOpen(true)
-            }
-        } catch {
+        const inProgress = getUnlimitedGame(savedDifficulty, savedImageMode)
+        if (!inProgress) {
             setStartOpen(true)
+            return
         }
+
+        const savedGroupFilter = getProfile()?.group_filter
+        const savedGenFilter = getProfile()?.gen_filter
+        const parsedGenFilter = isValidInfiniteGenFilter(savedGenFilter)
+            ? savedGenFilter
+            : DEFAULT_INFINITE_GEN_FILTER
+        const group =
+            savedGroupFilter === 'boy-group' ||
+            savedGroupFilter === 'girl-group' ||
+            savedGroupFilter === 'both'
+                ? savedGroupFilter
+                : 'both'
+
+        handleGameModeChange('unlimited', group, parsedGenFilter, savedDifficulty, savedImageMode)
+        setStartOpen(false)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 

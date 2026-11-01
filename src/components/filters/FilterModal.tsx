@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { getProfile, savePlayerSettings } from '@/lib/player'
 import ZoomedModeModal from '@/components/modals/ZoomedModeModal'
 import {
     DIFFICULTIES,
@@ -78,10 +79,7 @@ export default function FilterModal({
     useEffect(() => {
         if (isOpen) {
             try {
-                // Load group filter
-                const savedGroupFilter = localStorage.getItem(
-                    'idol-guessr-group-filter'
-                )
+                const savedGroupFilter = getProfile()?.group_filter
                 if (
                     savedGroupFilter === 'boy-group' ||
                     savedGroupFilter === 'girl-group' ||
@@ -92,17 +90,9 @@ export default function FilterModal({
                     setSelectedGroupFilter('both')
                 }
 
-                // Load gen filter
-                const savedGenFilter = localStorage.getItem(
-                    'idol-guessr-gen-filter'
-                )
-                if (savedGenFilter) {
-                    const parsed = JSON.parse(savedGenFilter)
-                    if (isValidInfiniteGenFilter(parsed)) {
-                        setSelectedGens(parsed)
-                    } else {
-                        setSelectedGens(DEFAULT_INFINITE_GEN_FILTER)
-                    }
+                const savedGenFilter = getProfile()?.gen_filter
+                if (isValidInfiniteGenFilter(savedGenFilter)) {
+                    setSelectedGens(savedGenFilter)
                 } else {
                     setSelectedGens(DEFAULT_INFINITE_GEN_FILTER)
                 }
@@ -164,18 +154,14 @@ export default function FilterModal({
         if (selectedGens.length === 0) return // Require at least one gen
 
         try {
-            localStorage.setItem(
-                'idol-guessr-group-filter',
-                selectedGroupFilter
-            )
-            localStorage.setItem(
-                'idol-guessr-gen-filter',
-                JSON.stringify(selectedGens)
-            )
-            localStorage.setItem('idol-guessr-difficulty', selectedDifficulty)
+            void savePlayerSettings({
+                group_filter: selectedGroupFilter,
+                gen_filter: selectedGens,
+                difficulty: selectedDifficulty,
+            })
             saveImageMode(selectedImageMode)
         } catch {
-            // Ignore localStorage errors
+            // Ignore settings errors
         }
 
         onConfirm(

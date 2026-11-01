@@ -1,10 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 import { INFINITE_GEN_VALUES, isActiveInfiniteGenFilter } from '@/utils/genFilter'
+import { supabaseAnonKey, supabaseUrl } from '@/lib/supabase/env'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createBrowserClient(supabaseUrl(), supabaseAnonKey())
 
 export interface DailyImage {
   id: number
@@ -56,6 +54,7 @@ export interface FeedbackTicket {
   updated_at: string;
   last_user_message_at: string | null;
   last_admin_message_at: string | null;
+  token?: string;
 }
 
 export interface FeedbackMessage {
@@ -80,281 +79,145 @@ export async function getDailyImage(): Promise<CurrentDaily | null> {
   return data[0] as CurrentDaily;
 }
 
-export function getSeenIdols(): string[] {
+const SEEN_IDOLS_KEY = 'idol-guessr-seen-idols'
+const SEEN_HANGUL_KEY = 'idol-guessr-seen-hangul-idols'
+
+function readSeen(key: string): string[] {
   if (typeof window === 'undefined') return []
   try {
-    const seen = localStorage.getItem('idol-guessr-seen-idols')
-    return seen ? JSON.parse(seen) : []
+    const parsed = JSON.parse(localStorage.getItem(key) ?? '[]') as unknown
+    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string' && value.length > 0) : []
   } catch {
     return []
   }
 }
 
-export function addSeenIdol(imgBucket: string): void {
-  if (typeof window === 'undefined') return
-  try {
-    const seen = getSeenIdols()
-    if (!seen.includes(imgBucket)) {
-      seen.push(imgBucket)
-      localStorage.setItem('idol-guessr-seen-idols', JSON.stringify(seen))
-      // console.log(`[Seen Idols] Added ${imgBucket}. Total seen: ${seen.length}`)
-    }
-  } catch (error) {
-    console.error('Error adding seen idol:', error)
-  }
+function rememberSeen(key: string, bucket?: string): void {
+  if (!bucket || typeof window === 'undefined') return
+  const seen = new Set(readSeen(key))
+  if (seen.has(bucket)) return
+  seen.add(bucket)
+  localStorage.setItem(key, JSON.stringify([...seen]))
+}
+
+export function getSeenIdols(): string[] {
+  return readSeen(SEEN_IDOLS_KEY)
+}
+
+export function addSeenIdol(bucket?: string): void {
+  rememberSeen(SEEN_IDOLS_KEY, bucket)
 }
 
 export function clearSeenIdols(): void {
   if (typeof window === 'undefined') return
-  try {
-    localStorage.removeItem('idol-guessr-seen-idols')
-    // console.log('[Seen Idols] Cleared all seen idols (pool reset)')
-  } catch (error) {
-    console.error('Error clearing seen idols:', error)
-  }
+  localStorage.removeItem(SEEN_IDOLS_KEY)
 }
 
-// Hangul mode seen idols tracking (separate from unlimited)
 export function getSeenHangulIdols(): string[] {
-  if (typeof window === 'undefined') return []
-  try {
-    const seen = localStorage.getItem('idol-guessr-seen-hangul-idols')
-    return seen ? JSON.parse(seen) : []
-  } catch {
-    return []
-  }
+  return readSeen(SEEN_HANGUL_KEY)
 }
 
-export function addSeenHangulIdol(imgBucket: string): void {
-  if (typeof window === 'undefined') return
-  try {
-    const seen = getSeenHangulIdols()
-    if (!seen.includes(imgBucket)) {
-      seen.push(imgBucket)
-      localStorage.setItem('idol-guessr-seen-hangul-idols', JSON.stringify(seen))
-    }
-  } catch (error) {
-    console.error('Error adding seen hangul idol:', error)
-  }
+export function addSeenHangulIdol(bucket?: string): void {
+  rememberSeen(SEEN_HANGUL_KEY, bucket)
 }
 
 export function clearSeenHangulIdols(): void {
   if (typeof window === 'undefined') return
-  try {
-    localStorage.removeItem('idol-guessr-seen-hangul-idols')
-  } catch (error) {
-    console.error('Error clearing seen hangul idols:', error)
+  localStorage.removeItem(SEEN_HANGUL_KEY)
+}
+
+function withoutAnswer<T extends { name?: string; alt_name?: string }>(rows: T[] | null): T[] {
+  return (rows ?? []).map((row) => ({ ...row, name: '', alt_name: undefined }))
+}
+
+async function fetchUnseen<T extends { img_bucket?: string }>(
+  seen: string[],
+  clearSeen: () => void,
+  remember: (bucket?: string) => void,
+  request: (exclude: string[] | null) => Promise<{ data: T[] | null; error: { message: string } | null }>,
+  label: string,
+): Promise<T[] | null> {
+  const first = await request(seen.length > 0 ? seen : null)
+  if (first.error) {
+    console.error(label, first.error)
+    return null
   }
+  if ((first.data?.length ?? 0) > 0 || seen.length === 0) {
+    first.data?.forEach((row) => remember(row.img_bucket))
+    return first.data ?? []
+  }
+  clearSeen()
+  const second = await request(null)
+  if (second.error) {
+    console.error(label, second.error)
+    return null
+  }
+  second.data?.forEach((row) => remember(row.img_bucket))
+  return second.data ?? []
 }
 
 export async function getMultipleRandomHangulImages(
   count: number,
-  groupFilter?: 'boy-group' | 'girl-group' | null
+  groupFilter?: 'boy-group' | 'girl-group' | null,
+  bind = false,
 ): Promise<HangulImage[]> {
-  const seenIdols = getSeenHangulIdols();
-
-  const fetchCount = count * 3;
-  const { data, error } = await supabase.rpc('get_multiple_random_hangul_idols', {
-    excluded_buckets: seenIdols,
-    row_count: fetchCount
-  });
-
-  if (error) {
-    console.error('[Hangul DB Request] Error:', error);
-    return [];
-  }
-
-  if (!data || data.length === 0) {
-    clearSeenHangulIdols();
-
-    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_hangul_idols', {
-      excluded_buckets: [],
-      row_count: count
-    });
-
-    if (retryError || !retryData) {
-      console.error('get_multiple_random_hangul retry error:', retryError);
-      return [];
-    }
-
-    const validRetryData = retryData.filter((img: HangulImage) => {
-      // Only hangul_name is required - image data is optional
-      if (!img.hangul_name) {
-        return false;
-      }
-      if (groupFilter && img.group_category !== groupFilter) {
-        return false;
-      }
-      return true;
-    });
-
-    return validRetryData.slice(0, count);
-  }
-
-  const uniqueImages: HangulImage[] = [];
-  const seenBuckets = new Set<string>();
-
-  for (const image of data) {
-    // Only hangul_name is required - image data is optional
-    if (!image.hangul_name) {
-      continue;
-    }
-
-    if (groupFilter && image.group_category !== groupFilter) {
-      continue;
-    }
-
-    // Use id as fallback if no img_bucket for deduplication
-    const uniqueKey = image.img_bucket || `id-${image.id}`;
-    if (!seenBuckets.has(uniqueKey) && uniqueImages.length < count) {
-      uniqueImages.push(image);
-      seenBuckets.add(uniqueKey);
-    }
-  }
-
-  if (uniqueImages.length < count && seenIdols.length > 0) {
-    clearSeenHangulIdols();
-
-    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_hangul_idols', {
-      excluded_buckets: [],
-      row_count: count
-    });
-
-    if (retryError || !retryData) {
-      console.error('get_multiple_random_hangul retry error:', retryError);
-      return uniqueImages;
-    }
-
-    const validRetryData = retryData.filter((img: HangulImage) => {
-      // Only hangul_name is required - image data is optional
-      if (!img.hangul_name) {
-        return false;
-      }
-      if (groupFilter && img.group_category !== groupFilter) {
-        return false;
-      }
-      return true;
-    });
-
-    return validRetryData.slice(0, count);
-  }
-
-  return uniqueImages;
+  const data = await fetchUnseen<HangulImage>(
+    getSeenHangulIdols(),
+    clearSeenHangulIdols,
+    addSeenHangulIdol,
+    async (exclude) => {
+      const result = await supabase.rpc('start_hangul_round', {
+        p_group: groupFilter ?? null,
+        p_count: count,
+        p_exclude: exclude,
+        p_bind: bind,
+      })
+      return { data: result.data as HangulImage[] | null, error: result.error }
+    },
+    '[Hangul DB Request] Error:',
+  )
+  if (!data) return []
+  const rows = withoutAnswer(data).filter((img) => {
+    if (!img.hangul_name) return false
+    if (!bind && groupFilter && img.group_category !== groupFilter) return false
+    return true
+  })
+  return bind ? rows : rows.slice(0, count)
 }
 
 export async function getMultipleRandomUnlimitedImages(
   count: number,
   groupFilter?: 'boy-group' | 'girl-group' | null,
-  genFilter?: number[]
+  genFilter?: number[],
+  options?: { difficulty?: string; imageMode?: string; bind?: boolean },
 ): Promise<DailyImage[]> {
-  const seenIdols = getSeenIdols();
-
-  const isFilteringByGen = isActiveInfiniteGenFilter(genFilter);
-
-  const passesFilters = (img: DailyImage): boolean => {
-    if (!img.group_category || !img.base64_group) {
-      return false;
-    }
-    if (groupFilter && img.group_category !== groupFilter) {
-      return false;
-    }
-    if (isFilteringByGen) {
-      if (img.gen === undefined || img.gen === null) {
-        return false;
-      }
-      if (!genFilter!.includes(img.gen)) {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const fetchMultiplier = isFilteringByGen ? 20 : 3;
-  const fetchCount = count * fetchMultiplier;
-
-  const { data, error } = await supabase.rpc('get_multiple_random_unlimited_test', {
-    excluded_buckets: seenIdols,
-    row_count: fetchCount
-  });
-
-  if (error) {
-    console.error('[DB Request] Error:', error);
-    return [];
-  }
-
-  if (!data || data.length === 0) {
-    if (!isFilteringByGen) {
-      clearSeenIdols();
-    }
-
-    const retryFetchCount = isFilteringByGen ? fetchCount : count;
-    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_unlimited_test', {
-      excluded_buckets: [],
-      row_count: retryFetchCount
-    });
-
-    if (retryError || !retryData) {
-      console.error('get_multiple_random_unlimited retry error:', retryError);
-      return [];
-    }
-
-    const validRetryData = retryData.filter((img: DailyImage) => {
-      if (!passesFilters(img)) {
-        return false;
-      }
-      return true;
-    });
-
-    return validRetryData.slice(0, count);
-  }
-
-  const uniqueImages: DailyImage[] = [];
-  const seenBuckets = new Set<string>();
-
-  for (const image of data) {
-    if (!passesFilters(image)) {
-      continue;
-    }
-
-    if (!seenBuckets.has(image.img_bucket) && uniqueImages.length < count) {
-      uniqueImages.push(image);
-      seenBuckets.add(image.img_bucket);
-    }
-  }
-
-  if (uniqueImages.length < count && seenIdols.length > 0) {
-    if (!isFilteringByGen || uniqueImages.length === 0) {
-      clearSeenIdols();
-    }
-
-    const retryFetchCount = isFilteringByGen ? fetchCount : count;
-    const { data: retryData, error: retryError } = await supabase.rpc('get_multiple_random_unlimited_test', {
-      excluded_buckets: [],
-      row_count: retryFetchCount
-    });
-
-    if (retryError || !retryData) {
-      console.error('get_multiple_random_unlimited_test retry error:', retryError);
-      return uniqueImages;
-    }
-
-    const validRetryData = retryData.filter((img: DailyImage) => {
-      if (!passesFilters(img)) {
-        return false;
-      }
-      return true;
-    });
-
-    if (validRetryData.length > 0) {
-      const additionalNeeded = count - uniqueImages.length;
-      const additional = validRetryData.slice(0, additionalNeeded);
-      return [...uniqueImages, ...additional];
-    }
-
-    return uniqueImages;
-  }
-
-  return uniqueImages;
+  const isFilteringByGen = isActiveInfiniteGenFilter(genFilter)
+  const bind = options?.bind ?? false
+  const data = await fetchUnseen<DailyImage>(
+    getSeenIdols(),
+    clearSeenIdols,
+    addSeenIdol,
+    async (exclude) => {
+      const result = await supabase.rpc('start_infinite_round', {
+        p_difficulty: options?.difficulty || 'normal',
+        p_image_mode: options?.imageMode || 'pixelated',
+        p_group: groupFilter ?? null,
+        p_gens: isFilteringByGen ? genFilter : null,
+        p_count: count,
+        p_exclude: exclude,
+        p_bind: bind,
+      })
+      return { data: result.data as DailyImage[] | null, error: result.error }
+    },
+    '[DB Request] Error:',
+  )
+  if (!data) return []
+  const rows = withoutAnswer(data).filter((img) => {
+    if (!img.group_category || !img.base64_group) return false
+    if (!bind && groupFilter && img.group_category !== groupFilter) return false
+    return true
+  })
+  return bind ? rows : rows.slice(0, count)
 }
 
 export async function createFeedbackTicket(
@@ -374,12 +237,33 @@ export async function createFeedbackTicket(
 export async function getMyFeedbackTickets(
   tickets: { id: string; token: string }[],
 ): Promise<FeedbackTicket[]> {
-  if (tickets.length === 0) return []
-  const { data, error } = await supabase.rpc('get_my_feedback_tickets', {
-    p_tickets: tickets,
+  const byId = new Map<string, FeedbackTicket>()
+  const { data: listed, error: listError } = await supabase.rpc('list_my_feedback_tickets')
+  if (!listError && Array.isArray(listed)) {
+    for (const row of listed as FeedbackTicket[]) byId.set(row.id, row)
+  }
+  const missing = tickets.filter((ticket) => !byId.has(ticket.id))
+  if (missing.length > 0) {
+    const { data, error } = await supabase.rpc('get_my_feedback_tickets', {
+      p_tickets: missing,
+    })
+    if (error && byId.size === 0) throw error
+    for (const row of (data ?? []) as FeedbackTicket[]) {
+      if (!byId.has(row.id)) byId.set(row.id, row)
+    }
+  } else if (listError && tickets.length === 0) {
+    throw listError
+  }
+  return [...byId.values()]
+}
+
+export async function markFeedbackRead(ticketId: string, seenAt: string | null): Promise<void> {
+  if (!seenAt) return
+  const { error } = await supabase.rpc('mark_feedback_read', {
+    p_ticket_id: ticketId,
+    p_seen_at: seenAt,
   })
-  if (error) throw error
-  return (data ?? []) as FeedbackTicket[]
+  if (error) console.error('mark_feedback_read', error)
 }
 
 export async function getFeedbackThread(ticketId: string, token: string): Promise<FeedbackThread> {
@@ -527,7 +411,7 @@ export async function adminClearAnnouncement(): Promise<void> {
 }
 
 function publicImageUrl(objectPath: string): string {
-  const normalizedUrl = supabaseUrl.replace(/\/+$/, '')
+  const normalizedUrl = supabaseUrl().replace(/\/+$/, '')
   return `${normalizedUrl}/storage/v1/object/public/${objectPath}`
 }
 
@@ -610,65 +494,37 @@ export interface HangulGameData {
   streak: number
 }
 
-function getDeviceType(userAgent: string): string {
-  if (/mobile/i.test(userAgent)) return 'mobile'
-  if (/tablet|ipad/i.test(userAgent)) return 'tablet'
-  return 'desktop'
+let accountId: string | null = null
+
+export function setAccountId(id: string | null) {
+  accountId = id
 }
 
-function getBrowser(userAgent: string): string {
-  if (/edg/i.test(userAgent)) return 'edge'
-  if (/chrome/i.test(userAgent)) return 'chrome'
-  if (/firefox/i.test(userAgent)) return 'firefox'
-  if (/safari/i.test(userAgent)) return 'safari'
-  return 'other'
+export function getAccountId() {
+  return accountId
 }
 
 export function getOrCreateSessionId(): string {
+  if (accountId) return accountId
   if (typeof window === 'undefined') return ''
 
   let sessionId = sessionStorage.getItem('idol-guessr-session-id')
   if (!sessionId) {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-      sessionId = crypto.randomUUID()
-    } else {
-      sessionId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    sessionId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
         const r = Math.random() * 16 | 0
         const v = c === 'x' ? r : (r & 0x3 | 0x8)
         return v.toString(16)
       })
-    }
     sessionStorage.setItem('idol-guessr-session-id', sessionId)
   }
   return sessionId
 }
 
 export async function trackDailyGameEnd(
-  imageId: number,
-  guesses: string[],
-  won: boolean
 ): Promise<void> {
-  try {
-    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : null
-
-    const guessData: GuessTrackingData = {
-      session_id: getOrCreateSessionId(),
-      image_id: imageId,
-      guesses: guesses,
-      guess_text: guesses.join(', '),  // Backwards compatibility: store as comma-separated string
-      is_correct: won,
-      guess_number: guesses.length,
-      guess_time: new Date().toISOString(),
-      time_since_previous_guess: null,  // No longer tracked per-guess
-      user_agent: userAgent,
-      device_type: userAgent ? getDeviceType(userAgent) : null,
-      browser: userAgent ? getBrowser(userAgent) : null,
-    }
-
-    await supabase.from('guess_tracking').insert(guessData)
-  } catch (error) {
-    console.error('Error tracking daily game:', error)
-  }
+  // submit_daily_guess already stores the finished game on the account.
 }
 
 // Keep for backwards compatibility during transition
@@ -681,16 +537,17 @@ export async function trackUnlimitedGame(
   difficulty: UnlimitedGameData['difficulty'] = 'normal',
   mode: UnlimitedGameData['mode'] = 'pixelated'
 ): Promise<void> {
-  if (streak < 1) {
-    return
-  }
+  if (streak < 1) return
+  const userId = getAccountId()
+  if (!userId) return
 
   try {
-    const gameData: UnlimitedGameData = {
-      session_id: getOrCreateSessionId(),
+    const gameData: UnlimitedGameData & { user_id: string } = {
+      session_id: userId,
       streak: streak,
       difficulty,
       mode,
+      user_id: userId,
     }
 
     const { error } = await supabase.from('unlimited_game_tracking').insert(gameData)
@@ -706,14 +563,15 @@ export async function trackUnlimitedGame(
 export async function trackHangulGame(
   streak: number
 ): Promise<void> {
-  if (streak < 1) {
-    return
-  }
+  if (streak < 1) return
+  const userId = getAccountId()
+  if (!userId) return
 
   try {
-    const gameData: HangulGameData = {
-      session_id: getOrCreateSessionId(),
-      streak: streak
+    const gameData: HangulGameData & { user_id: string } = {
+      session_id: userId,
+      streak: streak,
+      user_id: userId,
     }
 
     const { error } = await supabase.from('hangul_game_tracking').insert(gameData)
@@ -732,8 +590,8 @@ export async function getDailyCount(): Promise<number> {
   const today = gmtPlus1.toISOString().split('T')[0];
 
   const { count, error } = await supabase
-    .from('dailies')
-    .select('*', { count: 'exact' })
+    .from('dailies_public')
+    .select('id', { count: 'exact', head: true })
     .lte('play_date', today);
 
   if (error) {
@@ -744,20 +602,12 @@ export async function getDailyCount(): Promise<number> {
 }
 
 export async function getTodayDailyGuessCount(): Promise<number> {
-  const daily = await getDailyImage();
-  if (!daily) return 0;
-
-  const { count, error } = await supabase
-    .from('guess_tracking')
-    .select('*', { count: 'exact', head: true })
-    .eq('image_id', daily.id)
-    .eq('is_correct', true);
-
+  const { data, error } = await supabase.rpc('get_today_daily_win_count')
   if (error) {
-    console.error('Error getting today daily guess count:', error);
-    return 0;
+    console.error('Error getting today daily guess count:', error)
+    return 0
   }
-  return count ?? 0;
+  return data ?? 0
 }
 
 export interface HistoryDailyImage extends DailyImage {
@@ -769,17 +619,17 @@ export async function getDailyImageByDate(date: string): Promise<HistoryDailyIma
   const endOfDay = `${date}T23:59:59`;
 
   const { data, error } = await supabase
-    .from('dailies')
-    .select('*')
+    .from('dailies_public')
+    .select('id, group_type, play_date, img_bucket, group_name, chosen_by, chosen_by_url')
     .gte('play_date', startOfDay)
     .lte('play_date', endOfDay)
-    .single();
+    .maybeSingle();
 
-  if (error) {
+  if (error || !data) {
     return null;
   }
 
-  return data as HistoryDailyImage;
+  return { ...data, name: '' } as HistoryDailyImage;
 }
 
 export async function getAvailableDailyDates(): Promise<{ dates: string[], firstDate: string | null, lastDate: string | null }> {
@@ -789,7 +639,7 @@ export async function getAvailableDailyDates(): Promise<{ dates: string[], first
   const endOfToday = `${today}T23:59:59`;
 
   const { data, error } = await supabase
-    .from('dailies')
+    .from('dailies_public')
     .select('play_date')
     .lte('play_date', endOfToday)
     .order('play_date', { ascending: true });
@@ -973,6 +823,17 @@ export async function getChallengeResults(challengeId: string): Promise<Challeng
     console.error('Error getting challenge results:', error)
     return []
   }
+}
+
+export async function startChallengeAttempt(challengeId: string): Promise<boolean> {
+  const { error } = await supabase.rpc('start_challenge_attempt', {
+    p_challenge_id: challengeId,
+  })
+  if (error) {
+    console.error('start_challenge_attempt', error)
+    return false
+  }
+  return true
 }
 
 export async function checkChallengePlayed(

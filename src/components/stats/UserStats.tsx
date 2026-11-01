@@ -1,8 +1,21 @@
 'use client'
 
 import Image from 'next/image'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { InfiniteDifficulty, ImageMode } from '@/utils/difficulty'
+import {
+    focusIssuedIdol,
+    getDailyAttempts,
+    getDailyProgress,
+    getDailyStats,
+    getHangulGame,
+    getHangulStats,
+    getUnlimitedGame,
+    getUnlimitedStats,
+    playerReady,
+    releaseRound,
+    subscribePlayer,
+} from '@/lib/player'
 
 export interface DailyCompletion {
     date: string
@@ -138,40 +151,16 @@ export function useUserStats() {
     const [isLoaded, setIsLoaded] = useState(false)
 
     useEffect(() => {
-        const loadStats = () => {
-            try {
-                const savedStats = localStorage.getItem('idol-guessr-stats')
-                if (savedStats) {
-                    const parsedStats = JSON.parse(savedStats)
-                    const today = new Date().toDateString()
-                    const lastPlayed = parsedStats.lastPlayedDate
-                    if (lastPlayed !== today) {
-                        parsedStats.todayCompleted = false
-                    }
-                    if (!parsedStats.dailyCompletions) {
-                        parsedStats.dailyCompletions = {}
-                    }
-                    setStats(parsedStats)
-                }
-            } catch (error) {
-                console.error('Error loading stats from localStorage:', error)
-                setStats(defaultStats)
-            } finally {
-                setIsLoaded(true)
-            }
+        const sync = () => {
+            setStats(playerReady() ? getDailyStats() : defaultStats)
+            setIsLoaded(playerReady())
         }
-        loadStats()
+        sync()
+        const unsubscribe = subscribePlayer(sync)
+        return () => {
+            unsubscribe()
+        }
     }, [])
-
-    useEffect(() => {
-        if (isLoaded) {
-            try {
-                localStorage.setItem('idol-guessr-stats', JSON.stringify(stats))
-            } catch (error) {
-                console.error('Error saving stats to localStorage:', error)
-            }
-        }
-    }, [stats, isLoaded])
 
     const updateStats = (
         won: boolean,
@@ -181,46 +170,20 @@ export function useUserStats() {
         guessAttempts?: string[]
     ) => {
         const today = new Date().toDateString()
-        setStats((prevStats) => {
-            if (prevStats.dailyCompletions[today]?.completed) {
-                return prevStats
+        const server = getDailyStats()
+        if (imageId && correctAnswer) {
+            server.dailyCompletions[today] = {
+                date: today,
+                imageId,
+                completed: true,
+                won,
+                guessCount: won ? guessCount : 0,
+                correctAnswer,
+                guessAttempts: guessAttempts || server.dailyCompletions[today]?.guessAttempts || [],
             }
-            const newStats = {
-                ...prevStats,
-                guessDistribution: { ...prevStats.guessDistribution },
-                dailyCompletions: { ...prevStats.dailyCompletions },
-            }
-            newStats.totalGames += 1
-            newStats.lastPlayedDate = today
-            newStats.todayCompleted = true
-            if (imageId && correctAnswer) {
-                newStats.dailyCompletions[today] = {
-                    date: today,
-                    imageId,
-                    completed: true,
-                    won,
-                    guessCount: won ? guessCount : 0,
-                    correctAnswer,
-                    guessAttempts: guessAttempts || [],
-                }
-            }
-            if (won) {
-                newStats.totalWins += 1
-                newStats.guessDistribution[guessCount] += 1
-                if (
-                    prevStats.lastPlayedDate === today ||
-                    new Date(prevStats.lastPlayedDate).getTime() === new Date(today).getTime() - 86400000
-                ) {
-                    newStats.currentStreak += 1
-                } else {
-                    newStats.currentStreak = 1
-                }
-                newStats.maxStreak = Math.max(newStats.maxStreak, newStats.currentStreak)
-            } else {
-                newStats.currentStreak = 0
-            }
-            return newStats
-        })
+            server.todayCompleted = true
+        }
+        setStats(server)
     }
 
     const getTodayCompletion = useCallback((): DailyCompletion | null => {
@@ -233,68 +196,27 @@ export function useUserStats() {
         return stats.dailyCompletions[today]?.completed || false
     }, [stats.dailyCompletions])
 
-    const saveDailyProgress = useCallback((imageId: number, guesses: Array<'correct' | 'incorrect' | 'empty'>) => {
-        if (typeof window === 'undefined') return
-        try {
-            const today = new Date().toDateString()
-            const progress: DailyProgress = { date: today, imageId, guesses }
-            localStorage.setItem('idol-guessr-daily-progress', JSON.stringify(progress))
-        } catch (error) {
-            console.error('Error saving daily progress:', error)
-        }
+    const saveDailyProgress = useCallback((
+        _imageId?: number,
+        _guesses?: Array<'correct' | 'incorrect' | 'empty'>
+    ) => {
+        // Guesses are stored by submit_daily_guess.
     }, [])
 
     const loadDailyProgress = useCallback((): DailyProgress | null => {
-        if (typeof window === 'undefined') return null
-        try {
-            const today = new Date().toDateString()
-            const savedProgress = localStorage.getItem('idol-guessr-daily-progress')
-            if (savedProgress) {
-                const progress: DailyProgress = JSON.parse(savedProgress)
-                if (progress.date === today) {
-                    return progress
-                }
-            }
-        } catch (error) {
-            console.error('Error loading daily progress:', error)
-        }
-        return null
+        return getDailyProgress()
     }, [])
 
     const clearDailyProgress = useCallback(() => {
-        if (typeof window === 'undefined') return
-        try {
-            localStorage.removeItem('idol-guessr-daily-progress')
-        } catch (error) {
-            console.error('Error clearing daily progress:', error)
-        }
+        // The finished daily row stays on the server.
     }, [])
 
-    const saveGuessAttempt = useCallback((guess: string) => {
-        if (typeof window === 'undefined') return
-        try {
-            const today = new Date().toDateString()
-            const key = `idol-guessr-guess-attempts-${today}`
-            const existingAttempts = localStorage.getItem(key)
-            const attempts = existingAttempts ? JSON.parse(existingAttempts) : []
-            attempts.push(guess)
-            localStorage.setItem(key, JSON.stringify(attempts))
-        } catch (error) {
-            console.error('Error saving guess attempt:', error)
-        }
+    const saveGuessAttempt = useCallback((_guess?: string) => {
+        // The server appends the guess.
     }, [])
 
     const loadGuessAttempts = useCallback((): string[] => {
-        if (typeof window === 'undefined') return []
-        try {
-            const today = new Date().toDateString()
-            const key = `idol-guessr-guess-attempts-${today}`
-            const attempts = localStorage.getItem(key)
-            return attempts ? JSON.parse(attempts) : []
-        } catch (error) {
-            console.error('Error loading guess attempts:', error)
-            return []
-        }
+        return getDailyAttempts()
     }, [])
 
     return {
@@ -311,127 +233,49 @@ export function useUserStats() {
     }
 }
 
-// Pixelated keeps the original keys so existing saved stats are untouched.
-// Zoom gets its own suffix so streaks and in-progress games stay separate.
-function modeSuffix(mode: ImageMode): string {
-    return mode === 'zoom' ? '-zoom' : ''
-}
-
-function unlimitedStatsKey(difficulty: InfiniteDifficulty, mode: ImageMode = 'pixelated'): string {
-    const base = difficulty === 'normal'
-        ? 'idol-guessr-unlimited-stats'
-        : `idol-guessr-unlimited-stats-${difficulty}`
-    return `${base}${modeSuffix(mode)}`
-}
-
-function unlimitedGameStateKey(difficulty: InfiniteDifficulty, mode: ImageMode = 'pixelated'): string {
-    const base = difficulty === 'normal'
-        ? 'idol-guessr-unlimited-game-state'
-        : `idol-guessr-unlimited-game-state-${difficulty}`
-    return `${base}${modeSuffix(mode)}`
-}
 
 export function loadUnlimitedStats(difficulty: InfiniteDifficulty, mode: ImageMode = 'pixelated'): UnlimitedStats {
-    if (typeof window === 'undefined') return defaultUnlimitedStats
-    try {
-        const saved = localStorage.getItem(unlimitedStatsKey(difficulty, mode))
-        return saved ? { ...defaultUnlimitedStats, ...JSON.parse(saved) } : defaultUnlimitedStats
-    } catch {
-        return defaultUnlimitedStats
-    }
+    if (!playerReady()) return defaultUnlimitedStats
+    return getUnlimitedStats(difficulty, mode)
 }
 
 export function useUnlimitedStats(difficulty: InfiniteDifficulty = 'normal', mode: ImageMode = 'pixelated') {
     const [stats, setStats] = useState<UnlimitedStats>(defaultUnlimitedStats)
     const [isLoaded, setIsLoaded] = useState(false)
-    const statsKey = unlimitedStatsKey(difficulty, mode)
-    const gameStateKey = unlimitedGameStateKey(difficulty, mode)
-    const loadedKeyRef = useRef<string | null>(null)
-    const gameStateKeyRef = useRef(gameStateKey)
-    gameStateKeyRef.current = gameStateKey
 
     useEffect(() => {
-        setIsLoaded(false)
-        try {
-            const savedStats = localStorage.getItem(statsKey)
-            setStats(savedStats ? JSON.parse(savedStats) : defaultUnlimitedStats)
-        } catch (error) {
-            console.error('Error loading unlimited stats:', error)
-            setStats(defaultUnlimitedStats)
-        } finally {
-            loadedKeyRef.current = statsKey
-            setIsLoaded(true)
+        const sync = () => {
+            setStats(playerReady() ? getUnlimitedStats(difficulty, mode) : defaultUnlimitedStats)
+            setIsLoaded(playerReady())
         }
-    }, [statsKey])
-
-    useEffect(() => {
-        if (!isLoaded || loadedKeyRef.current !== statsKey) return
-        try {
-            localStorage.setItem(statsKey, JSON.stringify(stats))
-        } catch (error) {
-            console.error('Error saving unlimited stats:', error)
+        sync()
+        const unsubscribe = subscribePlayer(sync)
+        return () => {
+            unsubscribe()
         }
-    }, [stats, isLoaded, statsKey])
+    }, [difficulty, mode])
 
-    const updateStats = (won: boolean, incrementTotalGames: boolean = true, preserveStreak: boolean = false) => {
-        setStats((prevStats) => {
-            const newStats = { ...prevStats }
-            if (incrementTotalGames) {
-                newStats.totalGames += 1
-            }
-            if (won) {
-                newStats.totalWins += 1
-                newStats.currentStreak += 1
-                newStats.maxStreak = Math.max(newStats.maxStreak, newStats.currentStreak)
-            } else {
-                if (!preserveStreak) {
-                    newStats.currentStreak = 0
-                }
-            }
-            return newStats
-        })
-    }
-
-    const resolveGameStateKey = useCallback(
-        (forDifficulty?: InfiniteDifficulty, forMode?: ImageMode) =>
-            forDifficulty || forMode
-                ? unlimitedGameStateKey(forDifficulty ?? difficulty, forMode ?? mode)
-                : gameStateKeyRef.current,
-        [difficulty, mode]
-    )
+    const updateStats = useCallback((_won?: boolean, _incrementTotalGames?: boolean, _preserveStreak?: boolean) => {
+        setStats(getUnlimitedStats(difficulty, mode))
+    }, [difficulty, mode])
 
     const saveGameState = useCallback((gameState: UnlimitedGameState, forDifficulty?: InfiniteDifficulty, forMode?: ImageMode) => {
-        if (typeof window === 'undefined') return
-        try {
-            localStorage.setItem(resolveGameStateKey(forDifficulty, forMode), JSON.stringify(gameState))
-        } catch (error) {
-            console.error('Error saving unlimited game state:', error)
-        }
-    }, [resolveGameStateKey])
+        if (!gameState.imgBucket) return
+        void focusIssuedIdol('unlimited', gameState.imgBucket, forDifficulty ?? difficulty, forMode ?? mode)
+    }, [difficulty, mode])
 
     const loadGameState = useCallback((forDifficulty?: InfiniteDifficulty, forMode?: ImageMode): UnlimitedGameState | null => {
-        if (typeof window === 'undefined') return null
-        try {
-            const savedState = localStorage.getItem(resolveGameStateKey(forDifficulty, forMode))
-            if (savedState) {
-                return JSON.parse(savedState) as UnlimitedGameState
-            }
-        } catch (error) {
-            console.error('Error loading unlimited game state:', error)
-        }
-        return null
-    }, [resolveGameStateKey])
+        return getUnlimitedGame(forDifficulty ?? difficulty, forMode ?? mode)
+    }, [difficulty, mode])
 
     const clearGameState = useCallback((forDifficulty?: InfiniteDifficulty, forMode?: ImageMode) => {
-        if (typeof window === 'undefined') return
-        try {
-            localStorage.removeItem(resolveGameStateKey(forDifficulty, forMode))
-        } catch (error) {
-            console.error('Error clearing unlimited game state:', error)
-        }
-    }, [resolveGameStateKey])
+        void releaseRound('unlimited', forDifficulty ?? difficulty, forMode ?? mode)
+    }, [difficulty, mode])
 
-    return { stats, isLoaded, updateStats, saveGameState, loadGameState, clearGameState }
+    return useMemo(
+        () => ({ stats, isLoaded, updateStats, saveGameState, loadGameState, clearGameState }),
+        [stats, isLoaded, updateStats, saveGameState, loadGameState, clearGameState],
+    )
 }
 
 export function useHangulStats() {
@@ -439,85 +283,38 @@ export function useHangulStats() {
     const [isLoaded, setIsLoaded] = useState(false)
 
     useEffect(() => {
-        const loadStats = () => {
-            try {
-                const savedStats = localStorage.getItem('idol-guessr-hangul-stats')
-                if (savedStats) {
-                    setStats(JSON.parse(savedStats))
-                } else {
-                    setStats(defaultHangulStats)
-                }
-            } catch (error) {
-                console.error('Error loading hangul stats:', error)
-                setStats(defaultHangulStats)
-            } finally {
-                setIsLoaded(true)
-            }
+        const sync = () => {
+            setStats(playerReady() ? getHangulStats() : defaultHangulStats)
+            setIsLoaded(playerReady())
         }
-        loadStats()
+        sync()
+        const unsubscribe = subscribePlayer(sync)
+        return () => {
+            unsubscribe()
+        }
     }, [])
 
-    useEffect(() => {
-        if (isLoaded) {
-            try {
-                localStorage.setItem('idol-guessr-hangul-stats', JSON.stringify(stats))
-            } catch (error) {
-                console.error('Error saving hangul stats:', error)
-            }
-        }
-    }, [stats, isLoaded])
-
-    const updateStats = (won: boolean, incrementTotalGames: boolean = true, preserveStreak: boolean = false) => {
-        setStats((prevStats) => {
-            const newStats = { ...prevStats }
-            if (incrementTotalGames) {
-                newStats.totalGames += 1
-            }
-            if (won) {
-                newStats.totalWins += 1
-                newStats.currentStreak += 1
-                newStats.maxStreak = Math.max(newStats.maxStreak, newStats.currentStreak)
-            } else {
-                if (!preserveStreak) {
-                    newStats.currentStreak = 0
-                }
-            }
-            return newStats
-        })
-    }
+    const updateStats = useCallback((_won?: boolean, _incrementTotalGames?: boolean, _preserveStreak?: boolean) => {
+        setStats(getHangulStats())
+    }, [])
 
     const saveGameState = useCallback((gameState: HangulGameState) => {
-        if (typeof window === 'undefined') return
-        try {
-            localStorage.setItem('idol-guessr-hangul-game-state', JSON.stringify(gameState))
-        } catch (error) {
-            console.error('Error saving hangul game state:', error)
-        }
+        if (!gameState.imgBucket) return
+        void focusIssuedIdol('hangul', gameState.imgBucket)
     }, [])
 
     const loadGameState = useCallback((): HangulGameState | null => {
-        if (typeof window === 'undefined') return null
-        try {
-            const savedState = localStorage.getItem('idol-guessr-hangul-game-state')
-            if (savedState) {
-                return JSON.parse(savedState) as HangulGameState
-            }
-        } catch (error) {
-            console.error('Error loading hangul game state:', error)
-        }
-        return null
+        return getHangulGame()
     }, [])
 
     const clearGameState = useCallback(() => {
-        if (typeof window === 'undefined') return
-        try {
-            localStorage.removeItem('idol-guessr-hangul-game-state')
-        } catch (error) {
-            console.error('Error clearing hangul game state:', error)
-        }
+        void releaseRound('hangul')
     }, [])
 
-    return { stats, isLoaded, updateStats, saveGameState, loadGameState, clearGameState }
+    return useMemo(
+        () => ({ stats, isLoaded, updateStats, saveGameState, loadGameState, clearGameState }),
+        [stats, isLoaded, updateStats, saveGameState, loadGameState, clearGameState],
+    )
 }
 
 interface UserStatsProps {

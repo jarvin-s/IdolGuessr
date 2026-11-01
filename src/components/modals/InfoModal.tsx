@@ -3,6 +3,7 @@ import localFont from 'next/font/local'
 import { useFeedbackUnread } from '@/hooks/useFeedbackUnread'
 import ThemeToggle from '@/components/theme/ThemeToggle'
 import { useInputMode } from '@/utils/inputMode'
+import SignInButton from '@/components/auth/SignInButton'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -63,6 +64,25 @@ export default function InfoModal({
                 </p>
 
                 <div className='mt-6 space-y-3'>
+                    <Link
+                        href='/leaderboard'
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
+                    >
+                        <div className='text-left'>
+                            <h3 className={`${proximaNovaBold.className} text-lg`}>Leaderboard</h3>
+                            <p className='text-sm text-gray-500 dark:text-zinc-400'>Highest streaks</p>
+                        </div>
+                    </Link>
+                    <Link
+                        href='/profile'
+                        className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
+                    >
+                        <div className='text-left'>
+                            <h3 className={`${proximaNovaBold.className} text-lg`}>Profile</h3>
+                            <p className='text-sm text-gray-500 dark:text-zinc-400'>Nickname and your stats</p>
+                        </div>
+                    </Link>
+                    <SignInButton className='w-full' />
                     <Link
                         href='/faq'
                         className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'

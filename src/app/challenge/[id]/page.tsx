@@ -44,6 +44,8 @@ export default function ChallengePlayPage() {
         handleKeyPress,
         submitResults,
         results,
+        attemptStarted,
+        markStarted,
     } = useChallengeController(challengeId)
 
     const [showIntro, setShowIntro] = useState(false)
@@ -53,13 +55,10 @@ export default function ChallengePlayPage() {
     const [inputMode, , inputModeReady] = useInputMode()
 
     useEffect(() => {
-        if (challenge && currentIndex === 0 && !isLoading && results.length === 0) {
-            const savedProgress = localStorage.getItem('idol-guessr-challenge-progress')
-            if (!savedProgress) {
-                setShowIntro(true)
-            }
-        }
-    }, [challenge, currentIndex, isLoading, results.length])
+        if (!challenge || isLoading) return
+        const inProgress = attemptStarted || currentIndex > 0 || results.length > 0
+        setShowIntro(!inProgress)
+    }, [challenge, currentIndex, isLoading, results.length, attemptStarted])
 
     useEffect(() => {
         if (alreadyPlayed) {
@@ -74,8 +73,9 @@ export default function ChallengePlayPage() {
         }
     }
 
-    const handleStartChallenge = () => {
-        setShowIntro(false)
+    const handleStartChallenge = async () => {
+        const started = await markStarted()
+        if (started) setShowIntro(false)
     }
 
     if (isLoading) {

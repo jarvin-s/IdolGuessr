@@ -5,6 +5,8 @@ import './globals.css'
 import { Analytics } from '@vercel/analytics/next'
 import LiveAnnouncementBanner from '@/components/announcements/LiveAnnouncementBanner'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
+import { AuthProvider } from '@/components/auth/AuthProvider'
+import GuestSavePrompt from '@/components/auth/GuestSavePrompt'
 import { themeInitScript } from '@/components/theme/theme'
 
 const proximaNovaRegular = localFont({
@@ -75,9 +77,12 @@ export default function RootLayout({
             >
                 <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
                 <ThemeProvider>
-                    {children}
-                    <LiveAnnouncementBanner />
-                    <Analytics />
+                    <AuthProvider>
+                        {children}
+                        <GuestSavePrompt />
+                        <LiveAnnouncementBanner />
+                        <Analytics />
+                    </AuthProvider>
                 </ThemeProvider>
                 <Script
                     src='https://www.googletagmanager.com/gtag/js?id=G-6V9ZCS0XZP'

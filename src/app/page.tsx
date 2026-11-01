@@ -17,6 +17,7 @@ import {
     type HistoryDailyImage,
 } from '@/lib/supabase'
 import { useGameController } from '@/hooks/useGameController'
+import { savePlayerSettings } from '@/lib/player'
 import IndexModal from '@/components/modals/IndexModal'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef, useCallback } from 'react'
@@ -343,9 +344,7 @@ export default function Home() {
     }, [isInHistoryMode, handleHistoryKeyPress, historyDisabledLetters])
 
     useEffect(() => {
-        try {
-            localStorage.setItem('idol-guessr-game-mode', 'daily')
-        } catch {}
+        void savePlayerSettings({ game_mode: 'daily' })
         if (gameMode !== 'daily') {
             handleGameModeChange('daily')
         }

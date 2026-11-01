@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getMyFeedbackTickets } from '@/lib/supabase'
-import { getStoredTickets, hasUnread, type StoredTicket } from '@/utils/feedbackTickets'
+import { getStoredTickets, hasUnread, rememberTicket, type StoredTicket } from '@/utils/feedbackTickets'
 import { useTicketLiveUpdates } from './useTicketLiveUpdates'
 
 export function useFeedbackUnread(enabled: boolean): number {
@@ -10,12 +10,12 @@ export function useFeedbackUnread(enabled: boolean): number {
     const refresh = useCallback(async () => {
         const stored = getStoredTickets()
         setStoredTickets(stored)
-        if (stored.length === 0) {
-            setUnreadCount(0)
-            return
-        }
         try {
             const tickets = await getMyFeedbackTickets(stored.map(({ id, token }) => ({ id, token })))
+            tickets.forEach((ticket) => {
+                if (ticket.token) rememberTicket(ticket.id, ticket.token)
+            })
+            if (stored.length === 0) setStoredTickets(getStoredTickets())
             setUnreadCount(tickets.filter(hasUnread).length)
         } catch {
             setUnreadCount(0)
