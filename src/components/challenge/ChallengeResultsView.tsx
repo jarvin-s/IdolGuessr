@@ -22,7 +22,9 @@ function playerName(
     currentNickname?: string | null
 ) {
     const savedName = isMe ? currentNickname?.trim() : null
-    return savedName || result.nickname || (isMe ? 'You' : `Player ${index + 1}`)
+    return (
+        savedName || result.nickname || (isMe ? 'You' : `Player ${index + 1}`)
+    )
 }
 
 export default function ChallengeResultsView({
@@ -82,7 +84,9 @@ export default function ChallengeResultsView({
                                         {result.total_correct}/
                                         {challenge.idol_count}
                                     </span>
-                                    <span className='ml-2 text-gray-500 dark:text-zinc-200'>correct</span>
+                                    <span className='ml-2 text-gray-500 dark:text-zinc-200'>
+                                        correct
+                                    </span>
                                 </div>
                             </div>
                         )
@@ -107,7 +111,7 @@ export default function ChallengeResultsView({
                         return (
                             <div
                                 key={idol.id}
-                                className='overflow-hidden border border-[#0f0f0f] dark:border-zinc-600 bg-white dark:bg-zinc-900'
+                                className='overflow-hidden border border-[#0f0f0f] bg-white dark:border-zinc-600 dark:bg-zinc-900'
                             >
                                 {/* Idol header */}
                                 <div className='flex items-center gap-3 p-3'>
@@ -158,7 +162,9 @@ export default function ChallengeResultsView({
                                             <div
                                                 key={result.session_id}
                                                 className={`flex items-center justify-between px-3 py-2 ${
-                                                    isMe ? 'bg-pink-50 dark:bg-pink-950/40' : ''
+                                                    isMe
+                                                        ? 'bg-pink-50 dark:bg-pink-950/40'
+                                                        : ''
                                                 }`}
                                             >
                                                 <span className='text-sm'>
