@@ -840,8 +840,8 @@ export async function importLegacyProgress() {
         if (
             key.startsWith('idol-guessr-') &&
             key !== 'idol-guessr-theme' &&
-            key !== 'idol-guessr-seen-idols' &&
-            key !== 'idol-guessr-seen-hangul-idols'
+            key !== 'seen-idols' &&
+            key !== 'seen-hangul-idols'
         ) localStorage.removeItem(key)
     })
     LEGACY_KEYS.forEach((key) => localStorage.removeItem(key))

@@ -82,8 +82,8 @@ export async function getDailyImage(): Promise<CurrentDaily | null> {
     return data[0] as CurrentDaily
 }
 
-const SEEN_IDOLS_KEY = 'idol-guessr-seen-idols'
-const SEEN_HANGUL_KEY = 'idol-guessr-seen-hangul-idols'
+const SEEN_IDOLS_KEY = 'seen-idols'
+const SEEN_HANGUL_KEY = 'seen-hangul-idols'
 
 function readSeen(key: string): string[] {
     if (typeof window === 'undefined') return []
