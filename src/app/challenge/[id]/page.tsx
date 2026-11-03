@@ -8,6 +8,7 @@ import GuessInput from '@/components/game/GuessInput'
 import OnScreenKeyboard from '@/components/input/OnScreenKeyboard'
 import IdolTextInput from '@/components/input/IdolTextInput'
 import InfoModal from '@/components/modals/InfoModal'
+import AccountModal from '@/components/modals/AccountModal'
 import HelpModal from '@/components/modals/HelpModal'
 import FeedbackModal from '@/components/modals/FeedbackModal'
 import { useInputMode } from '@/utils/inputMode'
@@ -53,6 +54,7 @@ export default function ChallengePlayPage() {
 
     const [showIntro, setShowIntro] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
+    const [showAccount, setShowAccount] = useState(false)
     const [showHelp, setShowHelp] = useState(false)
     const [showFeedback, setShowFeedback] = useState(false)
     const [inputMode, , inputModeReady] = useInputMode()
@@ -139,6 +141,7 @@ export default function ChallengePlayPage() {
                     <GameHeader
                         timer={`${currentIndex + 1}/${totalIdols}`}
                         onShowStats={() => {}}
+                        onShowAccount={() => setShowAccount(true)}
                         onShowInfo={() => setShowInfo(true)}
                         gameMode={'unlimited'}
                         onGameModeChange={() => {}}
@@ -220,6 +223,11 @@ export default function ChallengePlayPage() {
                     </div>
                 </div>
             )}
+
+            <AccountModal
+                isOpen={showAccount}
+                onClose={() => setShowAccount(false)}
+            />
 
             <InfoModal
                 isOpen={showInfo}

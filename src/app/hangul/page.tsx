@@ -11,6 +11,7 @@ import StatsModal from '@/components/modals/StatsModal'
 import HelpModal from '@/components/modals/HelpModal'
 import FeedbackModal from '@/components/modals/FeedbackModal'
 import InfoModal from '@/components/modals/InfoModal'
+import AccountModal from '@/components/modals/AccountModal'
 import WinModal from '@/components/modals/WinModal'
 import HangulStartModal from '@/components/modals/HangulStartModal'
 import HangulFilterModal from '@/components/filters/HangulFilterModal'
@@ -26,6 +27,7 @@ export default function HangulPage() {
     const [startOpen, setStartOpen] = useState(false)
     const [showFilterModal, setShowFilterModal] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
+    const [showAccount, setShowAccount] = useState(false)
     const {
         isLoading,
         hangulImage,
@@ -91,6 +93,7 @@ export default function HangulPage() {
                 <GameHeader
                     timer={''}
                     onShowStats={() => setShowStats(true)}
+                    onShowAccount={() => setShowAccount(true)}
                     onShowInfo={() => setShowInfo(true)}
                     gameMode={'hangul'}
                     onGameModeChange={() => {
@@ -178,6 +181,11 @@ export default function HangulPage() {
                     setShowFeedback(false)
                     setShowInfo(true)
                 }}
+            />
+
+            <AccountModal
+                isOpen={showAccount}
+                onClose={() => setShowAccount(false)}
             />
 
             <InfoModal

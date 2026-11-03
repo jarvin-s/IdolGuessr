@@ -6,6 +6,7 @@ import type { ImageMode, InfiniteDifficulty } from '@/utils/difficulty'
 interface GameHeaderProps {
     timer: string
     onShowStats: () => void
+    onShowAccount?: () => void
     onShowInfo?: () => void
     gameMode: 'daily' | 'unlimited' | 'hangul'
     onGameModeChange: (
@@ -27,6 +28,7 @@ const meshGradient =
 export default function GameHeader({
     timer,
     onShowStats,
+    onShowAccount,
     onShowInfo,
     gameMode,
     onGameModeChange,
@@ -50,10 +52,10 @@ export default function GameHeader({
                             aria-label='Go to home screen'
                         >
                             <Image
-                                src='/images/idolguessr-logo.png'
-                                alt='IdolGuessr Logo'
-                                width={150}
-                                height={50}
+                               width={40}
+                               height={40}
+                               src='/icons/icon.svg'
+                               alt='IdolGuessr'
                                 className='h-10 w-auto dark:invert'
                             />
                         </button>
@@ -135,18 +137,34 @@ export default function GameHeader({
                             <StatsIcon />
                         </button>
 
+
                         {onShowInfo && (
                             <div className="relative">
                                 <button
                                     onClick={onShowInfo}
                                     className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
                                     aria-label='View Info'
-                                >
+                                    >
                                     <InfoIcon />
                                 </button>
                             </div>
                         )}
                    
+                        {onShowAccount && (
+                            <button
+                                onClick={onShowAccount}
+                                className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-pink-600 transition-colors hover:bg-pink-700 dark:bg-pink-600 dark:hover:bg-pink-700'
+                                aria-label='View account'
+                            >
+                                <Image
+                                    width={24}
+                                    height={24}
+                                    src='/icons/person.svg'
+                                    alt='Account'
+                                    className='invert'
+                                />
+                            </button>
+                        )}
 
                         {showModeToggle && (
                             <button

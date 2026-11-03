@@ -11,6 +11,7 @@ import StatsModal from '@/components/modals/StatsModal'
 import HelpModal from '@/components/modals/HelpModal'
 import FeedbackModal from '@/components/modals/FeedbackModal'
 import InfoModal from '@/components/modals/InfoModal'
+import AccountModal from '@/components/modals/AccountModal'
 import WinModal from '@/components/modals/WinModal'
 import InfiniteStartModal from '@/components/modals/InfiniteStartModal'
 import FilterModal from '@/components/filters/FilterModal'
@@ -47,6 +48,7 @@ export default function InfinitePage() {
     const [startOpen, setStartOpen] = useState(false)
     const [showFilterModal, setShowFilterModal] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
+    const [showAccount, setShowAccount] = useState(false)
     const [inputMode, , inputModeReady] = useInputMode()
     const {
         handleGameModeChange,
@@ -169,6 +171,7 @@ export default function InfinitePage() {
                 <GameHeader
                     timer={timer}
                     onShowStats={() => setShowStats(true)}
+                    onShowAccount={() => setShowAccount(true)}
                     onShowInfo={() => setShowInfo(true)}
                     gameMode={'unlimited'}
                     onGameModeChange={() => {
@@ -294,6 +297,11 @@ export default function InfinitePage() {
                     setShowFeedback(false)
                     setShowInfo(true)
                 }}
+            />
+
+            <AccountModal
+                isOpen={showAccount}
+                onClose={() => setShowAccount(false)}
             />
 
             <InfoModal

@@ -41,8 +41,27 @@ export default function ProfilePage() {
 
     return (
         <main className='mx-auto min-h-screen max-w-lg px-4 py-10'>
-            <Link href='/' className='text-sm text-gray-500 underline dark:text-zinc-400'>
-                Back to the game
+            <Link
+                href='/'
+                className='inline-flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full bg-gray-100 px-3 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                aria-label='Back to the game'
+            >
+                <svg
+                    className='h-4 w-4 text-gray-600 dark:text-zinc-400'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                >
+                    <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M10 19l-7-7m0 0l7-7m-7 7h18'
+                    />
+                </svg>
+                <span className='text-sm text-gray-600 dark:text-zinc-400'>
+                    Back to the game
+                </span>
             </Link>
             <h1 className='mt-4 text-3xl font-bold uppercase'>Profile</h1>
             {profile?.avatar_url ? (

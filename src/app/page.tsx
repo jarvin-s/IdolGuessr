@@ -9,6 +9,7 @@ import StatsModal from '@/components/modals/StatsModal'
 import HelpModal from '@/components/modals/HelpModal'
 import FeedbackModal from '@/components/modals/FeedbackModal'
 import InfoModal from '@/components/modals/InfoModal'
+import AccountModal from '@/components/modals/AccountModal'
 import HistoryModal from '@/components/modals/HistoryModal'
 import WinModal from '@/components/modals/WinModal'
 import {
@@ -63,6 +64,7 @@ export default function Home() {
     const router = useRouter()
     const [showIndexModal, setShowIndexModal] = useState(true)
     const [showInfo, setShowInfo] = useState(false)
+    const [showAccount, setShowAccount] = useState(false)
     const [showHistory, setShowHistory] = useState(false)
     const [historyDate, setHistoryDate] = useState<string | null>(null)
     const [historyImage, setHistoryImage] = useState<HistoryDailyImage | null>(
@@ -416,6 +418,7 @@ export default function Home() {
                     <GameHeader
                         timer={timer}
                         onShowStats={() => setShowStats(true)}
+                        onShowAccount={() => setShowAccount(true)}
                         onShowInfo={() => setShowInfo(true)}
                         gameMode={gameMode}
                         onGameModeChange={handleGameModeChange}
@@ -614,6 +617,11 @@ export default function Home() {
                     setShowFeedback(false)
                     setShowInfo(true)
                 }}
+            />
+
+            <AccountModal
+                isOpen={showAccount}
+                onClose={() => setShowAccount(false)}
             />
 
             <InfoModal
