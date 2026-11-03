@@ -197,10 +197,7 @@ export function useUserStats() {
         return stats.dailyCompletions[today]?.completed || false
     }, [stats.dailyCompletions])
 
-    const saveDailyProgress = useCallback((
-        _imageId?: number,
-        _guesses?: Array<'correct' | 'incorrect' | 'empty'>
-    ) => {
+    const saveDailyProgress = useCallback(() => {
         // Guesses are stored by submit_daily_guess.
     }, [])
 
@@ -212,7 +209,7 @@ export function useUserStats() {
         // The finished daily row stays on the server.
     }, [])
 
-    const saveGuessAttempt = useCallback((_guess?: string) => {
+    const saveGuessAttempt = useCallback(() => {
         // The server appends the guess.
     }, [])
 
@@ -256,7 +253,7 @@ export function useUnlimitedStats(difficulty: InfiniteDifficulty = 'normal', mod
         }
     }, [difficulty, mode])
 
-    const updateStats = useCallback((_won?: boolean, _incrementTotalGames?: boolean, _preserveStreak?: boolean) => {
+    const updateStats = useCallback(() => {
         setStats(getUnlimitedStats(difficulty, mode))
     }, [difficulty, mode])
 
@@ -295,7 +292,7 @@ export function useHangulStats() {
         }
     }, [])
 
-    const updateStats = useCallback((_won?: boolean, _incrementTotalGames?: boolean, _preserveStreak?: boolean) => {
+    const updateStats = useCallback(() => {
         setStats(getHangulStats())
     }, [])
 

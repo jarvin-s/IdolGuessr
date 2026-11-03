@@ -274,7 +274,7 @@ export function useHangulGameController() {
             if (!gameWon && !gameLost) {
                 const hasGuesses = guesses.some((g) => g === 'incorrect' || g === 'correct')
                 if (hasGuesses) {
-                    hangulStats.updateStats(false, true, true)
+                    hangulStats.updateStats()
                 }
                 lastStreakMilestoneRef.current = 0
             }
@@ -502,7 +502,7 @@ export function useHangulGameController() {
                                                 void trackHangulGame(streakBeforeReset)
                                                 hasTrackedCurrentGame.current = true
                                             }
-                                            hangulStats.updateStats(false, true)
+                                            hangulStats.updateStats()
                                         }
                                         lastStreakMilestoneRef.current = 0
                                         clearSeenHangulIdols()
@@ -530,7 +530,7 @@ export function useHangulGameController() {
                             setStreakMilestone(newStreak)
                             setShowStreakPopup(true)
                         }
-                        hangulStats.updateStats(true, false)
+                        hangulStats.updateStats()
                     }
                         } finally {
                             hangulGuessLock.current = false

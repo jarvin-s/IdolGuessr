@@ -17,15 +17,6 @@ import idolNames from '@/data/idolNames.json'
 
 const idolNamesSet = new Set(idolNames.map((name: string) => name.toUpperCase()))
 
-const CHALLENGE_STORAGE_KEY = 'idol-guessr-challenge-progress'
-
-interface ChallengeProgress {
-  challengeId: string
-  currentIndex: number
-  results: ChallengeIdolResult[]
-  currentGuesses: Array<'correct' | 'incorrect' | 'empty'>
-}
-
 export function useChallengeController(challengeId: string) {
   const [challenge, setChallenge] = useState<Challenge | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -59,11 +50,7 @@ export function useChallengeController(challengeId: string) {
   const totalIdols = challenge?.idol_count ?? 0
   const totalCorrect = results.filter((r) => r.correct).length
 
-  const saveProgress = useCallback((
-    _index: number,
-    _currentResults: ChallengeIdolResult[],
-    _currentGuessState: Array<'correct' | 'incorrect' | 'empty'>
-  ) => {
+  const saveProgress = useCallback(() => {
     // submit_challenge_guess stores the in-progress challenge.
   }, [])
 
@@ -153,9 +140,9 @@ export function useChallengeController(challengeId: string) {
       setGameWon(false)
       setGameLost(false)
       setIsAnimating(false)
-      saveProgress(nextIndex, results, ['empty', 'empty', 'empty', 'empty', 'empty', 'empty'])
+      saveProgress()
     }
-  }, [challenge, currentIndex, results, saveProgress, clearProgress])
+  }, [challenge, currentIndex, saveProgress, clearProgress])
 
   const recordResult = useCallback((correct: boolean, guessCount: number, guessAttempts: string[]) => {
     if (!currentIdol) return
@@ -169,10 +156,10 @@ export function useChallengeController(challengeId: string) {
 
     setResults((prev) => {
       const newResults = [...prev, result]
-      saveProgress(currentIndex, newResults, guesses)
+      saveProgress()
       return newResults
     })
-  }, [currentIdol, currentIndex, guesses, saveProgress])
+  }, [currentIdol, saveProgress])
 
   const markStarted = useCallback(async () => {
     const ok = await startChallengeAttempt(challengeId)
@@ -266,7 +253,7 @@ export function useChallengeController(challengeId: string) {
                   setTimeout(() => moveToNextIdol(), 2000)
                 }, 300)
               } else {
-                saveProgress(currentIndex, results, newGuesses)
+                saveProgress()
               }
 
               return newGuesses

@@ -682,7 +682,7 @@ export function useGameController() {
                         void trackUnlimitedGame(currentStreak, activeDifficulty, imageMode)
                         hasTrackedCurrentGame.current = true
                     }
-                    unlimitedStats.updateStats(false, true, true)
+                    unlimitedStats.updateStats()
                 }
                 lastStreakMilestoneRef.current = 0
             }
@@ -957,7 +957,7 @@ export function useGameController() {
                     const guessNumber = verdict.guessCount || guessLimit - remainingGuesses + 1
 
                     if (gameMode === 'daily') {
-                        saveGuessAttempt(normalizedGuess)
+                        saveGuessAttempt()
                     }
 
                     setIsAnimating(true)
@@ -1014,13 +1014,13 @@ export function useGameController() {
                                             )
                                             hasTrackedCurrentGame.current = true
                                         }
-                                        unlimitedStats.updateStats(false, true)
+                                        unlimitedStats.updateStats()
                                         lastStreakMilestoneRef.current = 0
                                         clearSeenIdols()
                                     }
                                 }, 300)
                             } else if (gameMode === 'daily') {
-                                saveProgress(newGuesses)
+                                saveProgress()
                             }
                         }, 500)
                     } else {
@@ -1050,7 +1050,7 @@ export function useGameController() {
                                 setStreakMilestone(newStreak)
                                 setShowStreakPopup(true)
                             }
-                            unlimitedStats.updateStats(true, false)
+                            unlimitedStats.updateStats()
                         }
                     }
                         } finally {
