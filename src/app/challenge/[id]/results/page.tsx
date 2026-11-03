@@ -13,11 +13,14 @@ import {
     type ChallengeResult,
 } from '@/lib/supabase'
 import { formatGenFilter } from '@/utils/genFilter'
+import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function ChallengeResultsPage() {
     const params = useParams()
     const router = useRouter()
+    const { isGuest, profile } = useAuth()
     const challengeId = params.id as string
+    const accountNickname = !isGuest ? profile?.nickname : null
 
     const [challenge, setChallenge] = useState<Challenge | null>(null)
     const [results, setResults] = useState<ChallengeResult[]>([])
@@ -185,6 +188,7 @@ export default function ChallengeResultsPage() {
                         challenge={challenge}
                         results={results}
                         currentSessionId={sessionId}
+                        currentNickname={accountNickname}
                     />
                 ) : (
                     <div className='rounded-lg bg-gray-100 p-8 text-center dark:bg-zinc-800'>

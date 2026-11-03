@@ -12,12 +12,24 @@ interface ChallengeResultsViewProps {
     challenge: Challenge
     results: ChallengeResult[]
     currentSessionId: string
+    currentNickname?: string | null
+}
+
+function playerName(
+    result: ChallengeResult,
+    index: number,
+    isMe: boolean,
+    currentNickname?: string | null
+) {
+    const savedName = isMe ? currentNickname?.trim() : null
+    return savedName || result.nickname || (isMe ? 'You' : `Player ${index + 1}`)
 }
 
 export default function ChallengeResultsView({
     challenge,
     results,
     currentSessionId,
+    currentNickname = null,
 }: ChallengeResultsViewProps) {
     const getIdolResult = (
         result: ChallengeResult,
@@ -34,9 +46,12 @@ export default function ChallengeResultsView({
                 <div className='space-y-2'>
                     {results.map((result, index) => {
                         const isMe = result.session_id === currentSessionId
-                        const displayName =
-                            result.nickname ||
-                            (isMe ? 'You' : `Player ${index + 1}`)
+                        const displayName = playerName(
+                            result,
+                            index,
+                            isMe,
+                            currentNickname
+                        )
 
                         return (
                             <div
@@ -57,7 +72,7 @@ export default function ChallengeResultsView({
                                         {displayName}
                                         {isMe && displayName !== 'You' && (
                                             <span className='ml-1 text-pink-600'>
-                                                (you)
+                                                (You)
                                             </span>
                                         )}
                                     </span>
@@ -130,11 +145,12 @@ export default function ChallengeResultsView({
                                         const isMe =
                                             result.session_id ===
                                             currentSessionId
-                                        const displayName =
-                                            result.nickname ||
-                                            (isMe
-                                                ? 'You'
-                                                : `Player ${playerIndex + 1}`)
+                                        const displayName = playerName(
+                                            result,
+                                            playerIndex,
+                                            isMe,
+                                            currentNickname
+                                        )
 
                                         if (!idolResult) return null
 
@@ -151,7 +167,7 @@ export default function ChallengeResultsView({
                                                         displayName !==
                                                             'You' && (
                                                             <span className='ml-1 text-xs text-pink-600'>
-                                                                (you)
+                                                                (You)
                                                             </span>
                                                         )}
                                                 </span>

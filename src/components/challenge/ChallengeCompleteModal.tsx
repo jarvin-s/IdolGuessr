@@ -7,6 +7,7 @@ interface ChallengeCompleteModalProps {
     totalCorrect: number
     totalIdols: number
     isSubmitting: boolean
+    accountNickname?: string | null
     onSubmit: (nickname: string | null) => void
 }
 
@@ -15,14 +16,16 @@ export default function ChallengeCompleteModal({
     totalCorrect,
     totalIdols,
     isSubmitting,
+    accountNickname = null,
     onSubmit,
 }: ChallengeCompleteModalProps) {
     const [nickname, setNickname] = useState('')
+    const savedNickname = accountNickname?.trim() || null
 
     if (!isOpen) return null
 
     const handleSubmit = () => {
-        onSubmit(nickname.trim() || null)
+        onSubmit(savedNickname || nickname.trim() || null)
     }
 
     return (
@@ -47,20 +50,26 @@ export default function ChallengeCompleteModal({
                     </div>
                 </div>
 
-                {/* Nickname input */}
-                <div className='mb-6'>
-                    <label className='mb-2 block  text-black dark:text-zinc-100'>
-                        Enter a name <span className='font-bold'> (optional)</span>
-                    </label>
-                    <input
-                        type='text'
-                        value={nickname}
-                        onChange={(e) => setNickname(e.target.value)}
-                        placeholder='Your name'
-                        maxLength={20}
-                        className='w-full border border-gray-300 dark:border-zinc-600 px-4 py-2 focus:border-pink-600 focus:ring-2 focus:ring-pink-200 focus:outline-none dark:bg-zinc-800'
-                    />
-                </div>
+                {savedNickname ? (
+                    <p className='mb-6 text-center text-black dark:text-zinc-100'>
+                        You&apos;ll show up as{' '}
+                        <span className='font-bold'>{savedNickname}</span>
+                    </p>
+                ) : (
+                    <div className='mb-6'>
+                        <label className='mb-2 block  text-black dark:text-zinc-100'>
+                            Enter a name <span className='font-bold'> (optional)</span>
+                        </label>
+                        <input
+                            type='text'
+                            value={nickname}
+                            onChange={(e) => setNickname(e.target.value)}
+                            placeholder='Your name'
+                            maxLength={20}
+                            className='w-full border border-gray-300 dark:border-zinc-600 px-4 py-2 focus:border-pink-600 focus:ring-2 focus:ring-pink-200 focus:outline-none dark:bg-zinc-800'
+                        />
+                    </div>
+                )}
 
                 {/* Submit button */}
                 <button

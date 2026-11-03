@@ -15,11 +15,14 @@ import ChallengeProgress from '@/components/challenge/ChallengeProgress'
 import ChallengeCompleteModal from '@/components/challenge/ChallengeCompleteModal'
 import ChallengeIntroModal from '@/components/challenge/ChallengeIntroModal'
 import { useChallengeController } from '@/hooks/useChallengeController'
+import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function ChallengePlayPage() {
     const params = useParams()
     const router = useRouter()
+    const { isGuest, profile } = useAuth()
     const challengeId = params.id as string
+    const accountNickname = !isGuest ? profile?.nickname : null
 
     const {
         challenge,
@@ -256,6 +259,7 @@ export default function ChallengePlayPage() {
                 totalCorrect={totalCorrect}
                 totalIdols={totalIdols}
                 isSubmitting={isSubmitting}
+                accountNickname={accountNickname}
                 onSubmit={handleSubmitResults}
             />
         </div>
