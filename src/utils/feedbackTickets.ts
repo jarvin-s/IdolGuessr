@@ -1,4 +1,4 @@
-import type { FeedbackTicket } from '@/lib/supabase'
+import { claimFeedbackTickets, type FeedbackTicket } from '@/lib/supabase'
 import { getProfile } from '@/lib/player'
 
 const STORAGE_KEY = 'idol-guessr-feedback-tickets'
@@ -34,15 +34,51 @@ export function rememberTicket(id: string, token: string): void {
     })
 }
 
+function writeBrowserTickets(tickets: StoredTicket[]): void {
+    if (typeof window === 'undefined') return
+    if (tickets.length === 0) {
+        localStorage.removeItem(STORAGE_KEY)
+        return
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets))
+}
+
 export function getStoredTickets(): StoredTicket[] {
-    if (memory.size > 0) return [...memory.values()]
-    const legacy = readLegacyTickets()
-    legacy.forEach((ticket) => memory.set(ticket.id, ticket))
+    for (const ticket of readLegacyTickets()) {
+        if (!memory.has(ticket.id)) memory.set(ticket.id, ticket)
+    }
     return [...memory.values()]
 }
 
 export function addStoredTicket(id: string, token: string): void {
     rememberTicket(id, token)
+    const next = readLegacyTickets().filter((ticket) => ticket.id !== id)
+    next.push({
+        id,
+        token,
+        lastSeenAdminAt: memory.get(id)?.lastSeenAdminAt ?? null,
+    })
+    writeBrowserTickets(next)
+}
+
+function removeBrowserTickets(ids: Set<string>): void {
+    if (ids.size === 0) return
+    writeBrowserTickets(readLegacyTickets().filter((ticket) => !ids.has(ticket.id)))
+}
+
+export async function claimAccountFeedbackTickets(): Promise<void> {
+    const profile = getProfile()
+    if (!profile || profile.is_anonymous) return
+    const stored = readLegacyTickets()
+    if (stored.length === 0) return
+    try {
+        const claimed = await claimFeedbackTickets(
+            stored.map(({ id, token }) => ({ id, token }))
+        )
+        removeBrowserTickets(new Set(claimed))
+    } catch (err) {
+        console.error('claim_feedback_tickets', err)
+    }
 }
 
 export function getTicketToken(id: string): string | null {

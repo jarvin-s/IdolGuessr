@@ -244,6 +244,29 @@ export async function getMultipleRandomUnlimitedImages(
     return bind ? rows : rows.slice(0, count)
 }
 
+function parseJson(value: unknown): unknown {
+    if (typeof value !== 'string') return value
+    try {
+        return JSON.parse(value)
+    } catch {
+        return null
+    }
+}
+
+export async function claimFeedbackTickets(
+    tickets: { id: string; token: string }[]
+): Promise<string[]> {
+    if (tickets.length === 0) return []
+    const { data, error } = await supabase.rpc('claim_feedback_tickets', {
+        p_tickets: tickets,
+    })
+    if (error) throw error
+    const rows = parseJson(data)
+    return Array.isArray(rows)
+        ? rows.filter((id): id is string => typeof id === 'string')
+        : []
+}
+
 export async function createFeedbackTicket(
     category: TicketCategory,
     message: string
@@ -265,8 +288,9 @@ export async function getMyFeedbackTickets(
     const { data: listed, error: listError } = await supabase.rpc(
         'list_my_feedback_tickets'
     )
-    if (!listError && Array.isArray(listed)) {
-        for (const row of listed as FeedbackTicket[]) byId.set(row.id, row)
+    const listedRows = parseJson(listed)
+    if (!listError && Array.isArray(listedRows)) {
+        for (const row of listedRows as FeedbackTicket[]) byId.set(row.id, row)
     }
     const missing = tickets.filter((ticket) => !byId.has(ticket.id))
     if (missing.length > 0) {

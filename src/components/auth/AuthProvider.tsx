@@ -17,6 +17,7 @@ import {
     subscribePlayer,
     type PlayerProfile,
 } from '@/lib/player'
+import { claimAccountFeedbackTickets } from '@/utils/feedbackTickets'
 
 interface AuthContextValue {
     ready: boolean
@@ -61,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setAccountId(user?.id ?? null)
             await refreshOverview()
             await importLegacyProgress()
+            await claimAccountFeedbackTickets()
             if (!cancelled) {
                 setProfile(getProfile())
                 setReady(true)

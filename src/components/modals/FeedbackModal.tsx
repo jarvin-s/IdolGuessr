@@ -9,6 +9,7 @@ import {
     type FeedbackTicket,
 } from '@/lib/supabase'
 import {
+    claimAccountFeedbackTickets,
     getStoredTickets,
     getTicketToken,
     hasUnread,
@@ -16,6 +17,7 @@ import {
     rememberTicket,
     type StoredTicket,
 } from '@/utils/feedbackTickets'
+import { useAuth } from '@/components/auth/AuthProvider'
 import { getProfile, savePlayerSettings } from '@/lib/player'
 import { useTicketLiveUpdates } from '@/hooks/useTicketLiveUpdates'
 import NewTicketForm from '@/components/feedback/NewTicketForm'
@@ -51,6 +53,7 @@ export default function FeedbackModal({
     onClose,
     onBack,
 }: FeedbackModalProps) {
+    const { isGuest } = useAuth()
     const [view, setView] = useState<View>('new')
     const [tickets, setTickets] = useState<FeedbackTicket[]>([])
     const [ticketsLoading, setTicketsLoading] = useState(false)
@@ -64,6 +67,7 @@ export default function FeedbackModal({
     threadRef.current = thread
 
     const loadTickets = useCallback(async () => {
+        await claimAccountFeedbackTickets()
         const stored = getStoredTickets()
         setStoredTickets(stored)
         setTicketsLoading(true)
@@ -252,7 +256,9 @@ export default function FeedbackModal({
                             Your feedback has been submitted successfully.
                         </p>
                         <p className='mt-1 text-sm text-gray-600 dark:text-zinc-400'>
-                            You can follow replies under My tickets.
+                            {isGuest
+                                ? 'You can follow replies under My tickets.'
+                                : "It's saved to your account. You can follow replies under My tickets."}
                         </p>
                         <button
                             onClick={() => {

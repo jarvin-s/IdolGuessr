@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import localFont from 'next/font/local'
+import { useAuth } from '@/components/auth/AuthProvider'
 import { createFeedbackTicket, type TicketCategory } from '@/lib/supabase'
-import { addStoredTicket } from '@/utils/feedbackTickets'
+import { addStoredTicket, rememberTicket } from '@/utils/feedbackTickets'
 import { CATEGORY_LABELS } from './ticketUi'
 
 const proximaNovaBold = localFont({
@@ -15,6 +16,7 @@ interface NewTicketFormProps {
 }
 
 export default function NewTicketForm({ onCreated }: NewTicketFormProps) {
+    const { isGuest } = useAuth()
     const [category, setCategory] = useState<TicketCategory>('general')
     const [message, setMessage] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -31,7 +33,8 @@ export default function NewTicketForm({ onCreated }: NewTicketFormProps) {
                 category,
                 trimmed
             )
-            addStoredTicket(id, access_token)
+            if (isGuest) addStoredTicket(id, access_token)
+            else rememberTicket(id, access_token)
             setMessage('')
             setCategory('general')
             onCreated(id)
@@ -100,8 +103,9 @@ export default function NewTicketForm({ onCreated }: NewTicketFormProps) {
             </button>
 
             <p className='text-center text-sm text-gray-500 dark:text-zinc-400'>
-                Tickets are saved in this browser. Clearing your site data will
-                remove access to them.
+                {isGuest
+                    ? 'Tickets are saved in this browser. Clearing your site data will remove access to them.'
+                    : 'This ticket is saved to your account.'}
             </p>
         </form>
     )
