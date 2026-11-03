@@ -123,11 +123,11 @@ export default function Home() {
         streakMilestone,
         setShowStreakPopup,
         showGameOver,
+        lostStreak,
         handlePlayAgain,
         handleSkip,
         loadNextUnlimited,
         unlimitedCurrentStreak,
-        unlimitedMaxStreak,
     } = useGameController()
 
     const [inputMode, , inputModeReady] = useInputMode()
@@ -506,7 +506,7 @@ export default function Home() {
                                 setShowStreakPopup(false)
                             }
                             showGameOver={showGameOver}
-                            highestStreak={unlimitedMaxStreak}
+                            highestStreak={lostStreak}
                             onPlayAgain={handlePlayAgain}
                             guesses={isInHistoryMode ? historyGuesses : guesses}
                         />

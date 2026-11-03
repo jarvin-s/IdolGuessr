@@ -15,7 +15,14 @@ import WinModal from '@/components/modals/WinModal'
 import InfiniteStartModal from '@/components/modals/InfiniteStartModal'
 import FilterModal from '@/components/filters/FilterModal'
 import { useGameController } from '@/hooks/useGameController'
-import { flushPlayerSettingsNow, getProfile, getUnlimitedGame, savePlayerSettings } from '@/lib/player'
+import {
+    clearRunEnded,
+    flushPlayerSettingsNow,
+    getProfile,
+    getUnlimitedGame,
+    runAwaitingPlayAgain,
+    savePlayerSettings,
+} from '@/lib/player'
 import { getImageUrl } from '@/lib/supabase'
 import IdolTextInput from '@/components/input/IdolTextInput'
 import { useInputMode } from '@/utils/inputMode'
@@ -37,9 +44,7 @@ type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 export default function InfinitePage() {
     const router = useRouter()
     const startingRef = useRef(false)
-    const [startOpen, setStartOpen] = useState(
-        () => !getUnlimitedGame(loadSavedDifficulty(), loadSavedImageMode())
-    )
+    const [startOpen, setStartOpen] = useState(false)
     const [showFilterModal, setShowFilterModal] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
     const [inputMode, , inputModeReady] = useInputMode()
@@ -87,11 +92,11 @@ export default function InfinitePage() {
         streakMilestone,
         setShowStreakPopup,
         showGameOver,
+        lostStreak,
         handlePlayAgain,
         handleSkip,
         loadNextUnlimited,
         unlimitedCurrentStreak,
-        unlimitedMaxStreak,
         guesses,
     } = useGameController()
 
@@ -104,6 +109,7 @@ export default function InfinitePage() {
         if (startingRef.current) return
         startingRef.current = true
         try {
+            clearRunEnded('infinite', difficulty, selectedImageMode)
             void savePlayerSettings({
                 group_filter: groupFilter,
                 gen_filter: genFilter,
@@ -128,6 +134,11 @@ export default function InfinitePage() {
         const savedDifficulty = loadSavedDifficulty()
         const savedImageMode = loadSavedImageMode()
         setImageMode(savedImageMode)
+
+        if (runAwaitingPlayAgain('infinite', savedDifficulty, savedImageMode)) {
+            setStartOpen(false)
+            return
+        }
 
         const inProgress = getUnlimitedGame(savedDifficulty, savedImageMode)
         if (!inProgress) {
@@ -214,7 +225,7 @@ export default function InfinitePage() {
                                 setShowStreakPopup(false)
                             }
                             showGameOver={showGameOver}
-                            highestStreak={unlimitedMaxStreak}
+                            highestStreak={lostStreak}
                             onPlayAgain={() => setShowFilterModal(true)}
                             guesses={guesses}
                         />

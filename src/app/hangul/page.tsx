@@ -15,7 +15,7 @@ import WinModal from '@/components/modals/WinModal'
 import HangulStartModal from '@/components/modals/HangulStartModal'
 import HangulFilterModal from '@/components/filters/HangulFilterModal'
 import { useHangulGameController } from '@/hooks/useHangulGameController'
-import { getHangulGame } from '@/lib/player'
+import { getHangulGame, runAwaitingPlayAgain } from '@/lib/player'
 import { getImageUrl } from '@/lib/supabase'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
@@ -23,7 +23,7 @@ type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 export default function HangulPage() {
     const router = useRouter()
     const startingRef = useRef(false)
-    const [startOpen, setStartOpen] = useState(() => !getHangulGame())
+    const [startOpen, setStartOpen] = useState(false)
     const [showFilterModal, setShowFilterModal] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
     const {
@@ -78,6 +78,10 @@ export default function HangulPage() {
     }
 
     useEffect(() => {
+        if (runAwaitingPlayAgain('hangul')) {
+            setStartOpen(false)
+            return
+        }
         setStartOpen(!getHangulGame())
     }, [])
 

@@ -258,6 +258,7 @@ function playableIdol(idol: ActiveGame['idol'] | undefined) {
 }
 
 function issuedResume(game: ActiveGame): { idol: NonNullable<ActiveGame['idol']>; cursor: number } | null {
+    if (game.last_outcome === 'lost') return null
     const queue = game.queue ?? []
     let cursor = game.queue_index ?? 0
     let idol = playableIdol(game.idol) ? game.idol : null
@@ -429,6 +430,60 @@ function focusSlot(pool: string, difficulty: string, imageMode: string) {
     return `${pool}\0${difficulty}\0${imageMode}`
 }
 
+function endedRunKey(mode: 'infinite' | 'hangul', difficulty = '', imageMode = '') {
+    return mode === 'hangul'
+        ? 'idol-guessr-ended:hangul'
+        : `idol-guessr-ended:infinite:${difficulty}:${imageMode}`
+}
+
+export function markRunEnded(
+    mode: 'infinite' | 'hangul',
+    difficulty = '',
+    imageMode = '',
+    streak = 0,
+) {
+    if (typeof window === 'undefined') return
+    const ended = Math.max(0, Math.floor(streak))
+    window.localStorage.setItem(endedRunKey(mode, difficulty, imageMode), `s:${ended}`)
+}
+
+export function clearRunEnded(mode: 'infinite' | 'hangul', difficulty = '', imageMode = '') {
+    if (typeof window === 'undefined') return
+    window.localStorage.removeItem(endedRunKey(mode, difficulty, imageMode))
+}
+
+export function endedRunStreak(mode: 'infinite' | 'hangul', difficulty = '', imageMode = '') {
+    if (typeof window === 'undefined') return 0
+    const raw = window.localStorage.getItem(endedRunKey(mode, difficulty, imageMode))
+    if (!raw?.startsWith('s:')) return 0
+    const value = Number(raw.slice(2))
+    return Number.isFinite(value) ? value : 0
+}
+
+function runEndedLocally(mode: 'infinite' | 'hangul', difficulty = '', imageMode = '') {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem(endedRunKey(mode, difficulty, imageMode)) != null
+}
+
+export function runAwaitingPlayAgain(
+    mode: 'infinite' | 'hangul',
+    difficulty = '',
+    imageMode = '',
+) {
+    if (runEndedLocally(mode, difficulty, imageMode)) return true
+    if (mode === 'hangul') {
+        return overview?.active_games.find((row) => row.mode === 'hangul')?.last_outcome === 'lost'
+    }
+    return (
+        overview?.active_games.find(
+            (row) =>
+                row.mode === 'infinite' &&
+                row.difficulty === difficulty &&
+                row.image_mode === imageMode,
+        )?.last_outcome === 'lost'
+    )
+}
+
 export async function focusIssuedIdol(
     pool: 'unlimited' | 'hangul',
     imgBucket: string,
@@ -436,6 +491,8 @@ export async function focusIssuedIdol(
     imageMode = '',
 ) {
     if (!imgBucket) return
+    const mode = pool === 'hangul' ? 'hangul' : 'infinite'
+    if (runEndedLocally(mode, difficulty, imageMode)) return
     const slot = focusSlot(pool, difficulty, imageMode)
     if (focusedIssued.get(slot) === imgBucket) return
     focusedIssued.set(slot, imgBucket)
@@ -447,6 +504,7 @@ export async function focusIssuedIdol(
     })
     if (!error || String(error.message).includes('round_in_progress')) return
     if (focusedIssued.get(slot) === imgBucket) focusedIssued.delete(slot)
+    if (String(error.message).includes('round_finished')) return
     console.error('focus_issued_idol', error)
 }
 
@@ -458,6 +516,10 @@ export async function judgeRoundGuess(input: {
     difficulty?: string
     imageMode?: string
 }): Promise<GuessVerdict | null> {
+    const modeForStreak = input.pool === 'hangul' ? 'hangul' : 'infinite'
+    const difficultyForStreak = input.pool === 'hangul' ? '' : input.difficulty ?? 'normal'
+    const imageModeForStreak = input.pool === 'hangul' ? '' : input.imageMode ?? 'pixelated'
+    const streakBefore = findStreak(modeForStreak, difficultyForStreak, imageModeForStreak)?.current_streak ?? 0
     const focusKey = input.imgBucket || (input.idolId && input.idolId > 0 ? String(input.idolId) : '')
     if (focusKey) {
         await focusIssuedIdol(input.pool, focusKey, input.difficulty, input.imageMode)
@@ -478,6 +540,9 @@ export async function judgeRoundGuess(input: {
     const difficulty = input.pool === 'hangul' ? '' : input.difficulty ?? 'normal'
     const imageMode = input.pool === 'hangul' ? '' : input.imageMode ?? 'pixelated'
     const verdict = mapVerdict(data as Record<string, unknown>, mode, difficulty, imageMode)
+    if (verdict.status === 'lost') {
+        markRunEnded(mode, difficulty, imageMode, streakBefore)
+    }
     if (verdict.status === 'won' || verdict.status === 'lost') {
         await releaseRound(input.pool, difficulty, imageMode)
     }

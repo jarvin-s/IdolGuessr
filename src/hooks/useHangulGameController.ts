@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { consumeRoundSkip, flushPlayerSettingsNow, getHangulGame, getProfile, judgeRoundGuess, savePlayerSettings, takeHangulImages } from '@/lib/player'
+import { clearRunEnded, consumeRoundSkip, endedRunStreak, flushPlayerSettingsNow, getHangulGame, getProfile, judgeRoundGuess, runAwaitingPlayAgain, savePlayerSettings, takeHangulImages } from '@/lib/player'
 import {
     type HangulImage,
     getHangulImageUrl,
@@ -419,6 +419,7 @@ export function useHangulGameController() {
     const handlePlayAgain = useCallback(
         (overrideGroupFilter?: GroupFilter) => {
             setShowGameOver(false)
+            clearRunEnded('hangul')
             lossRecordedRef.current = false
             hasTrackedCurrentGame.current = false
             hangulStats.clearGameState()
@@ -490,7 +491,9 @@ export function useHangulGameController() {
                                 const remainingAfterThis = newGuesses.filter((g) => g === 'empty').length
                                 if (remainingAfterThis === 0) {
                                     setTimeout(() => {
-                                        const streakBeforeReset = hangulStats.stats.currentStreak
+                                        const streakBeforeReset =
+                                            endedRunStreak('hangul') ||
+                                            hangulStats.stats.currentStreak
                                         setFinalStreak(streakBeforeReset)
                                         setGameLost(true)
                                         if (!lossRecordedRef.current) {
@@ -605,6 +608,14 @@ export function useHangulGameController() {
                 : undefined
         if (resumedFilter) setGroupFilter(resumedFilter)
 
+        if (runAwaitingPlayAgain('hangul')) {
+            setIsLoading(false)
+            setFinalStreak(endedRunStreak('hangul'))
+            setGameLost(true)
+            setShowGameOver(true)
+            return
+        }
+
         if (!getHangulGame()) {
             setIsLoading(false)
             return
@@ -661,7 +672,14 @@ export function useHangulGameController() {
             !justLoadedGuessesRef.current
         ) {
             const allEmpty = guesses.every((g) => g === 'empty')
-            if (allEmpty || issuedFocusBucketRef.current === hangulImage.img_bucket) {
+            const lostRound =
+                guesses.length > 0 && guesses.every((g) => g === 'incorrect')
+            if (
+                allEmpty ||
+                lostRound ||
+                runAwaitingPlayAgain('hangul') ||
+                issuedFocusBucketRef.current === hangulImage.img_bucket
+            ) {
                 return
             }
             issuedFocusBucketRef.current = hangulImage.img_bucket
@@ -710,6 +728,7 @@ export function useHangulGameController() {
     ])
 
     const handleStart = useCallback((filter: GroupFilter) => {
+        clearRunEnded('hangul')
         setGroupFilter(filter)
         void savePlayerSettings({ hangul_group_filter: filter })
         return (async () => {

@@ -3,11 +3,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import {
+    clearRunEnded,
     consumeRoundHint,
     consumeRoundSkip,
+    endedRunStreak,
     getProfile,
     judgeDailyGuess,
     judgeRoundGuess,
+    runAwaitingPlayAgain,
     savePlayerSettings,
     takeUnlimitedImages,
 } from '@/lib/player'
@@ -26,6 +29,7 @@ import {
     emptyGuesses,
     getDifficultyConfig,
     saveDifficulty,
+    loadSavedDifficulty,
     loadSavedImageMode,
     saveImageMode,
     type ImageMode,
@@ -75,6 +79,7 @@ export function useGameController() {
     const [streakMilestone, setStreakMilestone] = useState(0)
     const lastStreakMilestoneRef = useRef(0)
     const [showGameOver, setShowGameOver] = useState(false)
+    const [lostStreak, setLostStreak] = useState(0)
     const isSwitchingModeRef = useRef(false)
     const [difficulty, setDifficulty] = useState<InfiniteDifficulty>('normal')
     const [imageMode, setImageModeState] = useState<ImageMode>('pixelated')
@@ -851,11 +856,14 @@ export function useGameController() {
         ) => {
             if (overrideImageMode) setImageMode(overrideImageMode)
             setShowGameOver(false)
+            setLostStreak(0)
+            clearRunEnded('infinite', difficulty, imageMode)
             const nextDifficulty = overrideDifficulty ?? difficulty
             const nextConfig = getDifficultyConfig(nextDifficulty)
             const nextImageMode = overrideImageMode ?? imageMode
             unlimitedStats.clearGameState(difficulty)
             if (nextDifficulty !== difficulty || nextImageMode !== imageMode) {
+                clearRunEnded('infinite', nextDifficulty, nextImageMode)
                 unlimitedStats.clearGameState(nextDifficulty, nextImageMode)
             }
             if (nextDifficulty !== difficulty) {
@@ -992,7 +1000,9 @@ export function useGameController() {
                                         }, 2000)
                                     } else {
                                         const currentStreak =
+                                            endedRunStreak('infinite', difficulty, imageMode) ||
                                             unlimitedStats.stats.currentStreak
+                                        setLostStreak(currentStreak)
                                         if (
                                             currentStreak >= 1 &&
                                             !hasTrackedCurrentGame.current
@@ -1146,6 +1156,17 @@ export function useGameController() {
 
         if (pathname === '/infinite') {
             loadGenFilter()
+            const savedDifficulty = loadSavedDifficulty()
+            const savedImageMode = loadSavedImageMode()
+            if (runAwaitingPlayAgain('infinite', savedDifficulty, savedImageMode)) {
+                setGameMode('unlimited')
+                setDifficulty(savedDifficulty)
+                setImageMode(savedImageMode)
+                setLostStreak(endedRunStreak('infinite', savedDifficulty, savedImageMode))
+                setGameLost(true)
+                setShowGameOver(true)
+                setIsLoading(false)
+            }
             return
         }
 
@@ -1155,7 +1176,7 @@ export function useGameController() {
             hasLoadedInitialRef.current = true
         }
         loadGenFilter()
-    }, [pathname])
+    }, [pathname, setGameLost, setImageMode])
 
     useEffect(() => {
         // Don't auto-load on infinite page - let the page handle it via handleGameModeChange
@@ -1390,7 +1411,14 @@ export function useGameController() {
             !justLoadedGuessesRef.current
         ) {
             const allEmpty = guesses.every((g) => g === 'empty')
-            if (allEmpty || issuedFocusBucketRef.current === dailyImage.img_bucket) {
+            const lostRound =
+                guesses.length > 0 && guesses.every((g) => g === 'incorrect')
+            if (
+                allEmpty ||
+                lostRound ||
+                runAwaitingPlayAgain('infinite', difficulty, imageMode) ||
+                issuedFocusBucketRef.current === dailyImage.img_bucket
+            ) {
                 return
             }
             issuedFocusBucketRef.current = dailyImage.img_bucket
@@ -1443,6 +1471,7 @@ export function useGameController() {
         prefetchedImages,
         currentImageIndex,
         unlimitedStats,
+        imageMode,
     ])
 
     return {
@@ -1508,6 +1537,7 @@ export function useGameController() {
         setShowStreakPopup,
         setStreakMilestone,
         showGameOver,
+        lostStreak,
         handlePlayAgain,
         handleSkip,
         loadNextUnlimited,
