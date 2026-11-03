@@ -101,6 +101,7 @@ export interface HangulGameState {
     encodedIdolName: string
     encodedAltName?: string
     hangulName: string
+    idolId?: number
     groupName?: string
     imageRevealed?: boolean
     skipsRemaining?: number
@@ -299,8 +300,9 @@ export function useHangulStats() {
     }, [])
 
     const saveGameState = useCallback((gameState: HangulGameState) => {
-        if (!gameState.imgBucket) return
-        void focusIssuedIdol('hangul', gameState.imgBucket)
+        const key = gameState.imgBucket || (gameState.idolId && gameState.idolId > 0 ? String(gameState.idolId) : '')
+        if (!key) return
+        void focusIssuedIdol('hangul', key)
     }, [])
 
     const loadGameState = useCallback((): HangulGameState | null => {

@@ -325,6 +325,7 @@ export function getHangulGame(): HangulGameState | null {
     return {
         groupType: idol.group_type ?? '',
         imgBucket: idol.img_bucket ?? '',
+        idolId: idol.id,
         groupCategory: idol.group_category,
         base64Group: idol.base64_group,
         base64Idol: idol.base64_idol,
@@ -453,11 +454,13 @@ export async function judgeRoundGuess(input: {
     pool: 'unlimited' | 'hangul'
     guess: string
     imgBucket?: string
+    idolId?: number
     difficulty?: string
     imageMode?: string
 }): Promise<GuessVerdict | null> {
-    if (input.imgBucket) {
-        await focusIssuedIdol(input.pool, input.imgBucket, input.difficulty, input.imageMode)
+    const focusKey = input.imgBucket || (input.idolId && input.idolId > 0 ? String(input.idolId) : '')
+    if (focusKey) {
+        await focusIssuedIdol(input.pool, focusKey, input.difficulty, input.imageMode)
     }
     const { data, error } =
         input.pool === 'hangul'

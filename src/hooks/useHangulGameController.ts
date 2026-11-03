@@ -124,7 +124,7 @@ export function useHangulGameController() {
                     : undefined
 
                 const savedImage: HangulImage = {
-                    id: 0,
+                    id: savedGameState.idolId && savedGameState.idolId > 0 ? savedGameState.idolId : 0,
                     name: decodedName,
                     alt_name: decodedAltName,
                     hangul_name: savedGameState.hangulName,
@@ -313,6 +313,7 @@ export function useHangulGameController() {
                 encodedIdolName: encodeIdolName(row.name || ''),
                 encodedAltName: row.alt_name ? encodeIdolName(row.alt_name) : undefined,
                 hangulName: row.hangul_name,
+                idolId: row.id,
                 groupName: row.group_name,
                 imageRevealed: finalImageRevealed,
                 skipsRemaining: finalSkipsRemaining,
@@ -465,6 +466,7 @@ export function useHangulGameController() {
                         pool: 'hangul',
                         guess: normalizedGuess,
                         imgBucket: hangulImage?.img_bucket,
+                        idolId: hangulImage?.id,
                     })
                     if (!verdict) return
                     const isCorrect = verdict.correct
@@ -676,6 +678,7 @@ export function useHangulGameController() {
                     ? encodeIdolName(hangulImage.alt_name)
                     : undefined,
                 hangulName: hangulImage.hangul_name,
+                idolId: hangulImage.id,
                 groupName: hangulImage.group_name,
                 imageRevealed: imageRevealed,
                 skipsRemaining: skipsRemaining,
