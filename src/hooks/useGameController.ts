@@ -1005,7 +1005,6 @@ export function useGameController() {
                                             hasTrackedCurrentGame.current = true
                                         }
                                         unlimitedStats.updateStats(false, true)
-                                        unlimitedStats.clearGameState()
                                         lastStreakMilestoneRef.current = 0
                                         clearSeenIdols()
                                     }
@@ -1042,7 +1041,6 @@ export function useGameController() {
                                 setShowStreakPopup(true)
                             }
                             unlimitedStats.updateStats(true, false)
-                            unlimitedStats.clearGameState()
                         }
                     }
                         } finally {

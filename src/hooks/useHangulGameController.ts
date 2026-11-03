@@ -501,7 +501,6 @@ export function useHangulGameController() {
                                             }
                                             hangulStats.updateStats(false, true)
                                         }
-                                        hangulStats.clearGameState()
                                         lastStreakMilestoneRef.current = 0
                                         clearSeenHangulIdols()
                                     }, 300)
@@ -529,7 +528,6 @@ export function useHangulGameController() {
                             setShowStreakPopup(true)
                         }
                         hangulStats.updateStats(true, false)
-                        hangulStats.clearGameState()
                     }
                         } finally {
                             hangulGuessLock.current = false
