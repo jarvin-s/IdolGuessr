@@ -91,6 +91,13 @@ export default function RootLayout({
                         gtag('config', 'G-6V9ZCS0XZP');
                     `}
                 </Script>
+               <Script
+                    src='//scripts.mediavine.com/tags/02f25e0b-b180-4f3e-88d5-9ffba965602c.js'
+                    strategy='beforeInteractive'
+                    async
+                    data-noptimize='1'
+                    data-cfasync='false'
+                />
             </body>
         </html>
     )
