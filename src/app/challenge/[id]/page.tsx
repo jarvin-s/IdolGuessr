@@ -140,7 +140,6 @@ export default function ChallengePlayPage() {
                 <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:dark:border-zinc-700 sm:shadow-lg'>
                     <GameHeader
                         timer={`${currentIndex + 1}/${totalIdols}`}
-                        onShowStats={() => {}}
                         onShowAccount={() => setShowAccount(true)}
                         onShowInfo={() => setShowInfo(true)}
                         gameMode={'unlimited'}

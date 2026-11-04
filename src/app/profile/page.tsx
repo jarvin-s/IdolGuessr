@@ -11,6 +11,7 @@ import {
     type ImageMode,
     type InfiniteDifficulty,
 } from '@/utils/difficulty'
+import Image from 'next/image'
 
 const MODES = [
     { mode: 'daily', label: 'Daily' },
@@ -87,7 +88,7 @@ export default function ProfilePage() {
         <main className='mx-auto min-h-screen max-w-lg px-4 py-10'>
             <Link
                 href='/'
-                className='inline-flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full bg-gray-100 px-3 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                className='inline-flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full bg-gray-200 px-3 transition-colors hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                 aria-label='Back to the game'
             >
                 <svg
@@ -174,10 +175,10 @@ export default function ProfilePage() {
                         key={item.mode}
                         type='button'
                         onClick={() => setMode(item.mode)}
-                        className={`flex-1 cursor-pointer rounded-full py-1.5 text-sm ${
+                        className={`flex-1 cursor-pointer rounded-full py-1.5 text-sm transition-colors ${
                             mode === item.mode
                                 ? 'bg-white font-medium dark:bg-zinc-900'
-                                : ''
+                                : 'hover:bg-gray-200 dark:hover:bg-zinc-700'
                         }`}
                     >
                         {item.label}
@@ -260,16 +261,33 @@ export default function ProfilePage() {
                     </ul>
                 </div>
             ) : null}
-            <div className='mt-8 flex gap-4'>
-                <Link href='/leaderboard' className='text-sm underline'>
+            <div className='mt-8 flex gap-2'>
+                <Link
+                    href='/leaderboard'
+                    className='inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
+                >
+                    <Image
+                        src='/icons/stats.svg'
+                        alt='Leaderboard'
+                        width={16}
+                        height={16}
+                        className='dark:invert'
+                    />
                     Leaderboard
                 </Link>
                 {!isGuest ? (
                     <button
                         type='button'
                         onClick={() => void signOut()}
-                        className='text-sm underline'
+                        className='inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                     >
+                        <Image
+                            src='/icons/logout.svg'
+                            alt='Sign out'
+                            width={16}
+                            height={16}
+                            className='h-4 w-4 dark:invert'
+                        />
                         Sign out
                     </button>
                 ) : null}

@@ -170,7 +170,6 @@ export default function InfinitePage() {
             <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:dark:border-zinc-700 sm:shadow-lg'>
                 <GameHeader
                     timer={timer}
-                    onShowStats={() => setShowStats(true)}
                     onShowAccount={() => setShowAccount(true)}
                     onShowInfo={() => setShowInfo(true)}
                     gameMode={'unlimited'}

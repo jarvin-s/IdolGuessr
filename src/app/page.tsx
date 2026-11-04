@@ -417,7 +417,6 @@ export default function Home() {
                 ) : (
                     <GameHeader
                         timer={timer}
-                        onShowStats={() => setShowStats(true)}
                         onShowAccount={() => setShowAccount(true)}
                         onShowInfo={() => setShowInfo(true)}
                         gameMode={gameMode}

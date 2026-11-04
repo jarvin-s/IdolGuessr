@@ -21,6 +21,14 @@ type Tab = (typeof TABS)[number]['id']
 
 const IMAGE_MODES: ImageMode[] = ['pixelated', 'zoom']
 
+function segmentClass(selected: boolean) {
+    return `flex-1 cursor-pointer rounded-full py-1.5 text-sm transition-colors ${
+        selected
+            ? 'bg-white font-medium dark:bg-zinc-900'
+            : 'hover:bg-gray-200 dark:hover:bg-zinc-700'
+    }`
+}
+
 function OptionGroup({
     label,
     children,
@@ -91,9 +99,25 @@ export default function LeaderboardPage() {
         <main className='mx-auto min-h-screen max-w-lg px-4 py-10'>
             <Link
                 href='/'
-                className='text-sm text-gray-500 underline dark:text-zinc-400'
+                className='inline-flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full bg-gray-200 px-3 transition-colors hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                aria-label='Back to the game'
             >
-                Back to the game
+                <svg
+                    className='h-4 w-4 text-gray-600 dark:text-zinc-400'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                >
+                    <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M10 19l-7-7m0 0l7-7m-7 7h18'
+                    />
+                </svg>
+                <span className='text-sm text-gray-600 dark:text-zinc-400'>
+                    Back to the game
+                </span>
             </Link>
             <h1 className='mt-4 text-3xl font-bold uppercase'>Leaderboard</h1>
             <p className='mt-2 text-sm text-gray-500 dark:text-zinc-400'>
@@ -108,11 +132,7 @@ export default function LeaderboardPage() {
                                 key={item.id}
                                 type='button'
                                 onClick={() => setTab(item.id)}
-                                className={`flex-1 cursor-pointer rounded-full py-1.5 text-sm ${
-                                    tab === item.id
-                                        ? 'bg-white font-medium dark:bg-zinc-900'
-                                        : ''
-                                }`}
+                                className={segmentClass(tab === item.id)}
                             >
                                 {item.label}
                             </button>
@@ -128,11 +148,9 @@ export default function LeaderboardPage() {
                                         key={option}
                                         type='button'
                                         onClick={() => setDifficulty(option)}
-                                        className={`flex-1 cursor-pointer rounded-full py-1.5 text-sm ${
+                                        className={segmentClass(
                                             difficulty === option
-                                                ? 'bg-white font-medium dark:bg-zinc-900'
-                                                : ''
-                                        }`}
+                                        )}
                                     >
                                         {DIFFICULTY_LABELS[option]}
                                     </button>
@@ -146,11 +164,9 @@ export default function LeaderboardPage() {
                                         key={option}
                                         type='button'
                                         onClick={() => setImageMode(option)}
-                                        className={`flex-1 cursor-pointer rounded-full py-1.5 text-sm ${
+                                        className={segmentClass(
                                             imageMode === option
-                                                ? 'bg-white font-medium dark:bg-zinc-900'
-                                                : ''
-                                        }`}
+                                        )}
                                     >
                                         {IMAGE_MODE_LABELS[option]}
                                     </button>
