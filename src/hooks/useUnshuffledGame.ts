@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export const SLOT_COUNT = 16
 export const LOCKED_SLOTS = [0, 15]
@@ -13,8 +13,9 @@ export interface UnshuffledState {
     board: (number | null)[]
     tray: number[]
     checksUsed: number
-    wrongSlots: number[]
+    correctSlots: number[]
     won: boolean
+    scatterSeed: number
 }
 
 function shuffled<T>(items: T[]): T[] {
@@ -28,7 +29,7 @@ function shuffled<T>(items: T[]): T[] {
     return next
 }
 
-export function createUnshuffledState(): UnshuffledState {
+export function createUnshuffledState(scatterSeed = 1): UnshuffledState {
     const board: (number | null)[] = Array.from({ length: SLOT_COUNT }, () => null)
     for (const slot of LOCKED_SLOTS) board[slot] = slot
     const tray = shuffled(
@@ -36,7 +37,18 @@ export function createUnshuffledState(): UnshuffledState {
             (piece) => !isLockedSlot(piece)
         )
     )
-    return { board, tray, checksUsed: 0, wrongSlots: [], won: false }
+    return {
+        board,
+        tray,
+        checksUsed: 0,
+        correctSlots: [],
+        won: false,
+        scatterSeed,
+    }
+}
+
+function randomSeed() {
+    return Math.floor(Math.random() * 0x7fffffff) + 1
 }
 
 function solved(board: (number | null)[]) {
@@ -46,46 +58,45 @@ function solved(board: (number | null)[]) {
 export function useUnshuffledGame() {
     const [state, setState] = useState<UnshuffledState>(createUnshuffledState)
     const stateRef = useRef(state)
-    const clearTimer = useRef<number | null>(null)
     stateRef.current = state
 
-    const cancelReturn = useCallback(() => {
-        if (clearTimer.current !== null) {
-            window.clearTimeout(clearTimer.current)
-            clearTimer.current = null
-        }
+    useEffect(() => {
+        setState((current) =>
+            current.scatterSeed === 1
+                ? { ...current, scatterSeed: randomSeed() }
+                : current
+        )
     }, [])
 
-    const place = useCallback(
-        (piece: number, slot: number) => {
-            if (isLockedSlot(slot) || isLockedSlot(piece)) return
-            cancelReturn()
-            setState((current) => {
-                if (current.won) return current
-                const board = [...current.board]
-                const fromSlot = board.indexOf(piece)
-                if (fromSlot === slot) return { ...current, wrongSlots: [] }
-                const displaced = board[slot]
-                let tray = current.tray.filter((item) => item !== piece)
-                if (fromSlot >= 0 && displaced !== null) {
-                    board[fromSlot] = displaced
-                    board[slot] = piece
-                } else {
-                    if (fromSlot >= 0) board[fromSlot] = null
-                    board[slot] = piece
-                    if (displaced !== null) tray = [...tray, displaced]
-                }
-                return {
-                    ...current,
-                    board,
-                    tray,
-                    wrongSlots: [],
-                    won: solved(board),
-                }
-            })
-        },
-        [cancelReturn]
-    )
+    const place = useCallback((piece: number, slot: number) => {
+        if (isLockedSlot(slot) || isLockedSlot(piece)) return
+        setState((current) => {
+            if (current.won) return current
+            const board = [...current.board]
+            const fromSlot = board.indexOf(piece)
+            if (fromSlot === slot) return current
+            const displaced = board[slot]
+            let tray = current.tray.filter((item) => item !== piece)
+            if (fromSlot >= 0 && displaced !== null) {
+                board[fromSlot] = displaced
+                board[slot] = piece
+            } else {
+                if (fromSlot >= 0) board[fromSlot] = null
+                board[slot] = piece
+                if (displaced !== null) tray = [...tray, displaced]
+            }
+            const won = solved(board)
+            return {
+                ...current,
+                board,
+                tray,
+                correctSlots: won
+                    ? board.map((_, index) => index)
+                    : current.correctSlots.filter((index) => board[index] === index),
+                won,
+            }
+        })
+    }, [])
 
     const returnToTray = useCallback((slot: number) => {
         if (isLockedSlot(slot)) return
@@ -99,55 +110,29 @@ export function useUnshuffledGame() {
                 ...current,
                 board,
                 tray: [...current.tray, piece],
-                wrongSlots: current.wrongSlots.filter((item) => item !== slot),
+                correctSlots: current.correctSlots.filter((item) => item !== slot),
             }
         })
     }, [])
 
     const check = useCallback(() => {
-        cancelReturn()
         const current = stateRef.current
         if (current.won) return
         const checksUsed = current.checksUsed + 1
-        if (solved(current.board)) {
-            setState({ ...current, checksUsed, won: true, wrongSlots: [] })
-            return
-        }
-        const wrongSlots = current.board.flatMap((piece, slot) =>
-            piece !== null && piece !== slot ? [slot] : []
+        const correctSlots = current.board.flatMap((piece, slot) =>
+            piece === slot ? [slot] : []
         )
-        setState({ ...current, checksUsed, wrongSlots })
-        if (wrongSlots.length === 0) return
-        clearTimer.current = window.setTimeout(() => {
-            clearTimer.current = null
-            setState((latest) => {
-                if (latest.won) return latest
-                const board = [...latest.board]
-                const returned: number[] = []
-                for (const slot of wrongSlots) {
-                    const piece = board[slot]
-                    if (piece !== null && piece !== slot) {
-                        board[slot] = null
-                        returned.push(piece)
-                    }
-                }
-                return {
-                    ...latest,
-                    board,
-                    tray: [
-                        ...latest.tray.filter((piece) => !returned.includes(piece)),
-                        ...returned,
-                    ],
-                    wrongSlots: [],
-                }
-            })
-        }, 700)
-    }, [cancelReturn])
+        setState({
+            ...current,
+            checksUsed,
+            correctSlots,
+            won: solved(current.board),
+        })
+    }, [])
 
     const shuffle = useCallback(() => {
-        cancelReturn()
-        setState(createUnshuffledState())
-    }, [cancelReturn])
+        setState(createUnshuffledState(randomSeed()))
+    }, [])
 
     return { ...state, place, returnToTray, check, shuffle }
 }

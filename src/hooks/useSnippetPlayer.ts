@@ -7,12 +7,22 @@ const SLICES = 16
 export function useSnippetPlayer(previewUrl: string | null) {
     const audioRef = useRef<HTMLAudioElement | null>(null)
     const generation = useRef(0)
+    const volumeRef = useRef(1)
     const [playing, setPlaying] = useState(false)
+    const [volume, setVolumeState] = useState(1)
+
+    const setVolume = useCallback((value: number) => {
+        const next = Math.min(1, Math.max(0, value))
+        volumeRef.current = next
+        setVolumeState(next)
+        if (audioRef.current) audioRef.current.volume = next
+    }, [])
 
     useEffect(() => {
         if (!previewUrl) return
         const audio = new Audio(previewUrl)
         audio.preload = 'auto'
+        audio.volume = volumeRef.current
         audioRef.current = audio
         return () => {
             generation.current += 1
@@ -114,5 +124,5 @@ export function useSnippetPlayer(previewUrl: string | null) {
         }
     }, [])
 
-    return { playSlice, playSequence, stop, unlock, playing }
+    return { playSlice, playSequence, stop, unlock, playing, volume, setVolume }
 }

@@ -1,28 +1,58 @@
 'use client'
 
 import { useRef, useState, type CSSProperties, type PointerEvent } from 'react'
+import { createPortal } from 'react-dom'
 
 const DRAG_THRESHOLD = 5
+const BLUR_BLEED = 0.35
 
 export function pieceBackground(
     piece: number,
-    artworkUrl: string
+    artworkUrl: string,
+    bleed = 0
 ): CSSProperties {
     const col = piece % 4
     const row = Math.floor(piece / 4)
+    const scale = 1 + bleed * 2
+    const size = 400 / scale
+    const x = ((bleed - col) / (scale - 4)) * 100
+    const y = ((bleed - row) / (scale - 4)) * 100
     return {
         backgroundImage: `url("${artworkUrl}")`,
-        backgroundSize: '400% 400%',
-        backgroundPosition: `${(col * 100) / 3}% ${(row * 100) / 3}%`,
+        backgroundSize: `${size}% ${size}%`,
+        backgroundPosition: `${x}% ${y}%`,
         backgroundRepeat: 'no-repeat',
     }
+}
+
+function BlurredArtwork({
+    piece,
+    artworkUrl,
+}: {
+    piece: number
+    artworkUrl: string
+}) {
+    const bleed = `${BLUR_BLEED * 100}%`
+    return (
+        <span
+            aria-hidden
+            className='pointer-events-none absolute blur-lg'
+            style={{
+                top: `-${bleed}`,
+                right: `-${bleed}`,
+                bottom: `-${bleed}`,
+                left: `-${bleed}`,
+                ...pieceBackground(piece, artworkUrl, BLUR_BLEED),
+            }}
+        />
+    )
 }
 
 interface PuzzlePieceProps {
     piece: number
     artworkUrl: string
     locked?: boolean
-    wrong?: boolean
+    correct?: boolean
     className?: string
     onTap: (piece: number) => void
     onDragMove: (slot: number | null) => void
@@ -44,7 +74,7 @@ export default function PuzzlePiece({
     piece,
     artworkUrl,
     locked = false,
-    wrong = false,
+    correct = false,
     className = '',
     onTap,
     onDragMove,
@@ -73,8 +103,11 @@ export default function PuzzlePiece({
             if (distance >= DRAG_THRESHOLD) moved.current = true
             if (!moved.current || locked) return
             dragging.current = true
-            const rect = target.getBoundingClientRect()
-            setGhost({ x: ev.clientX, y: ev.clientY, size: rect.width })
+            setGhost({
+                x: ev.clientX,
+                y: ev.clientY,
+                size: target.offsetWidth,
+            })
             onDragMove(slotAt(ev.clientX, ev.clientY, target))
         }
         const finish = (ev: globalThis.PointerEvent) => {
@@ -104,28 +137,32 @@ export default function PuzzlePiece({
             <button
                 type='button'
                 aria-label={`Song piece ${piece + 1}`}
-                className={`touch-none bg-zinc-200 select-none dark:bg-zinc-700 ${
+                className={`relative touch-none overflow-hidden hover:scale-105 transition-transform duration-100 ease-in-out bg-zinc-200 select-none dark:bg-zinc-700 ${
                     locked
                         ? 'cursor-default'
                         : 'cursor-grab active:cursor-grabbing'
-                } ${wrong ? 'ring-2 ring-red-500 ring-inset' : ''} ${
+                } ${correct ? 'ring-[3px] ring-inset ring-green-400' : ''} ${
                     ghost ? 'opacity-40' : ''
                 } ${className}`}
-                style={pieceBackground(piece, artworkUrl)}
                 onPointerDown={onPointerDown}
-            />
-            {ghost && (
-                <div
-                    className='pointer-events-none fixed z-[600] -translate-x-1/2 -translate-y-1/2 rounded-sm shadow-lg'
-                    style={{
-                        left: ghost.x,
-                        top: ghost.y,
-                        width: ghost.size,
-                        height: ghost.size,
-                        ...pieceBackground(piece, artworkUrl),
-                    }}
-                />
-            )}
+            >
+                <BlurredArtwork piece={piece} artworkUrl={artworkUrl} />
+            </button>
+            {ghost &&
+                createPortal(
+                    <div
+                        className='pointer-events-none fixed z-[600] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl shadow-lg'
+                        style={{
+                            left: ghost.x,
+                            top: ghost.y,
+                            width: ghost.size,
+                            height: ghost.size,
+                        }}
+                    >
+                        <BlurredArtwork piece={piece} artworkUrl={artworkUrl} />
+                    </div>,
+                    document.body
+                )}
         </>
     )
 }
