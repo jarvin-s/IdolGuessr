@@ -1,10 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth/AuthProvider'
 import SignInButton from '@/components/auth/SignInButton'
-import { getStreaks, saveNickname } from '@/lib/player'
+import { getStreaks, saveNickname, type StreakRow } from '@/lib/player'
+import {
+    DIFFICULTY_LABELS,
+    IMAGE_MODE_LABELS,
+    type ImageMode,
+    type InfiniteDifficulty,
+} from '@/utils/difficulty'
 
 const MODES = [
     { mode: 'daily', label: 'Daily' },
@@ -12,27 +18,65 @@ const MODES = [
     { mode: 'hangul', label: 'Hangul' },
 ] as const
 
+type GameMode = (typeof MODES)[number]['mode']
+
+const NICKNAME_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000
+
+function nicknameAvailableAt(
+    changedAt: string | null | undefined
+): Date | null {
+    if (!changedAt) return null
+    const changed = new Date(changedAt)
+    if (Number.isNaN(changed.getTime())) return null
+    return new Date(changed.getTime() + NICKNAME_COOLDOWN_MS)
+}
+
+function rowTitle(row: StreakRow): string {
+    const parts: string[] = []
+    if (row.difficulty && row.difficulty in DIFFICULTY_LABELS) {
+        parts.push(DIFFICULTY_LABELS[row.difficulty as InfiniteDifficulty])
+    }
+    if (row.image_mode && row.image_mode in IMAGE_MODE_LABELS) {
+        parts.push(IMAGE_MODE_LABELS[row.image_mode as ImageMode])
+    }
+    return parts.join(' · ')
+}
+
+function winRate(row: StreakRow): number {
+    if (row.total_games <= 0) return 0
+    return Math.round((row.total_wins / row.total_games) * 100)
+}
+
 export default function ProfilePage() {
     const { profile, isGuest, signOut } = useAuth()
     const streaks = getStreaks()
+    const [mode, setMode] = useState<GameMode>('daily')
     const [nickname, setNickname] = useState(profile?.nickname ?? '')
     const [message, setMessage] = useState('')
     const [saving, setSaving] = useState(false)
 
-    const daily = streaks.find((row) => row.mode === 'daily')
-    const winRate =
-        daily && daily.total_games > 0
-            ? Math.round((daily.total_wins / daily.total_games) * 100)
-            : 0
+    useEffect(() => {
+        setNickname(profile?.nickname ?? '')
+    }, [profile?.nickname])
+
+    const availableAt = nicknameAvailableAt(profile?.nickname_changed_at)
+    const nicknameLocked =
+        availableAt !== null && availableAt.getTime() > Date.now()
+    const modeRows = streaks.filter((row) => row.mode === mode)
+    const singleRow = modeRows.length === 1 ? modeRows[0] : null
 
     const save = async () => {
+        if (nicknameLocked) return
         setSaving(true)
         setMessage('')
         try {
             await saveNickname(nickname.trim())
             setMessage('Nickname saved.')
         } catch (error) {
-            const text = error instanceof Error ? error.message : 'Could not save that nickname.'
+            const text =
+                error instanceof Error
+                    ? error.message
+                    : 'Could not save that nickname.'
             setMessage(text.replaceAll('_', ' '))
         } finally {
             setSaving(false)
@@ -75,7 +119,8 @@ export default function ProfilePage() {
             {isGuest ? (
                 <div className='mt-6 rounded-lg border border-gray-200 p-4 dark:border-zinc-700'>
                     <p className='text-sm text-gray-600 dark:text-zinc-400'>
-                        You are playing as a guest. Sign in with Google to keep your progress and choose a nickname.
+                        You are playing as a guest. Sign in with Google to keep
+                        your progress and choose a nickname.
                     </p>
                     <div className='mt-3'>
                         <SignInButton />
@@ -83,28 +128,36 @@ export default function ProfilePage() {
                 </div>
             ) : (
                 <div className='mt-6'>
-                    <label className='text-sm text-gray-600 dark:text-zinc-400' htmlFor='nickname'>
+                    <label
+                        className='text-sm text-gray-600 dark:text-zinc-400'
+                        htmlFor='nickname'
+                    >
                         Nickname
                     </label>
                     <div className='mt-2 flex gap-2'>
                         <input
                             id='nickname'
                             value={nickname}
-                            onChange={(event) => setNickname(event.target.value)}
+                            onChange={(event) =>
+                                setNickname(event.target.value)
+                            }
                             maxLength={20}
-                            className='flex-1 rounded-lg border border-gray-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900'
+                            disabled={nicknameLocked}
+                            className='flex-1 rounded-lg border border-gray-300 px-3 py-2 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-zinc-700 dark:bg-zinc-900 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500'
                         />
                         <button
                             type='button'
-                            disabled={saving}
+                            disabled={saving || nicknameLocked}
                             onClick={() => void save()}
-                            className='cursor-pointer rounded-lg bg-black px-4 py-2 text-white dark:bg-white dark:text-black'
+                            className='cursor-pointer rounded-lg bg-black px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white dark:text-black'
                         >
                             Save
                         </button>
                     </div>
                     <p className='mt-2 text-xs text-gray-500 dark:text-zinc-400'>
-                        3–20 letters, numbers, or underscores. You can change it once every 7 days.
+                        {nicknameLocked && availableAt
+                            ? `You can change it again on ${availableAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.`
+                            : '3–20 letters, numbers, or underscores. You can change it once every 7 days.'}
                     </p>
                     {message ? <p className='mt-2 text-sm'>{message}</p> : null}
                 </div>
@@ -112,41 +165,96 @@ export default function ProfilePage() {
 
             <h2 className='mt-8 text-xl font-bold uppercase'>Streaks</h2>
             <p className='mt-1 text-sm text-gray-500 dark:text-zinc-400'>
-                Daily win rate {winRate}%. Imported streaks from this browser are kept on your profile and are not ranked.
+                Imported streaks from this browser stay on your profile and are
+                not ranked.
             </p>
-            <ul className='mt-4 space-y-2'>
-                {MODES.map((item) => {
-                    const rows = streaks.filter((row) => row.mode === item.mode)
-                    if (rows.length === 0) {
+            <div className='mt-4 flex rounded-full bg-gray-100 p-1 dark:bg-zinc-800'>
+                {MODES.map((item) => (
+                    <button
+                        key={item.mode}
+                        type='button'
+                        onClick={() => setMode(item.mode)}
+                        className={`flex-1 cursor-pointer rounded-full py-1.5 text-sm ${
+                            mode === item.mode
+                                ? 'bg-white font-medium dark:bg-zinc-900'
+                                : ''
+                        }`}
+                    >
+                        {item.label}
+                    </button>
+                ))}
+            </div>
+            {modeRows.length === 0 ? (
+                <p className='mt-4 text-sm text-gray-500 dark:text-zinc-400'>
+                    No games yet.
+                </p>
+            ) : (
+                <ul className='mt-4 space-y-2'>
+                    {modeRows.map((row) => {
+                        const title = rowTitle(row)
                         return (
-                            <li key={item.mode} className='rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-zinc-700'>
-                                {item.label}: no games yet
+                            <li
+                                key={`${row.mode}-${row.difficulty}-${row.image_mode}`}
+                                className='rounded-lg border border-gray-200 px-3 py-3 text-sm dark:border-zinc-700'
+                            >
+                                {title ? (
+                                    <p className='font-medium'>{title}</p>
+                                ) : null}
+                                <div
+                                    className={`grid grid-cols-3 gap-2 text-center ${title ? 'mt-2' : ''}`}
+                                >
+                                    <div>
+                                        <div className='text-lg font-bold'>
+                                            {row.current_streak}
+                                        </div>
+                                        <div className='text-xs text-gray-500 dark:text-zinc-400'>
+                                            Current
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className='text-lg font-bold'>
+                                            {row.max_streak}
+                                        </div>
+                                        <div className='text-xs text-gray-500 dark:text-zinc-400'>
+                                            Best
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className='text-lg font-bold'>
+                                            {winRate(row)}%
+                                        </div>
+                                        <div className='text-xs text-gray-500 dark:text-zinc-400'>
+                                            Wins
+                                        </div>
+                                    </div>
+                                </div>
+                                {row.imported_max_streak > 0 ? (
+                                    <p className='mt-2 text-xs text-gray-500 dark:text-zinc-400'>
+                                        Imported best {row.imported_max_streak}
+                                    </p>
+                                ) : null}
                             </li>
                         )
-                    }
-                    return rows.map((row) => (
-                        <li
-                            key={`${row.mode}-${row.difficulty}-${row.image_mode}`}
-                            className='rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-zinc-700'
-                        >
-                            <span className='font-medium'>{item.label}</span>
-                            {row.difficulty ? ` · ${row.difficulty}` : ''}
-                            {row.image_mode ? ` · ${row.image_mode}` : ''}
-                            {': '}
-                            {row.current_streak} current, {row.max_streak} best
-                            {row.imported_max_streak > 0 ? ` (imported ${row.imported_max_streak})` : ''}
-                        </li>
-                    ))
-                })}
-            </ul>
-            {daily ? (
+                    })}
+                </ul>
+            )}
+            {singleRow ? (
                 <div className='mt-6'>
-                    <h2 className='text-xl font-bold uppercase'>Daily guesses</h2>
+                    <h2 className='text-xl font-bold uppercase'>Guesses</h2>
                     <ul className='mt-2 grid grid-cols-6 gap-2 text-center text-sm'>
                         {[1, 2, 3, 4, 5, 6].map((count) => (
-                            <li key={count} className='rounded bg-gray-100 py-2 dark:bg-zinc-800'>
-                                <div className='font-bold'>{daily.guess_distribution?.[String(count)] ?? 0}</div>
-                                <div className='text-xs text-gray-500'>{count}</div>
+                            <li
+                                key={count}
+                                className='rounded bg-gray-100 py-2 dark:bg-zinc-800'
+                            >
+                                <div className='font-bold'>
+                                    {singleRow.guess_distribution?.[
+                                        String(count)
+                                    ] ?? 0}
+                                </div>
+                                <div className='text-xs text-gray-500'>
+                                    {count}
+                                </div>
                             </li>
                         ))}
                     </ul>
@@ -157,7 +265,11 @@ export default function ProfilePage() {
                     Leaderboard
                 </Link>
                 {!isGuest ? (
-                    <button type='button' onClick={() => void signOut()} className='text-sm underline'>
+                    <button
+                        type='button'
+                        onClick={() => void signOut()}
+                        className='text-sm underline'
+                    >
                         Sign out
                     </button>
                 ) : null}
