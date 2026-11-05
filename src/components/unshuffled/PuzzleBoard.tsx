@@ -8,6 +8,7 @@ interface PuzzleBoardProps {
     hoverSlot: number | null
     correctSlots: number[]
     lockedSlots: number[]
+    activePiece: number | null
     onTap: (piece: number) => void
     onDragMove: (slot: number | null) => void
     onDragEnd: (piece: number, slot: number | null) => void
@@ -19,6 +20,7 @@ export default function PuzzleBoard({
     hoverSlot,
     correctSlots,
     lockedSlots,
+    activePiece,
     onTap,
     onDragMove,
     onDragEnd,
@@ -43,6 +45,7 @@ export default function PuzzleBoard({
                                 artworkUrl={artworkUrl}
                                 locked={lockedSlots.includes(slot)}
                                 correct={correctSlots.includes(slot)}
+                                active={activePiece === piece}
                                 className='absolute inset-0 h-full w-full'
                                 onTap={onTap}
                                 onDragMove={onDragMove}

@@ -67,6 +67,7 @@ export default function UnshuffledPage() {
         stop,
         unlock,
         playing,
+        activePiece,
         volume,
         setVolume,
     } = useSnippetPlayer(song?.previewUrl ?? null)
@@ -184,6 +185,19 @@ export default function UnshuffledPage() {
         playSequence(board.filter((piece): piece is number => piece !== null))
     }
 
+    function playBoardFrom(piece: number) {
+        const slot = board.indexOf(piece)
+        if (slot < 0) {
+            playSlice(piece)
+            return
+        }
+        playSequence(
+            board
+                .slice(slot)
+                .filter((item): item is number => item !== null)
+        )
+    }
+
     function resetClock() {
         startedAt.current = Date.now()
         elapsedMsRef.current = 0
@@ -282,6 +296,7 @@ export default function UnshuffledPage() {
                             artworkUrl={song.artworkUrl}
                             className='relative z-10 hidden lg:col-start-1 lg:row-start-1 lg:block'
                             pieceClassName='h-[5.5rem] w-[5.5rem] rounded-xl shadow-lg'
+                            activePiece={activePiece}
                             onTap={playSlice}
                             onDragMove={handleDragMove}
                             onDragEnd={handleDragEnd}
@@ -301,19 +316,29 @@ export default function UnshuffledPage() {
                                         disabled={won}
                                         aria-hidden={!hasPlacedPiece}
                                         tabIndex={hasPlacedPiece ? 0 : -1}
-                                        className={`rounded-full bg-gray-200 px-1.5 py-2 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-gray-300 disabled:cursor-default disabled:opacity-50 md:px-3 md:text-sm dark:bg-zinc-800 dark:hover:bg-zinc-700 ${
+                                        className={`inline-flex items-center justify-center rounded-full bg-pink-500 p-2 gap-1 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-pink-600 md:px-3 md:py-2 md:text-sm dark:bg-pink-800 dark:hover:bg-pink-700 ${
                                             hasPlacedPiece
                                                 ? 'cursor-pointer'
                                                 : 'pointer-events-none invisible'
                                         }`}
                                     >
-                                        Check
+                                        <span
+                                            aria-hidden
+                                            className='inline-block h-4 w-4 bg-current mask-contain mask-center mask-no-repeat'
+                                            style={{
+                                                maskImage:
+                                                    'url(/icons/checkmark.svg)',
+                                                WebkitMaskImage:
+                                                    'url(/icons/checkmark.svg)',
+                                            }}
+                                        />
+                                            Check
                                     </button>
                                     <button
                                         type='button'
                                         onClick={() => void loadRandomSong()}
                                         disabled={songLoading}
-                                        className='cursor-pointer rounded-full bg-gray-200 px-1.5 py-2 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-gray-300 disabled:cursor-default disabled:opacity-50 md:px-3 md:text-sm dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                                        className='inline-flex items-center justify-center rounded-full bg-gray-200 p-2 gap-1 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-gray-300 md:px-3 md:py-2 md:text-sm dark:bg-zinc-800 dark:hover:bg-zinc-700'
                                     >
                                         {songLoading
                                             ? 'Loading…'
@@ -326,7 +351,7 @@ export default function UnshuffledPage() {
                                         aria-label='Reset'
                                         aria-hidden={!hasPlacedPiece}
                                         tabIndex={hasPlacedPiece ? 0 : -1}
-                                        className={`inline-flex items-center justify-center rounded-full bg-gray-200 p-2 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-gray-300 md:px-3 md:py-2 md:text-sm dark:bg-zinc-800 dark:hover:bg-zinc-700 ${
+                                        className={`inline-flex items-center justify-center rounded-full bg-pink-500 p-2 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-pink-600 md:px-3 md:py-2 md:text-sm dark:bg-pink-800 dark:hover:bg-pink-700 ${
                                             hasPlacedPiece
                                                 ? 'cursor-pointer'
                                                 : 'pointer-events-none invisible'
@@ -334,7 +359,7 @@ export default function UnshuffledPage() {
                                     >
                                         <span
                                             aria-hidden
-                                            className='inline-block h-4 w-4 bg-current mask-contain mask-center mask-no-repeat md:hidden'
+                                            className='inline-block h-4 w-4 bg-current mask-contain mask-center mask-no-repeat'
                                             style={{
                                                 maskImage:
                                                     'url(/icons/reset.svg)',
@@ -361,7 +386,8 @@ export default function UnshuffledPage() {
                                 hoverSlot={hoverSlot}
                                 correctSlots={correctSlots}
                                 lockedSlots={LOCKED_SLOTS}
-                                onTap={playSlice}
+                                activePiece={activePiece}
+                                onTap={playBoardFrom}
                                 onDragMove={handleDragMove}
                                 onDragEnd={handleDragEnd}
                             />
@@ -373,13 +399,15 @@ export default function UnshuffledPage() {
                             artworkUrl={song.artworkUrl}
                             className='relative z-10 hidden lg:col-start-3 lg:row-start-1 lg:block'
                             pieceClassName='h-[5.5rem] w-[5.5rem] rounded-xl shadow-lg'
+                            activePiece={activePiece}
                             onTap={playSlice}
                             onDragMove={handleDragMove}
                             onDragEnd={handleDragEnd}
                         />
+
                     </div>
 
-                    <label className='mt-6 flex w-full max-w-xs items-center gap-3 self-center'>
+                    <label className='mt-6 flex justify-center items-center gap-3'>
                         <button
                             type='button'
                             onClick={playBoard}
@@ -402,7 +430,7 @@ export default function UnshuffledPage() {
                             onChange={(event) =>
                                 setVolume(Number(event.target.value) / 100)
                             }
-                            className='h-2 w-full cursor-pointer accent-black dark:accent-white'
+                            className='h-2 w-24 cursor-pointer accent-black dark:accent-white'
                         />
                     </label>
 
@@ -413,6 +441,7 @@ export default function UnshuffledPage() {
                         artworkUrl={song.artworkUrl}
                         className='relative z-10 mx-auto mt-3 h-28 w-full max-w-[27.5rem] lg:hidden'
                         pieceClassName='h-14 w-14 rounded-xl shadow-lg'
+                        activePiece={activePiece}
                         onTap={playSlice}
                         onDragMove={handleDragMove}
                         onDragEnd={handleDragEnd}
@@ -498,6 +527,7 @@ function ScatterPane({
     artworkUrl,
     className,
     pieceClassName,
+    activePiece,
     onTap,
     onDragMove,
     onDragEnd,
@@ -508,6 +538,7 @@ function ScatterPane({
     artworkUrl: string
     className: string
     pieceClassName: string
+    activePiece: number | null
     onTap: (piece: number) => void
     onDragMove: (slot: number | null) => void
     onDragEnd: (piece: number, slot: number | null) => void
@@ -533,6 +564,7 @@ function ScatterPane({
                             piece={piece}
                             artworkUrl={artworkUrl}
                             className={pieceClassName}
+                            active={activePiece === piece}
                             onTap={onTap}
                             onDragMove={onDragMove}
                             onDragEnd={onDragEnd}

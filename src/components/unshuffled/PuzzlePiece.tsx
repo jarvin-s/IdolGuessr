@@ -53,6 +53,7 @@ interface PuzzlePieceProps {
     artworkUrl: string
     locked?: boolean
     correct?: boolean
+    active?: boolean
     className?: string
     onTap: (piece: number) => void
     onDragMove: (slot: number | null) => void
@@ -75,6 +76,7 @@ export default function PuzzlePiece({
     artworkUrl,
     locked = false,
     correct = false,
+    active = false,
     className = '',
     onTap,
     onDragMove,
@@ -141,7 +143,13 @@ export default function PuzzlePiece({
                     locked
                         ? 'cursor-default'
                         : 'cursor-grab active:cursor-grabbing'
-                } ${correct ? 'border-2 border-green-400' : ''} ${
+                } ${
+                    active
+                        ? 'border-2 border-white'
+                        : correct
+                          ? 'border-2 border-green-400'
+                          : ''
+                } ${
                     ghost ? 'opacity-40' : ''
                 } ${className}`}
                 onPointerDown={onPointerDown}
