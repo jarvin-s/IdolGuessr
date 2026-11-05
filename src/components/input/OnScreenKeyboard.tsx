@@ -21,13 +21,21 @@ export default function OnScreenKeyboard({
     const bottomRowKeys = ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
     
     const keyboardRef = useRef<HTMLDivElement>(null)
+    const handledPointer = useRef<number | null>(null)
+
+    const pressKey = (key: string, pointerId: number) => {
+        if (!key || handledPointer.current === pointerId || disabledLetters.has(key)) return
+        handledPointer.current = pointerId
+        onKeyPress(key)
+        queueMicrotask(() => {
+            if (handledPointer.current === pointerId) handledPointer.current = null
+        })
+    }
 
     const handlePress = (key: string) => (e: React.PointerEvent) => {
         e.preventDefault()
         e.stopPropagation()
-        // Don't allow disabled letters to be pressed
-        if (disabledLetters.has(key)) return
-        onKeyPress(key)
+        pressKey(key, e.pointerId)
     }
     
     const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -58,10 +66,8 @@ export default function OnScreenKeyboard({
         }
         if (nearestButton) {
             const btn = nearestButton as HTMLButtonElement
-            const key = btn.textContent?.trim() || btn.getAttribute('data-key') || ''
-            if (key && !disabledLetters.has(key)) {
-                onKeyPress(key)
-            }
+            const key = btn.getAttribute('data-key') || btn.textContent?.trim() || ''
+            pressKey(key, e.pointerId)
         }
     }
 

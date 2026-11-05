@@ -658,6 +658,7 @@ export function useGameController() {
             overrideDifficulty?: InfiniteDifficulty,
             overrideImageMode?: ImageMode
         ) => {
+            guessInFlightRef.current = false
             const activeImageMode = overrideImageMode ?? imageMode
             const effectiveFilter = overrideGroupFilter ?? groupFilter
             const effectiveGenFilter = overrideGenFilter ?? genFilter
@@ -937,6 +938,9 @@ export function useGameController() {
 
                     if (guessInFlightRef.current) return
                     guessInFlightRef.current = true
+                    const releaseGuess = () => {
+                        guessInFlightRef.current = false
+                    }
                     void (async () => {
                         try {
                     const verdict =
@@ -949,7 +953,10 @@ export function useGameController() {
                                   imageMode,
                               })
                             : await judgeDailyGuess(normalizedGuess, dailyImage?.id)
-                    if (!verdict) return
+                    if (!verdict) {
+                        releaseGuess()
+                        return
+                    }
                     const isCorrect = verdict.correct
                     const matchedAnswer = (verdict.answer || '').toUpperCase()
                     if (matchedAnswer) setCorrectAnswer(matchedAnswer)
@@ -978,6 +985,7 @@ export function useGameController() {
                         }
 
                         setTimeout(() => {
+                            releaseGuess()
                             setIsAnimating(false)
                             setLastIncorrectGuess('')
                             const emptyIndex = guesses.findIndex(
@@ -1041,6 +1049,7 @@ export function useGameController() {
                         })
                         if (gameMode === 'daily') {
                             handleGameWin(guessNumber)
+                            releaseGuess()
                             setTimeout(() => setShowWinModal(true), 2000)
                         } else {
                             const currentStreak =
@@ -1053,8 +1062,8 @@ export function useGameController() {
                             unlimitedStats.updateStats()
                         }
                     }
-                        } finally {
-                            guessInFlightRef.current = false
+                        } catch {
+                            releaseGuess()
                         }
                     })()
                 }
@@ -1112,6 +1121,7 @@ export function useGameController() {
             ) {
                 return
             }
+            if (event.repeat) return
             const key = event.key.toUpperCase()
             if (key === 'ENTER' || key === 'BACKSPACE' || /^[A-Z]$/.test(key)) {
                 event.preventDefault()

@@ -490,11 +490,11 @@ export async function focusIssuedIdol(
     difficulty = '',
     imageMode = '',
 ) {
-    if (!imgBucket) return
+    if (!imgBucket) return false
     const mode = pool === 'hangul' ? 'hangul' : 'infinite'
-    if (runEndedLocally(mode, difficulty, imageMode)) return
+    if (runEndedLocally(mode, difficulty, imageMode)) return false
     const slot = focusSlot(pool, difficulty, imageMode)
-    if (focusedIssued.get(slot) === imgBucket) return
+    if (focusedIssued.get(slot) === imgBucket) return true
     focusedIssued.set(slot, imgBucket)
     const { error } = await supabase.rpc('focus_issued_idol', {
         p_pool: pool,
@@ -502,11 +502,16 @@ export async function focusIssuedIdol(
         p_difficulty: difficulty,
         p_image_mode: imageMode,
     })
-    if (!error || String(error.message).includes('round_in_progress')) return
+    if (!error) return true
     if (focusedIssued.get(slot) === imgBucket) focusedIssued.delete(slot)
-    if (String(error.message).includes('round_finished')) return
-    console.error('focus_issued_idol', error)
+    const message = String(error.message)
+    if (!message.includes('round_in_progress') && !message.includes('round_finished')) {
+        console.error('focus_issued_idol', error)
+    }
+    return false
 }
+
+let roundGuessActive = false
 
 export async function judgeRoundGuess(input: {
     pool: 'unlimited' | 'hangul'
@@ -519,36 +524,43 @@ export async function judgeRoundGuess(input: {
     const modeForStreak = input.pool === 'hangul' ? 'hangul' : 'infinite'
     const difficultyForStreak = input.pool === 'hangul' ? '' : input.difficulty ?? 'normal'
     const imageModeForStreak = input.pool === 'hangul' ? '' : input.imageMode ?? 'pixelated'
-    const streakBefore = findStreak(modeForStreak, difficultyForStreak, imageModeForStreak)?.current_streak ?? 0
-    const focusKey = input.imgBucket || (input.idolId && input.idolId > 0 ? String(input.idolId) : '')
-    if (focusKey) {
-        await focusIssuedIdol(input.pool, focusKey, input.difficulty, input.imageMode)
+    if (roundGuessActive) return null
+    roundGuessActive = true
+    try {
+        const streakBefore = findStreak(modeForStreak, difficultyForStreak, imageModeForStreak)?.current_streak ?? 0
+        const focusKey = input.imgBucket || (input.idolId && input.idolId > 0 ? String(input.idolId) : '')
+        if (focusKey) {
+            const focused = await focusIssuedIdol(input.pool, focusKey, input.difficulty, input.imageMode)
+            if (!focused) return null
+        }
+        const { data, error } =
+            input.pool === 'hangul'
+                ? await supabase.rpc('submit_hangul_guess', { p_guess: input.guess })
+                : await supabase.rpc('submit_infinite_guess', {
+                      p_guess: input.guess,
+                      p_difficulty: input.difficulty ?? 'normal',
+                      p_image_mode: input.imageMode ?? 'pixelated',
+                  })
+        if (error || !data) {
+            console.error('submit_round_guess', error)
+            return null
+        }
+        const mode = input.pool === 'hangul' ? 'hangul' : 'infinite'
+        const difficulty = input.pool === 'hangul' ? '' : input.difficulty ?? 'normal'
+        const imageMode = input.pool === 'hangul' ? '' : input.imageMode ?? 'pixelated'
+        const verdict = mapVerdict(data as Record<string, unknown>, mode, difficulty, imageMode)
+        if (verdict.status === 'lost') {
+            markRunEnded(mode, difficulty, imageMode, streakBefore)
+        }
+        if (verdict.status === 'won' || verdict.status === 'lost') {
+            await releaseRound(input.pool, difficulty, imageMode)
+        }
+        if (verdict.promptGuest) window.dispatchEvent(new Event('idol-guessr-guest-prompt'))
+        emit()
+        return verdict
+    } finally {
+        roundGuessActive = false
     }
-    const { data, error } =
-        input.pool === 'hangul'
-            ? await supabase.rpc('submit_hangul_guess', { p_guess: input.guess })
-            : await supabase.rpc('submit_infinite_guess', {
-                  p_guess: input.guess,
-                  p_difficulty: input.difficulty ?? 'normal',
-                  p_image_mode: input.imageMode ?? 'pixelated',
-              })
-    if (error || !data) {
-        console.error('submit_round_guess', error)
-        return null
-    }
-    const mode = input.pool === 'hangul' ? 'hangul' : 'infinite'
-    const difficulty = input.pool === 'hangul' ? '' : input.difficulty ?? 'normal'
-    const imageMode = input.pool === 'hangul' ? '' : input.imageMode ?? 'pixelated'
-    const verdict = mapVerdict(data as Record<string, unknown>, mode, difficulty, imageMode)
-    if (verdict.status === 'lost') {
-        markRunEnded(mode, difficulty, imageMode, streakBefore)
-    }
-    if (verdict.status === 'won' || verdict.status === 'lost') {
-        await releaseRound(input.pool, difficulty, imageMode)
-    }
-    if (verdict.promptGuest) window.dispatchEvent(new Event('idol-guessr-guest-prompt'))
-    emit()
-    return verdict
 }
 
 export async function consumeRoundSkip(pool: 'unlimited' | 'hangul', difficulty = '', imageMode = '') {
