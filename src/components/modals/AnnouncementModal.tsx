@@ -7,7 +7,7 @@ const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
 })
 
-const STORAGE_KEY = 'idol-guessr-announcement-database-update-seen'
+const STORAGE_KEY = 'testing-environment-seen'
 
 export default function AnnouncementModal() {
     const [isOpen, setIsOpen] = useState(false)
@@ -50,24 +50,31 @@ export default function AnnouncementModal() {
                 </button>
 
                 <h1 className={`${proximaNovaBold.className} pr-10 text-2xl`}>
-                    Hey, quick update!
+                    INFO
                 </h1>
                 <p className='mt-4 text-lg leading-relaxed'>
-                    Thank you so much for playing, the website is overwhelmed
-                    with users (literally). You guys were playing so much it
-                    crashed my database. I&apos;m trying my best to keep this
-                    from happening so bear with me as I&apos;m the only
-                    developer working on the app.
+                    This is a testing environment for IdolGuessr!
                 </p>
                 <p className='mt-4 text-lg leading-relaxed'>
-                    Due to the insane increase in players, I&apos;ve been having
-                    some trouble, so much so that I had to rollback the
-                    database to earlier this morning (8am UTC).
+                    Expect bugs, try to find bugs and in general try to break
+                    the app, and then be sure to let me know :)
                 </p>
-                <p className='mt-4 text-lg leading-relaxed'>
-                    Sorry for the inconvenience!
-                </p>
-                <p className='mt-4 text-lg'>- IdolGuessr</p>
+
+                <h2 className={`${proximaNovaBold.className} mt-6 text-xl`}>
+                    What&apos;s new
+                </h2>
+                <ul className='mt-3 list-disc space-y-2 pl-5 text-lg leading-relaxed'>
+                    <li>
+                        Sign in with Google to save your streak and pick a
+                        nickname. You&apos;ll find it under the account button.
+                    </li>
+                    <li>A leaderboard for the highest streaks.</li>
+                    <li>
+                        Unshuffled: put today&apos;s scrambled song back
+                        together. Tap a piece to hear it, drag it into place,
+                        and check which ones are right.
+                    </li>
+                </ul>
 
                 <button
                     onClick={() => setIsOpen(false)}

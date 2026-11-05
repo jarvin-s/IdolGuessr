@@ -663,6 +663,9 @@ export default function Home() {
                 onChallenge={() => {
                     router.push('/challenge', { scroll: false })
                 }}
+                onUnshuffled={() => {
+                    router.push('/unshuffled', { scroll: false })
+                }}
             />
 
             {gameMode === 'daily' && !isInHistoryMode && (

@@ -4,6 +4,7 @@ import {
     isActiveInfiniteGenFilter,
 } from '@/utils/genFilter'
 import { supabaseAnonKey, supabaseUrl } from '@/lib/supabase/env'
+import { randomId } from '@/utils/randomId'
 
 export const supabase = createBrowserClient(supabaseUrl(), supabaseAnonKey())
 
@@ -597,17 +598,7 @@ export function getOrCreateSessionId(): string {
 
     let sessionId = sessionStorage.getItem('idol-guessr-session-id')
     if (!sessionId) {
-        sessionId =
-            typeof crypto !== 'undefined' && crypto.randomUUID
-                ? crypto.randomUUID()
-                : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
-                      /[xy]/g,
-                      (c) => {
-                          const r = (Math.random() * 16) | 0
-                          const v = c === 'x' ? r : (r & 0x3) | 0x8
-                          return v.toString(16)
-                      }
-                  )
+        sessionId = randomId()
         sessionStorage.setItem('idol-guessr-session-id', sessionId)
     }
     return sessionId

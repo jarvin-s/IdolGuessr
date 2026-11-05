@@ -8,6 +8,7 @@ import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import GuestSavePrompt from '@/components/auth/GuestSavePrompt'
 import { themeInitScript } from '@/components/theme/theme'
+import AnnouncementModal from '@/components/modals/AnnouncementModal'
 
 const proximaNovaRegular = localFont({
     src: '../../public/fonts/proximanova_regular.ttf',
@@ -76,6 +77,7 @@ export default function RootLayout({
                 className={`${proximaNovaRegular.className} bg-white text-black antialiased dark:bg-zinc-950 dark:text-zinc-100`}
             >
                 <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+                <AnnouncementModal />
                 <ThemeProvider>
                     <AuthProvider>
                         {children}
