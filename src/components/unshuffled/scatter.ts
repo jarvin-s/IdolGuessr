@@ -29,22 +29,22 @@ const SIDE_ANCHORS: ReadonlyArray<ReadonlyArray<readonly [number, number]>> = [
 
 const BAND_ANCHORS: ReadonlyArray<ReadonlyArray<readonly [number, number]>> = [
     [
-        [14, 30],
-        [38, 28],
-        [62, 34],
-        [86, 30],
-        [26, 74],
-        [50, 70],
-        [74, 76],
+        [8, 34],
+        [22, 30],
+        [36, 36],
+        [50, 32],
+        [64, 35],
+        [78, 31],
+        [92, 34],
     ],
     [
-        [16, 28],
-        [40, 34],
-        [64, 26],
-        [88, 32],
-        [24, 72],
-        [50, 76],
-        [76, 68],
+        [12, 74],
+        [26, 78],
+        [40, 72],
+        [54, 76],
+        [68, 73],
+        [82, 77],
+        [94, 74],
     ],
 ]
 
@@ -92,9 +92,11 @@ export function scatterPosition(
 ): { x: number; y: number; rotate: number } {
     const anchors = (wide ? SIDE_ANCHORS : BAND_ANCHORS)[spot.group]
     const anchor = anchors[spot.index] ?? anchors[0]
+    const jx = wide ? spot.jx : spot.jx * 0.45
+    const jy = wide ? spot.jy : spot.jy * 0.45
     return {
-        x: clamp(anchor[0] + spot.jx, 8, 92),
-        y: clamp(anchor[1] + spot.jy, 10, 90),
+        x: clamp(anchor[0] + jx, 6, 94),
+        y: clamp(anchor[1] + jy, wide ? 10 : 22, wide ? 90 : 84),
         rotate: spot.rotate,
     }
 }

@@ -36,7 +36,7 @@ function BlurredArtwork({
     return (
         <span
             aria-hidden
-            className='pointer-events-none absolute blur-lg'
+            className='pointer-events-none absolute blur-xl'
             style={{
                 top: `-${bleed}`,
                 right: `-${bleed}`,
@@ -141,12 +141,22 @@ export default function PuzzlePiece({
                     locked
                         ? 'cursor-default'
                         : 'cursor-grab active:cursor-grabbing'
-                } ${correct ? 'ring-[3px] ring-inset ring-green-400' : ''} ${
+                } ${correct ? 'border-2 border-green-400' : ''} ${
                     ghost ? 'opacity-40' : ''
                 } ${className}`}
                 onPointerDown={onPointerDown}
             >
                 <BlurredArtwork piece={piece} artworkUrl={artworkUrl} />
+                {locked && (
+                    <span
+                        aria-hidden
+                        className='pointer-events-none absolute top-1 right-1 z-10 h-4 w-4 bg-black mask-contain mask-center mask-no-repeat [filter:drop-shadow(0_0_1px_#fff)_drop-shadow(0_0_1px_#fff)] dark:bg-white dark:[filter:drop-shadow(0_0_1px_#000)_drop-shadow(0_0_1px_#000)]'
+                        style={{
+                            maskImage: 'url(/icons/lock.svg)',
+                            WebkitMaskImage: 'url(/icons/lock.svg)',
+                        }}
+                    />
+                )}
             </button>
             {ghost &&
                 createPortal(

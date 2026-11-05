@@ -1,6 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
+
+const SCATTER_SEED = 1
 
 export const SLOT_COUNT = 16
 export const LOCKED_SLOTS = [0, 15]
@@ -18,24 +20,11 @@ export interface UnshuffledState {
     scatterSeed: number
 }
 
-function shuffled<T>(items: T[]): T[] {
-    const next = [...items]
-    for (let i = next.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        const swap = next[i]
-        next[i] = next[j]
-        next[j] = swap
-    }
-    return next
-}
-
 export function createUnshuffledState(scatterSeed = 1): UnshuffledState {
     const board: (number | null)[] = Array.from({ length: SLOT_COUNT }, () => null)
     for (const slot of LOCKED_SLOTS) board[slot] = slot
-    const tray = shuffled(
-        Array.from({ length: SLOT_COUNT }, (_, piece) => piece).filter(
-            (piece) => !isLockedSlot(piece)
-        )
+    const tray = Array.from({ length: SLOT_COUNT }, (_, piece) => piece).filter(
+        (piece) => !isLockedSlot(piece)
     )
     return {
         board,
@@ -47,10 +36,6 @@ export function createUnshuffledState(scatterSeed = 1): UnshuffledState {
     }
 }
 
-function randomSeed() {
-    return Math.floor(Math.random() * 0x7fffffff) + 1
-}
-
 function solved(board: (number | null)[]) {
     return board.every((piece, slot) => piece === slot)
 }
@@ -59,14 +44,6 @@ export function useUnshuffledGame() {
     const [state, setState] = useState<UnshuffledState>(createUnshuffledState)
     const stateRef = useRef(state)
     stateRef.current = state
-
-    useEffect(() => {
-        setState((current) =>
-            current.scatterSeed === 1
-                ? { ...current, scatterSeed: randomSeed() }
-                : current
-        )
-    }, [])
 
     const place = useCallback((piece: number, slot: number) => {
         if (isLockedSlot(slot) || isLockedSlot(piece)) return
@@ -131,7 +108,7 @@ export function useUnshuffledGame() {
     }, [])
 
     const shuffle = useCallback(() => {
-        setState(createUnshuffledState(randomSeed()))
+        setState(createUnshuffledState(SCATTER_SEED))
     }, [])
 
     return { ...state, place, returnToTray, check, shuffle }

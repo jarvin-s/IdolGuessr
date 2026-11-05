@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import PuzzleBoard from '@/components/unshuffled/PuzzleBoard'
 import PuzzlePiece from '@/components/unshuffled/PuzzlePiece'
+import UnshuffledPauseModal from '@/components/unshuffled/UnshuffledPauseModal'
 import UnshuffledStartModal from '@/components/unshuffled/UnshuffledStartModal'
 import {
     scatterPosition,
@@ -17,10 +18,20 @@ import {
 } from '@/hooks/useUnshuffledGame'
 import { useSnippetPlayer } from '@/hooks/useSnippetPlayer'
 import {
+    getRandomUnshuffledSong,
     getUnshuffledSong,
     submitUnshuffledResult,
     type UnshuffledSong,
 } from '@/lib/unshuffled'
+
+const CHECK_PENALTY_SECONDS = 10
+
+function formatUnshuffledTime(totalSeconds: number) {
+    const safe = Math.max(0, totalSeconds)
+    const minutes = Math.floor(safe / 60)
+    const seconds = safe % 60
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
+}
 
 export default function UnshuffledPage() {
     const [song, setSong] = useState<UnshuffledSong | null>(null)
@@ -28,7 +39,16 @@ export default function UnshuffledPage() {
     const [error, setError] = useState('')
     const [started, setStarted] = useState(false)
     const [hoverSlot, setHoverSlot] = useState<number | null>(null)
+    const [songLoading, setSongLoading] = useState(false)
+    const [penaltySeconds, setPenaltySeconds] = useState(0)
+    const [elapsedMs, setElapsedMs] = useState(0)
+    const [clockRunning, setClockRunning] = useState(false)
+    const [paused, setPaused] = useState(false)
+    const [frozenSeconds, setFrozenSeconds] = useState<number | null>(null)
     const saved = useRef(false)
+    const startedAt = useRef<number | null>(null)
+    const elapsedMsRef = useRef(0)
+    const secondsRef = useRef(0)
     const {
         board,
         tray,
@@ -41,8 +61,15 @@ export default function UnshuffledPage() {
         check,
         shuffle,
     } = useUnshuffledGame()
-    const { playSlice, playSequence, stop, unlock, playing, volume, setVolume } =
-        useSnippetPlayer(song?.previewUrl ?? null)
+    const {
+        playSlice,
+        playSequence,
+        stop,
+        unlock,
+        playing,
+        volume,
+        setVolume,
+    } = useSnippetPlayer(song?.previewUrl ?? null)
 
     useEffect(() => {
         let cancelled = false
@@ -68,9 +95,48 @@ export default function UnshuffledPage() {
     }, [])
 
     useEffect(() => {
+        if (!clockRunning) return
+        const id = window.setInterval(() => {
+            if (startedAt.current === null) return
+            const next = Date.now() - startedAt.current
+            elapsedMsRef.current = next
+            setElapsedMs(next)
+        }, 200)
+        return () => window.clearInterval(id)
+    }, [clockRunning])
+
+    useEffect(() => {
+        if (!started || won) return
+
+        function onVisibilityChange() {
+            if (document.visibilityState !== 'hidden') return
+            if (startedAt.current !== null) {
+                const next = Date.now() - startedAt.current
+                elapsedMsRef.current = next
+                setElapsedMs(next)
+                startedAt.current = null
+            }
+            setClockRunning(false)
+            stop()
+            setPaused(true)
+        }
+
+        document.addEventListener('visibilitychange', onVisibilityChange)
+        return () =>
+            document.removeEventListener('visibilitychange', onVisibilityChange)
+    }, [started, won, stop])
+
+    const liveSeconds = Math.floor(elapsedMs / 1000) + penaltySeconds
+    const displaySeconds = frozenSeconds ?? liveSeconds
+    secondsRef.current = displaySeconds
+
+    useEffect(() => {
         if (!won || !song || saved.current) return
+        const seconds = secondsRef.current
         saved.current = true
-        void submitUnshuffledResult(song.id, checksUsed).catch(
+        setClockRunning(false)
+        setFrozenSeconds(seconds)
+        void submitUnshuffledResult(song.id, checksUsed, seconds).catch(
             (err: unknown) => {
                 console.error(err)
                 saved.current = false
@@ -88,7 +154,8 @@ export default function UnshuffledPage() {
         }
         for (const group of groups) {
             group.sort(
-                (a, b) => (spots.get(a)?.index ?? 0) - (spots.get(b)?.index ?? 0)
+                (a, b) =>
+                    (spots.get(a)?.index ?? 0) - (spots.get(b)?.index ?? 0)
             )
         }
         return groups
@@ -117,11 +184,64 @@ export default function UnshuffledPage() {
         playSequence(board.filter((piece): piece is number => piece !== null))
     }
 
+    function resetClock() {
+        startedAt.current = Date.now()
+        elapsedMsRef.current = 0
+        setElapsedMs(0)
+        setPenaltySeconds(0)
+        setFrozenSeconds(null)
+        setPaused(false)
+        setClockRunning(true)
+    }
+
+    function resumeGame() {
+        startedAt.current = Date.now() - elapsedMsRef.current
+        setPaused(false)
+        setClockRunning(true)
+    }
+
+    function handleCheck() {
+        if (won) return
+        setPenaltySeconds((current) => current + CHECK_PENALTY_SECONDS)
+        check()
+    }
+
     function playAgain() {
         saved.current = false
         stop()
         shuffle()
+        resetClock()
     }
+
+    function resetBoard() {
+        saved.current = false
+        stop()
+        shuffle()
+    }
+
+    async function loadRandomSong() {
+        if (songLoading) return
+        setSongLoading(true)
+        setError('')
+        try {
+            const next = await getRandomUnshuffledSong(song?.id)
+            saved.current = false
+            stop()
+            shuffle()
+            if (started) resetClock()
+            setSong(next)
+        } catch (err: unknown) {
+            setError(
+                err instanceof Error ? err.message : 'Could not load the song'
+            )
+        } finally {
+            setSongLoading(false)
+        }
+    }
+
+    const hasPlacedPiece = board.some(
+        (piece, slot) => piece !== null && !isLockedSlot(slot)
+    )
 
     return (
         <main className='mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-8'>
@@ -148,12 +268,6 @@ export default function UnshuffledPage() {
                 </span>
             </Link>
 
-            <h1 className='mt-4 text-center text-3xl font-bold'>
-                IdolGuessr{' '}
-                <span className='uppercase'>
-                    Unshuffled
-                </span>
-            </h1>
             {error && (
                 <p className='mt-8 text-center text-sm text-red-600'>{error}</p>
             )}
@@ -172,18 +286,75 @@ export default function UnshuffledPage() {
                             onDragMove={handleDragMove}
                             onDragEnd={handleDragEnd}
                         />
-                        <ScatterPane
-                            pieces={scattered[0]}
-                            spots={spots}
-                            wide={false}
-                            artworkUrl={song.artworkUrl}
-                            className='relative z-10 mb-3 h-32 lg:hidden'
-                            pieceClassName='h-14 w-14 rounded-xl shadow-lg'
-                            onTap={playSlice}
-                            onDragMove={handleDragMove}
-                            onDragEnd={handleDragEnd}
-                        />
-                        <div className='relative z-0 mx-auto w-full max-w-[27.5rem] lg:col-start-2 lg:row-start-1 lg:mx-0 lg:max-w-none'>
+                        <div className='relative z-0 mx-auto w-full max-w-[320px] md:max-w-[27.5rem] lg:col-start-2 lg:row-start-1'>
+                            <div className='mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2'>
+                                <div
+                                    aria-hidden
+                                    className='invisible rounded-full px-3 py-1.5 font-mono text-sm font-bold tabular-nums'
+                                >
+                                    {formatUnshuffledTime(displaySeconds)}
+                                </div>
+                                <div className='flex min-w-0 items-center justify-center gap-1 md:gap-2'>
+                                    <button
+                                        type='button'
+                                        onClick={handleCheck}
+                                        disabled={won}
+                                        aria-hidden={!hasPlacedPiece}
+                                        tabIndex={hasPlacedPiece ? 0 : -1}
+                                        className={`rounded-full bg-gray-200 px-1.5 py-2 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-gray-300 disabled:cursor-default disabled:opacity-50 md:px-3 md:text-sm dark:bg-zinc-800 dark:hover:bg-zinc-700 ${
+                                            hasPlacedPiece
+                                                ? 'cursor-pointer'
+                                                : 'pointer-events-none invisible'
+                                        }`}
+                                    >
+                                        Check
+                                    </button>
+                                    <button
+                                        type='button'
+                                        onClick={() => void loadRandomSong()}
+                                        disabled={songLoading}
+                                        className='cursor-pointer rounded-full bg-gray-200 px-1.5 py-2 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-gray-300 disabled:cursor-default disabled:opacity-50 md:px-3 md:text-sm dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                                    >
+                                        {songLoading
+                                            ? 'Loading…'
+                                            : 'Random song'}
+                                    </button>
+                                    <button
+                                        type='button'
+                                        onClick={resetBoard}
+                                        disabled={!hasPlacedPiece}
+                                        aria-label='Reset'
+                                        aria-hidden={!hasPlacedPiece}
+                                        tabIndex={hasPlacedPiece ? 0 : -1}
+                                        className={`inline-flex items-center justify-center rounded-full bg-gray-200 p-2 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-gray-300 md:px-3 md:py-2 md:text-sm dark:bg-zinc-800 dark:hover:bg-zinc-700 ${
+                                            hasPlacedPiece
+                                                ? 'cursor-pointer'
+                                                : 'pointer-events-none invisible'
+                                        }`}
+                                    >
+                                        <span
+                                            aria-hidden
+                                            className='inline-block h-4 w-4 bg-current mask-contain mask-center mask-no-repeat md:hidden'
+                                            style={{
+                                                maskImage:
+                                                    'url(/icons/reset.svg)',
+                                                WebkitMaskImage:
+                                                    'url(/icons/reset.svg)',
+                                            }}
+                                        />
+                                        <span className='hidden md:inline'>
+                                            Reset
+                                        </span>
+                                    </button>
+                                </div>
+                                <div
+                                    className={`rounded-full bg-gray-200 px-3 py-1.5 font-mono text-sm font-bold text-black tabular-nums dark:bg-zinc-800 dark:text-zinc-100 ${
+                                        started ? '' : 'invisible'
+                                    }`}
+                                >
+                                    {formatUnshuffledTime(displaySeconds)}
+                                </div>
+                            </div>
                             <PuzzleBoard
                                 board={board}
                                 artworkUrl={song.artworkUrl}
@@ -206,20 +377,19 @@ export default function UnshuffledPage() {
                             onDragMove={handleDragMove}
                             onDragEnd={handleDragEnd}
                         />
-                        <ScatterPane
-                            pieces={scattered[1]}
-                            spots={spots}
-                            wide={false}
-                            artworkUrl={song.artworkUrl}
-                            className='relative z-10 mt-3 h-32 lg:hidden'
-                            pieceClassName='h-14 w-14 rounded-xl shadow-lg'
-                            onTap={playSlice}
-                            onDragMove={handleDragMove}
-                            onDragEnd={handleDragEnd}
-                        />
                     </div>
 
                     <label className='mt-6 flex w-full max-w-xs items-center gap-3 self-center'>
+                        <button
+                            type='button'
+                            onClick={playBoard}
+                            aria-label={
+                                playing ? 'Stop preview' : 'Play the board'
+                            }
+                            className='flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-black text-white dark:bg-white dark:text-black'
+                        >
+                            {playing ? <PauseIcon /> : <PlayIcon />}
+                        </button>
                         <span className='text-sm text-gray-500 dark:text-zinc-400'>
                             Volume
                         </span>
@@ -236,56 +406,17 @@ export default function UnshuffledPage() {
                         />
                     </label>
 
-                    <div className='mt-6 flex items-center justify-center gap-3'>
-                        <button
-                            type='button'
-                            onClick={playBoard}
-                            aria-label={
-                                playing ? 'Stop preview' : 'Play the board'
-                            }
-                            className='flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-black text-white dark:bg-white dark:text-black'
-                        >
-                            {playing ? <PauseIcon /> : <PlayIcon />}
-                        </button>
-                        <button
-                            type='button'
-                            onClick={check}
-                            disabled={won}
-                            className='cursor-pointer rounded-full bg-gray-200 px-6 py-3 text-sm font-semibold transition-colors hover:bg-gray-300 disabled:cursor-default disabled:opacity-50 dark:bg-zinc-800 dark:hover:bg-zinc-700'
-                        >
-                            Check
-                        </button>
-                    </div>
-
-                    {won && (
-                        <div className='mt-6 flex flex-col items-center text-center'>
-                            <div
-                                className='h-40 w-40 rounded-lg bg-cover bg-center'
-                                style={{
-                                    backgroundImage: `url("${song.artworkUrl}")`,
-                                }}
-                                role='img'
-                                aria-label={`${song.songName} artwork`}
-                            />
-                            <p className='mt-3 text-2xl font-bold'>
-                                {song.songName}
-                            </p>
-                            <p className='text-gray-500 dark:text-zinc-400'>
-                                {song.artistName}
-                            </p>
-                            <p className='mt-1 text-sm text-gray-500 dark:text-zinc-400'>
-                                Solved in {checksUsed}{' '}
-                                {checksUsed === 1 ? 'check' : 'checks'}
-                            </p>
-                            <button
-                                type='button'
-                                onClick={playAgain}
-                                className='mt-4 cursor-pointer rounded-full bg-black px-6 py-2.5 text-sm font-semibold text-white dark:bg-white dark:text-black'
-                            >
-                                Play again
-                            </button>
-                        </div>
-                    )}
+                    <ScatterPane
+                        pieces={tray}
+                        spots={spots}
+                        wide={false}
+                        artworkUrl={song.artworkUrl}
+                        className='relative z-10 mx-auto mt-3 h-28 w-full max-w-[27.5rem] lg:hidden'
+                        pieceClassName='h-14 w-14 rounded-xl shadow-lg'
+                        onTap={playSlice}
+                        onDragMove={handleDragMove}
+                        onDragEnd={handleDragEnd}
+                    />
 
                     <p className='mt-8 text-center text-sm text-gray-500 dark:text-zinc-500'>
                         {song.trackViewUrl ? (
@@ -304,12 +435,55 @@ export default function UnshuffledPage() {
                 </>
             )}
 
+            {won && song && (
+                <div className='fixed inset-0 z-[500] flex items-center justify-center bg-black/40 px-4'>
+                    <div
+                        className='w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl dark:bg-zinc-900'
+                        role='dialog'
+                        aria-labelledby='unshuffled-result-title'
+                    >
+                        <div
+                            className='mx-auto h-40 w-40 rounded-lg bg-cover bg-center'
+                            style={{
+                                backgroundImage: `url("${song.artworkUrl}")`,
+                            }}
+                            role='img'
+                            aria-label={`${song.songName} artwork`}
+                        />
+                        <h2
+                            id='unshuffled-result-title'
+                            className='mt-3 text-2xl font-bold'
+                        >
+                            {song.songName}
+                        </h2>
+                        <p className='text-gray-500 dark:text-zinc-400'>
+                            {song.artistName}
+                        </p>
+                        <p className='mt-1 text-sm text-gray-500 dark:text-zinc-400'>
+                            Solved in {formatUnshuffledTime(displaySeconds)}{' '}
+                            with {checksUsed}{' '}
+                            {checksUsed === 1 ? 'check' : 'checks'}
+                        </p>
+                        <button
+                            type='button'
+                            onClick={playAgain}
+                            className='mt-6 w-full cursor-pointer rounded-full bg-black py-3 font-semibold text-white dark:bg-white dark:text-black'
+                        >
+                            Play again
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <UnshuffledPauseModal open={paused && !won} onResume={resumeGame} />
+
             <UnshuffledStartModal
                 open={!started}
                 loading={loading}
                 error={error}
                 onStart={() => {
                     setStarted(true)
+                    resetClock()
                     void unlock()
                 }}
             />
@@ -347,7 +521,7 @@ function ScatterPane({
                 return (
                     <div
                         key={piece}
-                        className='absolute hover:!z-30'
+                        className='absolute hover:z-[30]'
                         style={{
                             left: `${position.x}%`,
                             top: `${position.y}%`,
@@ -373,8 +547,8 @@ function ScatterPane({
 function PlayIcon() {
     return (
         <svg
-            width='22'
-            height='22'
+            width='16'
+            height='16'
             viewBox='0 0 24 24'
             fill='currentColor'
             aria-hidden='true'
@@ -387,8 +561,8 @@ function PlayIcon() {
 function PauseIcon() {
     return (
         <svg
-            width='22'
-            height='22'
+            width='16'
+            height='16'
             viewBox='0 0 24 24'
             fill='currentColor'
             aria-hidden='true'

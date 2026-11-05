@@ -24,7 +24,7 @@ export default function PuzzleBoard({
     onDragEnd,
 }: PuzzleBoardProps) {
     return (
-        <div className='grid aspect-square w-full max-w-[440px] grid-cols-4 gap-1.5 rounded-lg bg-gray-200 p-1.5 dark:bg-zinc-800'>
+        <div className='mx-auto grid aspect-square w-full max-w-[320px] grid-cols-4 gap-1.5 rounded-lg bg-gray-200 p-1.5 md:mx-0 md:max-w-[440px] dark:bg-zinc-800'>
             {board.map((piece, slot) => {
                 const highlighted = hoverSlot === slot
                 return (
