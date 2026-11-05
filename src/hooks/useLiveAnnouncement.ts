@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getActiveAnnouncement, supabase, type Announcement } from '@/lib/supabase'
+import { randomId } from '@/utils/randomId'
 
 export function useLiveAnnouncement(): Announcement | null {
     const [announcement, setAnnouncement] = useState<Announcement | null>(null)
@@ -24,7 +25,7 @@ export function useLiveAnnouncement(): Announcement | null {
         // React just closed, and subscribe() on that channel never joins.
         let active = true
         const channel = supabase
-            .channel(`live-announcements-${crypto.randomUUID()}`)
+            .channel(`live-announcements-${randomId()}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, () => {
                 load()
             })

@@ -9,6 +9,7 @@ import {
     supabase,
     type Announcement,
 } from '@/lib/supabase'
+import { randomId } from '@/utils/randomId'
 
 const DURATION_OPTIONS: {
     value: string
@@ -54,7 +55,7 @@ export default function AdminAnnouncementsPage() {
     useEffect(() => {
         loadAnnouncements()
         const channel = supabase
-            .channel(`admin-announcements-${crypto.randomUUID()}`)
+            .channel(`admin-announcements-${randomId()}`)
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'announcements' },
