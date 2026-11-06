@@ -192,9 +192,7 @@ export default function UnshuffledPage() {
             return
         }
         playSequence(
-            board
-                .slice(slot)
-                .filter((item): item is number => item !== null)
+            board.slice(slot).filter((item): item is number => item !== null)
         )
     }
 
@@ -316,7 +314,7 @@ export default function UnshuffledPage() {
                                         disabled={won}
                                         aria-hidden={!hasPlacedPiece}
                                         tabIndex={hasPlacedPiece ? 0 : -1}
-                                        className={`inline-flex items-center justify-center rounded-full bg-pink-500 p-2 gap-1 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-pink-600 md:px-3 md:py-2 md:text-sm dark:bg-pink-800 dark:hover:bg-pink-700 ${
+                                        className={`inline-flex items-center justify-center gap-1 rounded-full bg-pink-500 p-2 text-[13px] font-bold whitespace-nowrap text-white transition-colors hover:bg-pink-600 md:px-3 md:py-2 md:text-sm dark:bg-pink-800 dark:text-black dark:hover:bg-pink-700 ${
                                             hasPlacedPiece
                                                 ? 'cursor-pointer'
                                                 : 'pointer-events-none invisible'
@@ -332,13 +330,13 @@ export default function UnshuffledPage() {
                                                     'url(/icons/checkmark.svg)',
                                             }}
                                         />
-                                            Check
+                                        Check
                                     </button>
                                     <button
                                         type='button'
                                         onClick={() => void loadRandomSong()}
                                         disabled={songLoading}
-                                        className='inline-flex items-center justify-center rounded-full bg-gray-200 p-2 gap-1 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-gray-300 md:px-3 md:py-2 md:text-sm dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                                        className='inline-flex items-center justify-center gap-1 rounded-full bg-gray-200 p-2 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-gray-300 md:px-3 md:py-2 md:text-sm dark:bg-zinc-800 dark:hover:bg-zinc-700'
                                     >
                                         {songLoading
                                             ? 'Loading…'
@@ -351,7 +349,7 @@ export default function UnshuffledPage() {
                                         aria-label='Reset'
                                         aria-hidden={!hasPlacedPiece}
                                         tabIndex={hasPlacedPiece ? 0 : -1}
-                                        className={`inline-flex items-center justify-center rounded-full bg-pink-500 p-2 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-pink-600 md:px-3 md:py-2 md:text-sm dark:bg-pink-800 dark:hover:bg-pink-700 ${
+                                        className={`inline-flex items-center justify-center rounded-full bg-pink-500 p-2 text-[13px] font-bold whitespace-nowrap text-white transition-colors hover:bg-pink-600 md:px-3 md:py-2 md:text-sm dark:bg-pink-800 dark:text-black dark:hover:bg-pink-700 ${
                                             hasPlacedPiece
                                                 ? 'cursor-pointer'
                                                 : 'pointer-events-none invisible'
@@ -404,10 +402,9 @@ export default function UnshuffledPage() {
                             onDragMove={handleDragMove}
                             onDragEnd={handleDragEnd}
                         />
-
                     </div>
 
-                    <label className='mt-6 flex justify-center items-center gap-3'>
+                    <label className='mt-6 flex items-center justify-center gap-3'>
                         <button
                             type='button'
                             onClick={playBoard}

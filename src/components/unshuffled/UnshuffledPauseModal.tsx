@@ -20,7 +20,7 @@ export default function UnshuffledPauseModal({
                 aria-labelledby='unshuffled-pause-title'
             >
                 <h2 id='unshuffled-pause-title' className='text-2xl font-bold'>
-                    GAME PAUSE
+                    GAME PAUSED
                 </h2>
                 <p className='mt-2 text-gray-500 dark:text-zinc-400'>
                     Pick up where you left off.
