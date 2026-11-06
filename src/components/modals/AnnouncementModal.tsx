@@ -65,8 +65,8 @@ export default function AnnouncementModal() {
                 </h2>
                 <ul className='mt-3 list-disc space-y-2 pl-5 text-lg leading-relaxed'>
                     <li>
-                        Sign in with Google to save your streak and pick a
-                        nickname. You&apos;ll find it under the account button.
+                        Sign in to save your streak and pick a nickname.
+                        You&apos;ll find it under the account button.
                     </li>
                     <li>A leaderboard for the highest streaks.</li>
                     <li>

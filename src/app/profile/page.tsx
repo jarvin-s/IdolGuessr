@@ -120,8 +120,8 @@ export default function ProfilePage() {
             {isGuest ? (
                 <div className='mt-6 rounded-lg border border-gray-200 p-4 dark:border-zinc-700'>
                     <p className='text-sm text-gray-600 dark:text-zinc-400'>
-                        You are playing as a guest. Sign in with Google to keep
-                        your progress and choose a nickname.
+                        You are playing as a guest. Sign in to keep your
+                        progress and choose a nickname.
                     </p>
                     <div className='mt-3'>
                         <SignInButton />

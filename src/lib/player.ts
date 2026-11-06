@@ -804,15 +804,31 @@ export async function fetchLeaderboard(mode: string, difficulty = '', imageMode 
     }
 }
 
+function authRedirect() {
+    return `${window.location.origin}/auth/callback`
+}
+
+async function stashGuestMerge() {
+    const { data: userData } = await supabase.auth.getUser()
+    if (!userData.user?.is_anonymous) return
+    const { data: code } = await supabase.rpc('prepare_guest_merge')
+    if (typeof code === 'string' && code) {
+        document.cookie = `ig_merge_code=${code}; path=/; max-age=900; samesite=lax`
+    }
+}
+
+function emailTaken(error: { message: string; code?: string }) {
+    if (error.code === 'email_exists' || error.code === 'user_already_exists') {
+        return true
+    }
+    return /already (been )?registered|already exists/i.test(error.message)
+}
+
 export async function signInWithGoogle() {
-    const origin = window.location.origin
-    const redirectTo = `${origin}/auth/callback?next=/profile`
+    const redirectTo = authRedirect()
+    await stashGuestMerge()
     const { data: userData } = await supabase.auth.getUser()
     if (userData.user?.is_anonymous) {
-        const { data: code } = await supabase.rpc('prepare_guest_merge')
-        if (typeof code === 'string' && code) {
-            document.cookie = `ig_merge_code=${code}; path=/; max-age=900; samesite=lax`
-        }
         const linked = await supabase.auth.linkIdentity({
             provider: 'google',
             options: { redirectTo },
@@ -823,7 +839,40 @@ export async function signInWithGoogle() {
         provider: 'google',
         options: { redirectTo },
     })
-    if (error) console.error('google sign-in', error)
+    if (error) throw error
+}
+
+export async function signInWithEmail(email: string): Promise<'sent' | 'signed-in'> {
+    const redirectTo = authRedirect()
+    const normalized = email.trim().toLowerCase()
+    const { data: userData } = await supabase.auth.getUser()
+
+    if (userData.user?.is_anonymous) {
+        const linked = await supabase.auth.updateUser(
+            { email: normalized },
+            { emailRedirectTo: redirectTo },
+        )
+        if (!linked.error) {
+            const user = linked.data.user
+            if (user && user.is_anonymous === false && user.email_confirmed_at) {
+                await refreshOverview()
+                return 'signed-in'
+            }
+            return 'sent'
+        }
+        if (!emailTaken(linked.error)) throw linked.error
+    }
+
+    await stashGuestMerge()
+    const { error } = await supabase.auth.signInWithOtp({
+        email: normalized,
+        options: {
+            emailRedirectTo: redirectTo,
+            shouldCreateUser: true,
+        },
+    })
+    if (error) throw error
+    return 'sent'
 }
 
 export async function signOutToGuest() {

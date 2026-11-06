@@ -314,7 +314,7 @@ export default function UnshuffledPage() {
                                         disabled={won}
                                         aria-hidden={!hasPlacedPiece}
                                         tabIndex={hasPlacedPiece ? 0 : -1}
-                                        className={`inline-flex items-center justify-center gap-1 rounded-full bg-pink-500 p-2 text-[13px] font-bold whitespace-nowrap text-white transition-colors hover:bg-pink-600 md:px-3 md:py-2 md:text-sm dark:bg-pink-800 dark:text-black dark:hover:bg-pink-700 ${
+                                        className={`inline-flex items-center justify-center gap-1 rounded-full bg-pink-500 p-2 text-[13px] font-bold whitespace-nowrap text-white transition-colors hover:bg-pink-600 md:px-3 md:py-2 md:text-sm dark:bg-pink-800 dark:hover:bg-pink-700 ${
                                             hasPlacedPiece
                                                 ? 'cursor-pointer'
                                                 : 'pointer-events-none invisible'
@@ -349,7 +349,7 @@ export default function UnshuffledPage() {
                                         aria-label='Reset'
                                         aria-hidden={!hasPlacedPiece}
                                         tabIndex={hasPlacedPiece ? 0 : -1}
-                                        className={`inline-flex items-center justify-center rounded-full bg-pink-500 p-2 text-[13px] font-bold whitespace-nowrap text-white transition-colors hover:bg-pink-600 md:px-3 md:py-2 md:text-sm dark:bg-pink-800 dark:text-black dark:hover:bg-pink-700 ${
+                                        className={`inline-flex items-center justify-center rounded-full bg-pink-500 p-2 text-[13px] font-bold whitespace-nowrap text-white transition-colors hover:bg-pink-600 md:px-3 md:py-2 md:text-sm dark:bg-pink-800 dark:hover:bg-pink-700 ${
                                             hasPlacedPiece
                                                 ? 'cursor-pointer'
                                                 : 'pointer-events-none invisible'
