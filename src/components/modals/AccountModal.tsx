@@ -4,6 +4,7 @@ import Link from 'next/link'
 import localFont from 'next/font/local'
 import SignInButton from '@/components/auth/SignInButton'
 import { useAuth } from '@/components/auth/AuthProvider'
+import Image from 'next/image'
 
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
@@ -85,18 +86,18 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
                     <div className='flex gap-2'>
                         <Link
                             href='/profile'
-                            className='inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
+                            className='inline-flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-full border border-gray-200 px-4 py-2 font-medium transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                         >
-                            <img src='/icons/person.svg' alt='' className='h-4 w-4 dark:invert' />
+                            <Image src='/icons/person.svg' alt='' className='h-4 w-4 dark:invert' width={16} height={16} />
                             Profile
                         </Link>
                         {!isGuest ? (
                             <button
                                 type='button'
                                 onClick={() => void signOut()}
-                                className='inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
+                                className='inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-gray-200 px-4 py-2 font-medium transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                             >
-                                <img src='/icons/logout.svg' alt='' className='h-4 w-4 dark:invert' />
+                                <Image src='/icons/logout.svg' alt='' className='h-4 w-4 dark:invert' width={16} height={16} />
                                 Sign out
                             </button>
                         ) : null}

@@ -83,7 +83,7 @@ export default function IndexModal({
                     Guess your favorite K-pop idol in different ways!
                 </p>
 
-                <div className='mt-8 grid grid-cols-2 justify-center gap-3 md:grid-cols-5'>
+                <div className='mt-8 grid grid-cols-3 justify-center gap-3 md:grid-cols-5'>
                     <div className='flex flex-row items-center justify-center'>
                         <button
                             onClick={handleDaily}

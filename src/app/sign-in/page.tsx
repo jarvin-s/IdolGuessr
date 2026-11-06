@@ -14,6 +14,63 @@ function errorText(error: unknown, fallback: string) {
     return fallback
 }
 
+const signInPortraits: {
+    src: string
+    className: string
+    imageClassName?: string
+}[] = [
+    {
+        src: '/images/sign-in/felix-001.webp',
+        className: 'left-[4%] top-[8%] size-48',
+    },
+    {
+        src: '/images/sign-in/jungkook-001.webp',
+        className: 'left-[1%] top-[40%] size-56',
+    },
+    {
+        src: '/images/sign-in/kai.webp',
+        className: 'left-[15%] bottom-[18%] size-48',
+    },
+    {
+        src: '/images/sign-in/sunghoon-001.webp',
+        className: 'left-[20%] top-[1%] size-32',
+    },
+    {
+        src: '/images/sign-in/chaewon-001.webp',
+        className: 'left-[21%] top-[30%] size-36',
+    },
+    {
+        src: '/images/sign-in/mingyu-001.webp',
+        className: 'left-[1%] bottom-[5%] size-36',
+    },
+    {
+        src: '/images/sign-in/wonyoung-001.webp',
+        className: 'right-[2%] top-[5%] size-44',
+    },
+    {
+        src: '/images/sign-in/karina.webp',
+        className: 'right-[18%] top-[36%] size-48',
+    },
+    {
+        src: '/images/sign-in/sullyoon-001.webp',
+        className: 'right-[3%] bottom-[7%] size-52',
+    },
+    {
+        src: '/images/sign-in/wonhee-001.webp',
+        className: 'right-[20%] top-[5%] size-36',
+        imageClassName: 'object-[center_30%]',
+    },
+    {
+        src: '/images/sign-in/beomgyu-001.webp',
+        className: 'right-[3%] top-[44%] size-36',
+    },
+    {
+        src: '/images/sign-in/stella-001.webp',
+        className: 'right-[23%] bottom-[4%] size-48',
+        imageClassName: 'object-top',
+    },
+]
+
 export default function SignInPage() {
     const router = useRouter()
     const { profile, isGuest, signInWithGoogle } = useAuth()
@@ -78,8 +135,24 @@ export default function SignInPage() {
     const needsUsername = !isGuest && !profile?.nickname
 
     return (
-        <main className='flex min-h-screen flex-col bg-gradient-to-br from-black to-pink-800 px-4 text-white'>
-            <div className='mx-auto flex w-full max-w-sm flex-1 flex-col items-center justify-center py-10'>
+        <main className='relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-tr from-black to-pink-900 px-4 text-white'>
+            <div className='pointer-events-none absolute inset-0 hidden lg:block' aria-hidden>
+                {signInPortraits.map((portrait) => (
+                    <div
+                        key={portrait.src}
+                        className={`absolute overflow-hidden rounded-full ${portrait.className}`}
+                    >
+                        <Image
+                            src={portrait.src}
+                            alt=''
+                            width={320}
+                            height={320}
+                            className={`size-full object-cover ${portrait.imageClassName ?? ''}`}
+                        />
+                    </div>
+                ))}
+            </div>
+            <div className='relative z-10 mx-auto flex w-full max-w-sm flex-1 flex-col items-center md:justify-center justify-start py-10'>
                 <Link
                     href='/'
                     className='mb-8 flex h-8 cursor-pointer items-center justify-center gap-2 self-start rounded-full bg-zinc-800 px-3 transition-colors hover:bg-zinc-700'
