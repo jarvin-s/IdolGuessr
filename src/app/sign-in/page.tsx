@@ -176,7 +176,7 @@ export default function SignInPage() {
                     </span>
                 </Link>
                 <Image
-                    src='/images/idolguessr-logo.png'
+                    src='/images/idolguessr-logo.webp'
                     alt='IdolGuessr'
                     width={640}
                     height={280}

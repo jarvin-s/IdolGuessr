@@ -132,7 +132,7 @@ export function useShareImage({
                 await new Promise((resolve, reject) => {
                     logoImg.onload = resolve
                     logoImg.onerror = reject
-                    logoImg.src = '/images/idolguessr-logo.png'
+                    logoImg.src = '/images/idolguessr-logo.webp'
                 })
 
                 const logoWidth = 300

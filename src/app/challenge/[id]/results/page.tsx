@@ -124,7 +124,7 @@ export default function ChallengeResultsPage() {
                         className='mb-4 inline-block cursor-pointer'
                     >
                         <Image
-                            src='/images/idolguessr-logo.png'
+                            src='/images/idolguessr-logo.webp'
                             alt='Idol Guessr'
                             width={150}
                             height={40}

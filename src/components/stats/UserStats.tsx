@@ -348,7 +348,7 @@ export default function UserStats({ stats, isLoaded, className = '', gameMode = 
     return (
         <div className={`rounded-lg bg-white dark:bg-zinc-900 p-10 shadow-lg ${className}`}>
             <div className='mb-10 flex items-center justify-center'>
-                <Image src='/images/idolguessr-logo.png' alt='IdolGuessr Logo' width={150} height={50} className='h-20 w-auto dark:invert' />
+                <Image src='/images/idolguessr-logo.webp' alt='IdolGuessr Logo' width={150} height={50} className='h-20 w-auto dark:invert' />
             </div>
             <div className='mb-4 flex items-center justify-center'>
                 <h2 className='text-2xl font-bold text-gray-900 dark:text-zinc-100 uppercase'>

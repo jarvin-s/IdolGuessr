@@ -71,7 +71,7 @@ export default function IndexModal({
             >
                 <div className='mb-8 flex items-center justify-center'>
                     <Image
-                        src='/images/idolguessr-logo.png'
+                        src='/images/idolguessr-logo.webp'
                         alt='IdolGuessr Logo'
                         width={350}
                         height={350}
