@@ -22,6 +22,17 @@ export default function IndexModal({
     const [isClosing, setIsClosing] = useState(false)
     const [dailyCount, setDailyCount] = useState<number | null>(null)
     const [todayGuessCount, setTodayGuessCount] = useState<number | null>(null)
+    const [todayLabel, setTodayLabel] = useState<string | null>(null)
+
+    useEffect(() => {
+        setTodayLabel(
+            new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            })
+        )
+    }, [])
 
     useEffect(() => {
         if (isOpen) {
@@ -131,13 +142,7 @@ export default function IndexModal({
                     </div>
                 </div>
 
-                <h1 className='mt-6 text-xl font-bold'>
-                    {new Date().toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                    })}
-                </h1>
+                <h1 className='mt-6 text-xl font-bold'>{todayLabel ?? '\u00A0'}</h1>
                 <p className='text-lg'>Daily #{dailyCount ?? ''}</p>
                 {todayGuessCount !== null && (
                     <p className='text-base italic'>
