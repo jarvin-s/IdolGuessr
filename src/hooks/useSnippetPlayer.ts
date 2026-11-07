@@ -33,10 +33,10 @@ export function useSnippetPlayer(previewUrl: string | null) {
     const sourcesRef = useRef<AudioBufferSourceNode[]>([])
     const timersRef = useRef<number[]>([])
     const generation = useRef(0)
-    const volumeRef = useRef(1)
+    const volumeRef = useRef(0.25)
     const [playing, setPlaying] = useState(false)
     const [activePiece, setActivePiece] = useState<number | null>(null)
-    const [volume, setVolumeState] = useState(1)
+    const [volume, setVolumeState] = useState(0.25)
 
     const getContext = useCallback(() => {
         if (contextRef.current) return contextRef.current

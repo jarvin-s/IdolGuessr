@@ -19,6 +19,37 @@ const TABS = [
 
 type Tab = (typeof TABS)[number]['id']
 
+type LeaderboardRow = {
+    rank: number
+    nickname: string
+    max_streak: number
+    is_me: boolean
+}
+
+const PODIUM = [
+    {
+        rank: 2,
+        emoji: '🥈',
+        bar: 'h-16 bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-100',
+        emptyBar:
+            'h-16 bg-zinc-200/40 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500',
+    },
+    {
+        rank: 1,
+        emoji: '🏆',
+        bar: 'h-24 bg-amber-300 text-amber-950 dark:bg-amber-500 dark:text-amber-950',
+        emptyBar:
+            'h-24 bg-amber-300/30 text-amber-700/50 dark:bg-amber-900/40 dark:text-amber-200/40',
+    },
+    {
+        rank: 3,
+        emoji: '🥉',
+        bar: 'h-12 bg-orange-300 text-orange-950 dark:bg-orange-800 dark:text-orange-100',
+        emptyBar:
+            'h-12 bg-orange-300/30 text-orange-800/40 dark:bg-orange-950/50 dark:text-orange-200/40',
+    },
+] as const
+
 const IMAGE_MODES: ImageMode[] = ['pixelated', 'zoom']
 
 function segmentClass(selected: boolean) {
@@ -27,6 +58,54 @@ function segmentClass(selected: boolean) {
             ? 'bg-white font-medium dark:bg-zinc-900'
             : 'hover:bg-gray-200 dark:hover:bg-zinc-700'
     }`
+}
+
+function TopThree({ rows }: { rows: LeaderboardRow[] }) {
+    if (rows.length === 0) return null
+
+    return (
+        <section className='mt-8' aria-label='Top 3'>
+            <div className='flex items-end justify-center gap-2 sm:gap-3'>
+                {PODIUM.map((slot) => {
+                    const row = rows.find((entry) => entry.rank === slot.rank)
+                    return (
+                        <div
+                            key={slot.rank}
+                            className={`flex w-1/3 max-w-28 flex-col items-center ${
+                                row?.is_me ? 'rounded-xl ring-2 ring-amber-400' : ''
+                            }`}
+                        >
+                            <span
+                                className={`${slot.rank === 1 ? 'text-4xl' : 'text-3xl'} ${
+                                    row ? '' : 'opacity-40'
+                                }`}
+                                aria-hidden
+                            >
+                                {slot.emoji}
+                            </span>
+                            <p
+                                className={`mt-1 w-full truncate px-1 text-center text-sm font-semibold ${
+                                    row ? '' : 'text-gray-400 dark:text-zinc-600'
+                                }`}
+                            >
+                                {row?.nickname ?? '—'}
+                            </p>
+                            <p className='text-xs text-gray-500 dark:text-zinc-400'>
+                                {row ? `${row.max_streak} streak` : '\u00a0'}
+                            </p>
+                            <div
+                                className={`mt-2 flex w-full items-start justify-center rounded-t-xl pt-1.5 text-sm font-bold ${
+                                    row ? slot.bar : slot.emptyBar
+                                }`}
+                            >
+                                {slot.rank}
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+        </section>
+    )
 }
 
 function OptionGroup({
@@ -50,14 +129,7 @@ export default function LeaderboardPage() {
     const [tab, setTab] = useState<Tab>('daily')
     const [difficulty, setDifficulty] = useState<InfiniteDifficulty>('normal')
     const [imageMode, setImageMode] = useState<ImageMode>('pixelated')
-    const [rows, setRows] = useState<
-        Array<{
-            rank: number
-            nickname: string
-            max_streak: number
-            is_me: boolean
-        }>
-    >([])
+    const [rows, setRows] = useState<LeaderboardRow[]>([])
     const [me, setMe] = useState<{
         rank: number | null
         nickname: string | null
@@ -177,31 +249,34 @@ export default function LeaderboardPage() {
                 ) : null}
             </div>
             {error ? <p className='mt-4 text-sm'>{error}</p> : null}
-            <ol className='mt-6 space-y-2'>
-                {rows.length === 0 ? (
-                    <li className='text-sm text-gray-500'>
-                        No ranked streaks yet.
-                    </li>
-                ) : (
-                    rows.map((row) => (
-                        <li
-                            key={`${row.rank}-${row.nickname}`}
-                            className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
-                                row.is_me
-                                    ? 'bg-amber-50 dark:bg-zinc-800'
-                                    : 'bg-gray-50 dark:bg-zinc-900'
-                            }`}
-                        >
-                            <span>
-                                {row.rank}. {row.nickname}
-                            </span>
-                            <span className='font-medium'>
-                                {row.max_streak}
-                            </span>
-                        </li>
-                    ))
-                )}
-            </ol>
+            <TopThree rows={rows} />
+            {rows.length === 0 ? (
+                <p className='mt-6 text-sm text-gray-500'>
+                    No ranked streaks yet.
+                </p>
+            ) : rows.some((row) => row.rank > 3) ? (
+                <ol className='mt-6 space-y-2'>
+                    {rows
+                        .filter((row) => row.rank > 3)
+                        .map((row) => (
+                            <li
+                                key={`${row.rank}-${row.nickname}`}
+                                className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                                    row.is_me
+                                        ? 'bg-amber-50 dark:bg-zinc-800'
+                                        : 'bg-gray-50 dark:bg-zinc-900'
+                                }`}
+                            >
+                                <span>
+                                    {row.rank}. {row.nickname}
+                                </span>
+                                <span className='font-medium'>
+                                    {row.max_streak}
+                                </span>
+                            </li>
+                        ))}
+                </ol>
+            ) : null}
             {me ? (
                 <p className='mt-6 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-zinc-700'>
                     <span className='font-bold'>You:</span>{' '}

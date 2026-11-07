@@ -22,29 +22,7 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
     return (
         <div className='bg-opacity-50 fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
             <div className='modal-fade-in relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6 dark:bg-zinc-900'>
-                <div className='mb-4 flex items-center justify-between'>
-                    <button
-                        onClick={onClose}
-                        className='flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full bg-gray-100 px-3 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
-                        aria-label='Back to the game'
-                    >
-                        <svg
-                            className='h-4 w-4 text-gray-600 dark:text-zinc-400'
-                            fill='none'
-                            stroke='currentColor'
-                            viewBox='0 0 24 24'
-                        >
-                            <path
-                                strokeLinecap='round'
-                                strokeLinejoin='round'
-                                strokeWidth={2}
-                                d='M10 19l-7-7m0 0l7-7m-7 7h18'
-                            />
-                        </svg>
-                        <span className='text-sm text-gray-600 dark:text-zinc-400'>
-                            Back to the game
-                        </span>
-                    </button>
+                <div className='mb-4 flex items-center justify-end'>
                     <button
                         onClick={onClose}
                         className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
@@ -88,7 +66,7 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
                             href='/profile'
                             className='inline-flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-full border border-gray-200 px-4 py-2 font-medium transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                         >
-                            <Image src='/icons/person.svg' alt='' className='h-4 w-4 dark:invert' width={16} height={16} />
+                            <Image src='/icons/person.svg' alt='' className='h-5 w-5 dark:invert' width={16} height={16} />
                             Profile
                         </Link>
                         {!isGuest ? (
