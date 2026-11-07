@@ -79,6 +79,7 @@ export default function RootLayout({
                     <LiveAnnouncementBanner />
                     <Analytics />
                 </ThemeProvider>
+                <meta name="google-site-verification" content="RXIFkzDkAtsEdjOA9vUutVls0S5bss859Bz4sJAfk6k" />
                 <Script
                     src='https://www.googletagmanager.com/gtag/js?id=G-6V9ZCS0XZP'
                     strategy='afterInteractive'
