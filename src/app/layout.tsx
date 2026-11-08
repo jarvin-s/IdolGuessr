@@ -86,6 +86,7 @@ export default function RootLayout({
                         <Analytics />
                     </AuthProvider>
                 </ThemeProvider>
+                <meta name="google-site-verification" content="MdKcxKgV8Gu3dX6zl6vvcc2j7s1XCV3d2ta--42CZbU" />
                 <Script
                     src='https://www.googletagmanager.com/gtag/js?id=G-6V9ZCS0XZP'
                     strategy='afterInteractive'
