@@ -73,9 +73,9 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
                             <button
                                 type='button'
                                 onClick={() => void signOut()}
-                                className='inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-gray-200 px-4 py-2 font-medium transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
+                                className='inline-flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-full border border-gray-200 px-4 py-2 font-medium transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                             >
-                                <Image src='/icons/logout.svg' alt='' className='h-4 w-4 dark:invert' width={16} height={16} />
+                                <Image src='/icons/logout.svg' alt='' className='h-5 w-5 dark:invert' width={16} height={16} />
                                 Sign out
                             </button>
                         ) : null}

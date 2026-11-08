@@ -883,15 +883,9 @@ export async function signOutToGuest() {
     await refreshOverview()
 }
 
-const LEGACY_KEYS = [
-    'idol-guessr-stats',
-    'idol-guessr-daily-progress',
-    'idol-guessr-daily-completion',
-    'idol-guessr-hangul-stats',
-    'idol-guessr-hangul-game-state',
-    'idol-guessr-feedback-tickets',
-    'idol-guessr-challenge-progress',
-]
+const LEGACY_BACKUP_PREFIX = 'idol-guessr-backup-'
+const LEGACY_BACKUP_AT_KEY = 'idol-guessr-backup-saved-at'
+const LEGACY_BACKUP_TTL_MS = 30 * 24 * 60 * 60 * 1000
 
 function readJson<T>(key: string): T | null {
     try {
@@ -902,12 +896,58 @@ function readJson<T>(key: string): T | null {
     }
 }
 
+function isLegacyImportKey(key: string) {
+    return (
+        key.startsWith('idol-guessr-') &&
+        !key.startsWith(LEGACY_BACKUP_PREFIX) &&
+        key !== 'idol-guessr-theme'
+    )
+}
+
+function pruneExpiredLegacyBackups() {
+    const savedAt = Number(localStorage.getItem(LEGACY_BACKUP_AT_KEY))
+    if (!Number.isFinite(savedAt) || savedAt <= 0) return
+    if (Date.now() - savedAt < LEGACY_BACKUP_TTL_MS) return
+    Object.keys(localStorage)
+        .filter((key) => key.startsWith(LEGACY_BACKUP_PREFIX))
+        .forEach((key) => localStorage.removeItem(key))
+}
+
+// Copies each key to idol-guessr-backup-<key> before removing it. If copying
+// fails, the originals stay so a full localStorage does not wipe the streaks.
+function archiveLegacyKeys(keys: string[]) {
+    const copies: Array<[string, string]> = []
+    for (const key of keys) {
+        const value = localStorage.getItem(key)
+        if (value !== null) copies.push([key, value])
+    }
+    if (copies.length === 0) return
+    const written: string[] = []
+    try {
+        for (const [key, value] of copies) {
+            const backupKey = `${LEGACY_BACKUP_PREFIX}${key}`
+            localStorage.setItem(backupKey, value)
+            written.push(backupKey)
+        }
+        localStorage.setItem(LEGACY_BACKUP_AT_KEY, String(Date.now()))
+    } catch (error) {
+        written.forEach((key) => localStorage.removeItem(key))
+        throw error
+    }
+    for (const [key] of copies) localStorage.removeItem(key)
+}
+
 export async function importLegacyProgress() {
     if (typeof window === 'undefined') return
+    pruneExpiredLegacyBackups()
     if (overview?.profile.legacy_imported_at) return
-    const keys = Object.keys(localStorage).filter((key) => key.startsWith('idol-guessr-'))
+    const keys = Object.keys(localStorage).filter(isLegacyImportKey)
     if (keys.length === 0) {
-        await supabase.rpc('import_legacy_progress', { p_payload: {} })
+        const { error } = await supabase.rpc('import_legacy_progress', { p_payload: {} })
+        if (error) {
+            console.error('import_legacy_progress', error)
+            return
+        }
         await refreshOverview()
         return
     }
@@ -961,15 +1001,14 @@ export async function importLegacyProgress() {
     }
 
     const { error } = await supabase.rpc('import_legacy_progress', { p_payload: payload })
-    if (error) console.error('import_legacy_progress', error)
-    keys.forEach((key) => {
-        if (
-            key.startsWith('idol-guessr-') &&
-            key !== 'idol-guessr-theme' &&
-            key !== 'seen-idols' &&
-            key !== 'seen-hangul-idols'
-        ) localStorage.removeItem(key)
-    })
-    LEGACY_KEYS.forEach((key) => localStorage.removeItem(key))
+    if (error) {
+        console.error('import_legacy_progress', error)
+        return
+    }
+    try {
+        archiveLegacyKeys(keys)
+    } catch (archiveError) {
+        console.error('import_legacy_progress backup', archiveError)
+    }
     await refreshOverview()
 }
