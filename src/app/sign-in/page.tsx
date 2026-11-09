@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/AuthProvider'
-import { saveNickname, signInWithEmail } from '@/lib/player'
+import { saveNickname } from '@/lib/player'
 
 function errorText(error: unknown, fallback: string) {
     if (error instanceof Error && error.message) {
@@ -74,7 +74,6 @@ const signInPortraits: {
 export default function SignInPage() {
     const router = useRouter()
     const { profile, isGuest, signInWithGoogle } = useAuth()
-    const [email, setEmail] = useState('')
     const [sentEmail, setSentEmail] = useState('')
     const [nickname, setNickname] = useState('')
     const [error, setError] = useState('')
@@ -100,21 +99,6 @@ export default function SignInPage() {
             await signInWithGoogle()
         } catch (err: unknown) {
             setError(errorText(err, 'Could not open Google.'))
-            setPending(null)
-        }
-    }
-
-    async function continueWithEmail(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault()
-        setPending('email')
-        setError('')
-        try {
-            const result = await signInWithEmail(email)
-            if (result === 'signed-in') return
-            setSentEmail(email.trim())
-        } catch (err: unknown) {
-            setError(errorText(err, 'Could not send the email.'))
-        } finally {
             setPending(null)
         }
     }
@@ -272,60 +256,6 @@ export default function SignInPage() {
                                 ? 'Opening Google…'
                                 : 'Continue with Google'}
                         </button>
-
-                        <div className='my-6 flex w-full items-center gap-3'>
-                            <div className='h-px flex-1 bg-zinc-700' />
-                            <span className='text-xs tracking-wide text-zinc-500'>
-                                OR
-                            </span>
-                            <div className='h-px flex-1 bg-zinc-700' />
-                        </div>
-
-                        <form
-                            onSubmit={(event) => void continueWithEmail(event)}
-                            className='w-full'
-                        >
-                            <label
-                                className='block text-sm font-medium'
-                                htmlFor='email'
-                            >
-                                Email
-                            </label>
-                            <input
-                                id='email'
-                                type='email'
-                                inputMode='email'
-                                autoComplete='email'
-                                required
-                                value={email}
-                                onChange={(event) =>
-                                    setEmail(event.target.value)
-                                }
-                                placeholder='Enter your email'
-                                className='mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-zinc-500'
-                            />
-                            {error ? (
-                                <p className='mt-3 text-sm text-red-400'>
-                                    {error}
-                                </p>
-                            ) : null}
-                            <button
-                                type='submit'
-                                disabled={pending !== null}
-                                className='mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-pink-500 py-3 text-sm font-medium text-white transition-colors hover:bg-pink-600 disabled:cursor-default disabled:opacity-60'
-                            >
-                                <Image
-                                    src='/icons/mail.svg'
-                                    alt='Email'
-                                    width={18}
-                                    height={18}
-                                    className='h-5 w-5'
-                                />
-                                {pending === 'email'
-                                    ? 'Sending…'
-                                    : 'Continue with email'}
-                            </button>
-                        </form>
 
                         <p className='mt-6 text-center text-sm text-zinc-400'>
                             Your account keeps your streaks and your nickname on
