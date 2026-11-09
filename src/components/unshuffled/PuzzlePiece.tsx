@@ -54,6 +54,7 @@ interface PuzzlePieceProps {
     locked?: boolean
     correct?: boolean
     active?: boolean
+    onBoard?: boolean
     className?: string
     onTap: (piece: number) => void
     onDragMove: (slot: number | null) => void
@@ -77,6 +78,7 @@ export default function PuzzlePiece({
     locked = false,
     correct = false,
     active = false,
+    onBoard = false,
     className = '',
     onTap,
     onDragMove,
@@ -139,7 +141,11 @@ export default function PuzzlePiece({
             <button
                 type='button'
                 aria-label={`Song piece ${piece + 1}`}
-                className={`relative touch-none overflow-hidden hover:scale-105 transition-transform duration-100 ease-in-out bg-zinc-200 select-none dark:bg-zinc-700 ${
+                className={`relative touch-none overflow-hidden bg-zinc-200 select-none dark:bg-zinc-700 ${
+                    onBoard
+                        ? ''
+                        : 'hover:scale-105 transition-transform duration-100 ease-in-out'
+                } ${
                     locked
                         ? 'cursor-default'
                         : 'cursor-grab active:cursor-grabbing'

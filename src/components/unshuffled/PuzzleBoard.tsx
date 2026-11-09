@@ -46,6 +46,7 @@ export default function PuzzleBoard({
                                 locked={lockedSlots.includes(slot)}
                                 correct={correctSlots.includes(slot)}
                                 active={activePiece === piece}
+                                onBoard
                                 className='absolute inset-0 h-full w-full'
                                 onTap={onTap}
                                 onDragMove={onDragMove}

@@ -132,9 +132,12 @@ export default function IndexModal({
                         </button>
                     </div>
                     <div className='relative flex flex-row items-center justify-center'>
+                        <span className='absolute -top-2 -right-2 z-10 rounded-full bg-pink-500 px-1.5 py-0.5 text-[10px] leading-none font-bold tracking-wide text-white uppercase'>
+                            New
+                        </span>
                         <button
                             onClick={handleUnshuffled}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border-2 border-pink-500 bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:bg-zinc-800 dark:hover:bg-zinc-700'
                         >
                             <UnshuffledIcon />
                             Unshuffled
@@ -142,7 +145,9 @@ export default function IndexModal({
                     </div>
                 </div>
 
-                <h1 className='mt-6 text-xl font-bold'>{todayLabel ?? '\u00A0'}</h1>
+                <h1 className='mt-6 text-xl font-bold'>
+                    {todayLabel ?? '\u00A0'}
+                </h1>
                 <p className='text-lg'>Daily #{dailyCount ?? ''}</p>
                 {todayGuessCount !== null && (
                     <p className='text-base italic'>

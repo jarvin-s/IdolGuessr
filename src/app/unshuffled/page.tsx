@@ -404,7 +404,7 @@ export default function UnshuffledPage() {
                         />
                     </div>
 
-                    <label className='mt-6 flex items-center justify-center gap-3'>
+                    <label className='mt-2 flex items-center justify-center gap-3'>
                         <button
                             type='button'
                             onClick={playBoard}
