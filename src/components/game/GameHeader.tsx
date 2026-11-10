@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import FilterModal from '../filters/FilterModal'
+import { useFeedbackUnread } from '@/hooks/useFeedbackUnread'
 import type { ImageMode, InfiniteDifficulty } from '@/utils/difficulty'
 
 interface GameHeaderProps {
@@ -36,6 +37,7 @@ export default function GameHeader({
     isChallenge = false,
 }: GameHeaderProps) {
     const [showFilterModal, setShowFilterModal] = useState(false)
+    const feedbackUnread = useFeedbackUnread()
 
     return (
         <>
@@ -132,10 +134,20 @@ export default function GameHeader({
                                 <button
                                     onClick={onShowInfo}
                                     className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
-                                    aria-label='View Info'
+                                    aria-label={
+                                        feedbackUnread > 0
+                                            ? `View Info, ${feedbackUnread} feedback ${feedbackUnread === 1 ? 'reply' : 'replies'}`
+                                            : 'View Info'
+                                    }
                                     >
                                     <InfoIcon />
                                 </button>
+                                {feedbackUnread > 0 && (
+                                    <span
+                                        aria-hidden
+                                        className='pointer-events-none absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-pink-500 ring-2 ring-white dark:ring-zinc-950'
+                                    />
+                                )}
                             </div>
                         )}
                    

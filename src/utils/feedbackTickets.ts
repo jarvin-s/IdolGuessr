@@ -2,7 +2,19 @@ import { claimFeedbackTickets, type FeedbackTicket } from '@/lib/supabase'
 import { getProfile } from '@/lib/player'
 
 const STORAGE_KEY = 'idol-guessr-feedback-tickets'
+const CHANGED_EVENT = 'idol-guessr-feedback-tickets-changed'
 const memory = new Map<string, StoredTicket>()
+
+export function notifyFeedbackTicketsChanged(): void {
+    if (typeof window === 'undefined') return
+    window.dispatchEvent(new Event(CHANGED_EVENT))
+}
+
+export function onFeedbackTicketsChanged(listener: () => void): () => void {
+    if (typeof window === 'undefined') return () => {}
+    window.addEventListener(CHANGED_EVENT, listener)
+    return () => window.removeEventListener(CHANGED_EVENT, listener)
+}
 
 export interface StoredTicket {
     id: string

@@ -15,6 +15,7 @@ import {
 } from '@/lib/supabase'
 import TicketList from '@/components/feedback/TicketList'
 import TicketThread from '@/components/feedback/TicketThread'
+import { TicketOpenerCard } from '@/components/feedback/TicketOpener'
 import {
     CATEGORY_LABELS,
     STATUS_LABELS,
@@ -217,6 +218,7 @@ export default function AdminTicketsPage() {
                         isUnread={needsReply}
                         onSelect={selectTicket}
                         selectedId={selectedId}
+                        showOpener
                         emptyMessage='No tickets match these filters.'
                     />
                 </div>
@@ -269,6 +271,7 @@ export default function AdminTicketsPage() {
                                 />
                             </div>
                         </div>
+                        <TicketOpenerCard opener={thread.ticket.opener} />
                         {threadError && (
                             <p className='mb-2 text-sm text-red-600'>
                                 {threadError}

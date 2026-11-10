@@ -2,7 +2,11 @@ import { useState } from 'react'
 import localFont from 'next/font/local'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { createFeedbackTicket, type TicketCategory } from '@/lib/supabase'
-import { addStoredTicket, rememberTicket } from '@/utils/feedbackTickets'
+import {
+    addStoredTicket,
+    notifyFeedbackTicketsChanged,
+    rememberTicket,
+} from '@/utils/feedbackTickets'
 import { CATEGORY_LABELS } from './ticketUi'
 
 const proximaNovaBold = localFont({
@@ -35,6 +39,7 @@ export default function NewTicketForm({ onCreated }: NewTicketFormProps) {
             )
             if (isGuest) addStoredTicket(id, access_token)
             else rememberTicket(id, access_token)
+            notifyFeedbackTicketsChanged()
             setMessage('')
             setCategory('general')
             onCreated(id)

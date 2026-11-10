@@ -23,6 +23,7 @@ import { useTicketLiveUpdates } from '@/hooks/useTicketLiveUpdates'
 import NewTicketForm from '@/components/feedback/NewTicketForm'
 import TicketList from '@/components/feedback/TicketList'
 import TicketThread from '@/components/feedback/TicketThread'
+import { useFeedbackNotice } from '@/components/feedback/FeedbackNoticeProvider'
 import {
     formatTicketNumber,
     resolveTicketNumber,
@@ -54,6 +55,7 @@ export default function FeedbackModal({
     onBack,
 }: FeedbackModalProps) {
     const { isGuest } = useAuth()
+    const { syncUnread } = useFeedbackNotice()
     const [view, setView] = useState<View>('new')
     const [tickets, setTickets] = useState<FeedbackTicket[]>([])
     const [ticketsLoading, setTicketsLoading] = useState(false)
@@ -101,12 +103,13 @@ export default function FeedbackModal({
             setThread(data)
             markSeen(ticketId, data.ticket.last_admin_message_at)
             void markFeedbackRead(ticketId, data.ticket.last_admin_message_at)
+            syncUnread()
             setSeenVersion((v) => v + 1)
         } catch (err) {
             console.error('Error loading ticket:', err)
             setThreadError('Could not load this ticket.')
         }
-    }, [])
+    }, [syncUnread])
 
     useEffect(() => {
         if (!isOpen) return
@@ -141,12 +144,13 @@ export default function FeedbackModal({
                 setThread(data)
                 markSeen(ticketId, data.ticket.last_admin_message_at)
                 void markFeedbackRead(ticketId, data.ticket.last_admin_message_at)
+                syncUnread()
                 setSeenVersion((v) => v + 1)
             } catch (err) {
                 console.error('Error refreshing ticket:', err)
             }
         },
-        [loadTickets]
+        [loadTickets, syncUnread]
     )
 
     useTicketLiveUpdates(storedTickets, handleLiveUpdate, isOpen)
