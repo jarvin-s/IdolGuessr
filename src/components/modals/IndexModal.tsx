@@ -86,7 +86,7 @@ export default function IndexModal({
                         alt='IdolGuessr Logo'
                         width={350}
                         height={350}
-                        className='h-auto w-auto dark:invert'
+                        className='h-[clamp(8rem,24svh,14rem)] w-auto dark:invert'
                     />
                 </div>
 
@@ -94,54 +94,58 @@ export default function IndexModal({
                     Guess your favorite K-pop idol in different ways!
                 </p>
 
-                <div className='mt-8 grid grid-cols-3 justify-center gap-3 md:grid-cols-5'>
-                    <div className='flex flex-row items-center justify-center'>
-                        <button
-                            onClick={handleDaily}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
-                        >
-                            <DailyIcon />
-                            Daily
-                        </button>
+                <div className='mt-8 flex flex-col items-center gap-3 md:flex-row'>
+                    <div className='flex justify-center gap-3'>
+                        <div className='flex flex-row items-center justify-center'>
+                            <button
+                                onClick={handleDaily}
+                                className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                            >
+                                <DailyIcon />
+                                Daily
+                            </button>
+                        </div>
+                        <div className='flex flex-row items-center justify-center'>
+                            <button
+                                onClick={handleInfinite}
+                                className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                            >
+                                <InfiniteIcon />
+                                Infinite
+                            </button>
+                        </div>
+                        <div className='relative flex flex-row items-center justify-center'>
+                            <button
+                                onClick={handleHangul}
+                                className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                            >
+                                <HangulIcon />
+                                Hangul
+                            </button>
+                        </div>
                     </div>
-                    <div className='flex flex-row items-center justify-center'>
-                        <button
-                            onClick={handleInfinite}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
-                        >
-                            <InfiniteIcon />
-                            Infinite
-                        </button>
-                    </div>
-                    <div className='relative flex flex-row items-center justify-center'>
-                        <button
-                            onClick={handleHangul}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
-                        >
-                            <HangulIcon />
-                            Hangul
-                        </button>
-                    </div>
-                    <div className='relative flex flex-row items-center justify-center'>
-                        <button
-                            onClick={handleChallenge}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
-                        >
-                            <ChallengeIcon />
-                            Challenge
-                        </button>
-                    </div>
-                    <div className='relative flex flex-row items-center justify-center'>
-                        <span className='absolute -top-2 -right-2 z-10 rounded-full bg-pink-500 px-1.5 py-0.5 text-[10px] leading-none font-bold tracking-wide text-white uppercase'>
-                            New
-                        </span>
-                        <button
-                            onClick={handleUnshuffled}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border-2 border-pink-500 bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:bg-zinc-800 dark:hover:bg-zinc-700'
-                        >
-                            <UnshuffledIcon />
-                            Unshuffled
-                        </button>
+                    <div className='flex justify-center gap-3'>
+                        <div className='relative flex flex-row items-center justify-center'>
+                            <button
+                                onClick={handleChallenge}
+                                className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                            >
+                                <ChallengeIcon />
+                                Challenge
+                            </button>
+                        </div>
+                        <div className='relative flex flex-row items-center justify-center'>
+                            <span className='absolute -top-2 -right-2 z-10 rounded-full bg-pink-500 px-1.5 py-0.5 text-[10px] leading-none font-bold tracking-wide text-white uppercase'>
+                                New
+                            </span>
+                            <button
+                                onClick={handleUnshuffled}
+                                className='flex w-[90px] cursor-pointer flex-col items-center justify-center border-2 border-pink-500 bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                            >
+                                <UnshuffledIcon />
+                                Unshuffled
+                            </button>
+                        </div>
                     </div>
                 </div>
 
