@@ -5,7 +5,10 @@ import './globals.css'
 import { Analytics } from '@vercel/analytics/next'
 import LiveAnnouncementBanner from '@/components/announcements/LiveAnnouncementBanner'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
+import { AuthProvider } from '@/components/auth/AuthProvider'
+import GuestSavePrompt from '@/components/auth/GuestSavePrompt'
 import { themeInitScript } from '@/components/theme/theme'
+import AnnouncementModal from '@/components/modals/AnnouncementModal'
 
 const proximaNovaRegular = localFont({
     src: '../../public/fonts/proximanova_regular.ttf',
@@ -74,11 +77,16 @@ export default function RootLayout({
                 className={`${proximaNovaRegular.className} bg-white text-black antialiased dark:bg-zinc-950 dark:text-zinc-100`}
             >
                 <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+                <AnnouncementModal />
                 <ThemeProvider>
-                    {children}
-                    <LiveAnnouncementBanner />
-                    <Analytics />
+                    <AuthProvider>
+                        {children}
+                        <GuestSavePrompt />
+                        <LiveAnnouncementBanner />
+                        <Analytics />
+                    </AuthProvider>
                 </ThemeProvider>
+                <meta name="google-site-verification" content="MdKcxKgV8Gu3dX6zl6vvcc2j7s1XCV3d2ta--42CZbU" />
                 <Script
                     src='https://www.googletagmanager.com/gtag/js?id=G-6V9ZCS0XZP'
                     strategy='afterInteractive'
@@ -91,6 +99,13 @@ export default function RootLayout({
                         gtag('config', 'G-6V9ZCS0XZP');
                     `}
                 </Script>
+                <Script
+                    src='https://scripts.mediavine.com/tags/02f25e0b-b180-4f3e-88d5-9ffba965602c.js'
+                    strategy='afterInteractive'
+                    async
+                    data-noptimize='1'
+                    data-cfasync='false'
+                />
             </body>
         </html>
     )

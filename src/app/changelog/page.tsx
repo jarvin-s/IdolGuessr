@@ -97,7 +97,7 @@ export default function ChangelogPage() {
                         </span>
                     </Link>
                     <Image
-                        src='/images/idolguessr-logo.png'
+                        src='/images/idolguessr-logo.webp'
                         alt='IdolGuessr Logo'
                         width={150}
                         height={50}

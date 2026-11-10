@@ -4,16 +4,21 @@ import {
     addFeedbackMessage,
     getFeedbackThread,
     getMyFeedbackTickets,
+    markFeedbackRead,
     type FeedbackThread,
     type FeedbackTicket,
 } from '@/lib/supabase'
 import {
+    claimAccountFeedbackTickets,
     getStoredTickets,
     getTicketToken,
     hasUnread,
     markSeen,
+    rememberTicket,
     type StoredTicket,
 } from '@/utils/feedbackTickets'
+import { useAuth } from '@/components/auth/AuthProvider'
+import { getProfile, savePlayerSettings } from '@/lib/player'
 import { useTicketLiveUpdates } from '@/hooks/useTicketLiveUpdates'
 import NewTicketForm from '@/components/feedback/NewTicketForm'
 import TicketList from '@/components/feedback/TicketList'
@@ -27,24 +32,12 @@ const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
 })
 
-const FEEDBACK_INTRO_SEEN_KEY = 'idol-guessr-feedback-tickets-intro-seen'
-
 function hasSeenFeedbackIntro(): boolean {
-    if (typeof window === 'undefined') return true
-    try {
-        return localStorage.getItem(FEEDBACK_INTRO_SEEN_KEY) === '1'
-    } catch {
-        return true
-    }
+    return Boolean(getProfile()?.seen_notices?.feedback_intro)
 }
 
 function markFeedbackIntroSeen(): void {
-    if (typeof window === 'undefined') return
-    try {
-        localStorage.setItem(FEEDBACK_INTRO_SEEN_KEY, '1')
-    } catch {
-        // ignore
-    }
+    void savePlayerSettings({ seen_notices: { feedback_intro: true } })
 }
 
 interface FeedbackModalProps {
@@ -60,6 +53,7 @@ export default function FeedbackModal({
     onClose,
     onBack,
 }: FeedbackModalProps) {
+    const { isGuest } = useAuth()
     const [view, setView] = useState<View>('new')
     const [tickets, setTickets] = useState<FeedbackTicket[]>([])
     const [ticketsLoading, setTicketsLoading] = useState(false)
@@ -73,22 +67,25 @@ export default function FeedbackModal({
     threadRef.current = thread
 
     const loadTickets = useCallback(async () => {
+        await claimAccountFeedbackTickets()
         const stored = getStoredTickets()
         setStoredTickets(stored)
-        if (stored.length === 0) {
-            setTickets([])
-            return
-        }
         setTicketsLoading(true)
         setTicketsError(null)
         try {
             const data = await getMyFeedbackTickets(
                 stored.map(({ id, token }) => ({ id, token }))
             )
+            data.forEach((ticket) => {
+                if (ticket.token) rememberTicket(ticket.id, ticket.token)
+            })
             setTickets(data)
+            setStoredTickets(getStoredTickets())
+            return data
         } catch (err) {
             console.error('Error loading tickets:', err)
             setTicketsError('Could not load your tickets.')
+            return []
         } finally {
             setTicketsLoading(false)
         }
@@ -103,6 +100,7 @@ export default function FeedbackModal({
             const data = await getFeedbackThread(ticketId, token)
             setThread(data)
             markSeen(ticketId, data.ticket.last_admin_message_at)
+            void markFeedbackRead(ticketId, data.ticket.last_admin_message_at)
             setSeenVersion((v) => v + 1)
         } catch (err) {
             console.error('Error loading ticket:', err)
@@ -112,11 +110,18 @@ export default function FeedbackModal({
 
     useEffect(() => {
         if (!isOpen) return
-        const stored = getStoredTickets()
-        setView(stored.length > 0 ? 'list' : 'new')
+        let cancelled = false
         setThread(null)
         setShowIntroPopup(!hasSeenFeedbackIntro())
-        loadTickets()
+        void (async () => {
+            const stored = getStoredTickets()
+            if (!cancelled) setView(stored.length > 0 ? 'list' : 'new')
+            const data = await loadTickets()
+            if (!cancelled && data.length > 0) setView('list')
+        })()
+        return () => {
+            cancelled = true
+        }
     }, [isOpen, loadTickets])
 
     const dismissIntroPopup = () => {
@@ -135,6 +140,7 @@ export default function FeedbackModal({
                 if (threadRef.current?.ticket.id !== ticketId) return
                 setThread(data)
                 markSeen(ticketId, data.ticket.last_admin_message_at)
+                void markFeedbackRead(ticketId, data.ticket.last_admin_message_at)
                 setSeenVersion((v) => v + 1)
             } catch (err) {
                 console.error('Error refreshing ticket:', err)
@@ -250,7 +256,9 @@ export default function FeedbackModal({
                             Your feedback has been submitted successfully.
                         </p>
                         <p className='mt-1 text-sm text-gray-600 dark:text-zinc-400'>
-                            You can follow replies under My tickets.
+                            {isGuest
+                                ? 'You can follow replies under My tickets.'
+                                : "It's saved to your account. You can follow replies under My tickets."}
                         </p>
                         <button
                             onClick={() => {

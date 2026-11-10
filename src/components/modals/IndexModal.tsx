@@ -8,6 +8,7 @@ interface IndexModalProps {
     onInfinite: () => void
     onHangul: () => void
     onChallenge?: () => void
+    onUnshuffled?: () => void
 }
 
 export default function IndexModal({
@@ -16,10 +17,22 @@ export default function IndexModal({
     onInfinite,
     onHangul,
     onChallenge,
+    onUnshuffled,
 }: IndexModalProps) {
     const [isClosing, setIsClosing] = useState(false)
     const [dailyCount, setDailyCount] = useState<number | null>(null)
     const [todayGuessCount, setTodayGuessCount] = useState<number | null>(null)
+    const [todayLabel, setTodayLabel] = useState<string | null>(null)
+
+    useEffect(() => {
+        setTodayLabel(
+            new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            })
+        )
+    }, [])
 
     useEffect(() => {
         if (isOpen) {
@@ -56,16 +69,20 @@ export default function IndexModal({
         onChallenge?.()
     }
 
+    const handleUnshuffled = () => {
+        onUnshuffled?.()
+    }
+
     return (
         <div
-            className={`fixed inset-0 z-[500] flex items-center justify-center bg-[#e6e6e3] dark:bg-zinc-950 transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
+            className={`fixed inset-0 z-[500] flex items-center justify-center bg-[#e6e6e3] transition-opacity duration-300 dark:bg-zinc-950 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
         >
             <div
                 className={`flex w-full max-w-2xl flex-col items-center px-6 text-center transition-transform duration-300 ${isClosing ? 'scale-95' : 'scale-100'}`}
             >
                 <div className='mb-8 flex items-center justify-center'>
                     <Image
-                        src='/images/idolguessr-logo.png'
+                        src='/images/idolguessr-logo.webp'
                         alt='IdolGuessr Logo'
                         width={350}
                         height={350}
@@ -77,11 +94,11 @@ export default function IndexModal({
                     Guess your favorite K-pop idol in different ways!
                 </p>
 
-                <div className='mt-8 grid grid-cols-2 justify-center gap-3 md:grid-cols-4'>
+                <div className='mt-8 grid grid-cols-3 justify-center gap-3 md:grid-cols-5'>
                     <div className='flex flex-row items-center justify-center'>
                         <button
                             onClick={handleDaily}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] dark:bg-zinc-800 p-3 hover:bg-[#dbdbdb] dark:hover:bg-zinc-700 dark:border-zinc-600'
+                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                         >
                             <DailyIcon />
                             Daily
@@ -90,7 +107,7 @@ export default function IndexModal({
                     <div className='flex flex-row items-center justify-center'>
                         <button
                             onClick={handleInfinite}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] dark:bg-zinc-800 p-3 hover:bg-[#dbdbdb] dark:hover:bg-zinc-700 dark:border-zinc-600'
+                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                         >
                             <InfiniteIcon />
                             Infinite
@@ -99,7 +116,7 @@ export default function IndexModal({
                     <div className='relative flex flex-row items-center justify-center'>
                         <button
                             onClick={handleHangul}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] dark:bg-zinc-800 p-3 hover:bg-[#dbdbdb] dark:hover:bg-zinc-700 dark:border-zinc-600'
+                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                         >
                             <HangulIcon />
                             Hangul
@@ -108,27 +125,37 @@ export default function IndexModal({
                     <div className='relative flex flex-row items-center justify-center'>
                         <button
                             onClick={handleChallenge}
-                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] dark:bg-zinc-800 p-3 hover:bg-[#dbdbdb] dark:hover:bg-zinc-700 dark:border-zinc-600'
+                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                         >
                             <ChallengeIcon />
                             Challenge
                         </button>
                     </div>
+                    <div className='relative flex flex-row items-center justify-center'>
+                        <span className='absolute -top-2 -right-2 z-10 rounded-full bg-pink-500 px-1.5 py-0.5 text-[10px] leading-none font-bold tracking-wide text-white uppercase'>
+                            New
+                        </span>
+                        <button
+                            onClick={handleUnshuffled}
+                            className='flex w-[90px] cursor-pointer flex-col items-center justify-center border-2 border-pink-500 bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                        >
+                            <UnshuffledIcon />
+                            Unshuffled
+                        </button>
+                    </div>
                 </div>
 
                 <h1 className='mt-6 text-xl font-bold'>
-                    {new Date().toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                    })}
+                    {todayLabel ?? '\u00A0'}
                 </h1>
                 <p className='text-lg'>Daily #{dailyCount ?? ''}</p>
                 {todayGuessCount !== null && (
                     <p className='text-base italic'>
-                        <span className='text-pink-600'>{todayGuessCount.toLocaleString()}{' '}</span>
-                        {todayGuessCount === 1 ? 'person' : 'people'}{' '}
-                        guessed today&apos;s idol already
+                        <span className='text-pink-600'>
+                            {todayGuessCount.toLocaleString()}{' '}
+                        </span>
+                        {todayGuessCount === 1 ? 'person' : 'people'} guessed
+                        today&apos;s idol already
                     </p>
                 )}
             </div>
@@ -179,6 +206,22 @@ function InfiniteIcon() {
             <path
                 fill='currentColor'
                 d='M382 136c-40.87 0-73.46 20.53-93.6 37.76l-.71.61l-11.47 12.47l25.32 41.61l18.74-18.79C339.89 193.1 361.78 184 382 184c40.8 0 74 32.3 74 72s-33.2 72-74 72c-62 0-104.14-81.95-104.56-82.78C275 240.29 221.56 136 130 136C62.73 136 8 189.83 8 256s54.73 120 122 120c32.95 0 65.38-13.11 93.79-37.92l.61-.54l11.38-12.38l-25.33-41.61l-18.83 18.88C172 319.4 151.26 328 130 328c-40.8 0-74-32.3-74-72s33.2-72 74-72c62 0 104.14 81.95 104.56 82.78C237 271.71 290.44 376 382 376c67.27 0 122-53.83 122-120s-54.73-120-122-120'
+            />
+        </svg>
+    )
+}
+
+function UnshuffledIcon() {
+    return (
+        <svg
+            xmlns='http://www.w3.org/2000/svg'
+            width='36'
+            height='36'
+            viewBox='0 0 24 24'
+        >
+            <path
+                fill='currentColor'
+                d='M14 20v-2h2.6l-3.175-3.175L14.85 13.4L18 16.55V14h2v6zm-8.6 0L4 18.6L16.6 6H14V4h6v6h-2V7.4zm3.775-9.425L4 5.4L5.4 4l5.175 5.175z'
             />
         </svg>
     )

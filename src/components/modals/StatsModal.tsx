@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import UserStats, { loadUnlimitedStats } from '../stats/UserStats'
+import SignInButton from '@/components/auth/SignInButton'
 import {
     DIFFICULTIES,
     DIFFICULTY_LABELS,
@@ -91,7 +92,14 @@ export default function StatsModal({
                     isLoaded={statsLoaded}
                     className='border-0 shadow-none'
                     gameMode={gameMode}
-                    subHeader={difficultyTabs}
+                    subHeader={
+                        <>
+                            {difficultyTabs}
+                            <div className='mb-4 flex justify-center'>
+                                <SignInButton />
+                            </div>
+                        </>
+                    }
                 />
             </div>
         </div>

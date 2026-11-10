@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { getProfile, savePlayerSettings } from '@/lib/player'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 
@@ -18,9 +19,7 @@ export default function HangulFilterModal({
     useEffect(() => {
         if (isOpen) {
             try {
-                const savedFilter = localStorage.getItem(
-                    'idol-guessr-hangul-group-filter'
-                )
+                const savedFilter = getProfile()?.hangul_group_filter
                 if (
                     savedFilter === 'boy-group' ||
                     savedFilter === 'girl-group' ||
@@ -40,7 +39,7 @@ export default function HangulFilterModal({
 
     const handleConfirm = () => {
         try {
-            localStorage.setItem('idol-guessr-hangul-group-filter', selectedFilter)
+            void savePlayerSettings({ hangul_group_filter: selectedFilter })
         } catch {}
         onConfirm(selectedFilter)
     }

@@ -1,4 +1,5 @@
 export const THEME_STORAGE_KEY = 'idol-guessr-theme'
+const THEME_COOKIE = 'idol-guessr-theme'
 
 export type ThemeChoice = 'light' | 'dark' | 'system'
 
@@ -26,4 +27,4 @@ export function applyTheme(choice: ThemeChoice) {
     meta.setAttribute('content', dark ? '#09090b' : '#ffffff')
 }
 
-export const themeInitScript = `(function(){try{var t=localStorage.getItem('${THEME_STORAGE_KEY}');var dark=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var root=document.documentElement;root.classList.toggle('dark',dark);root.style.colorScheme=dark?'dark':'light';var meta=document.querySelector('meta[name="theme-color"]');if(!meta){meta=document.createElement('meta');meta.setAttribute('name','theme-color');document.head.appendChild(meta);}meta.setAttribute('content',dark?'#09090b':'#ffffff');}catch(e){}})();`
+export const themeInitScript = `(function(){try{var m=document.cookie.match(/(?:^|; )${THEME_COOKIE}=([^;]+)/);var t=m?decodeURIComponent(m[1]):null;var dark=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var root=document.documentElement;root.classList.toggle('dark',dark);root.style.colorScheme=dark?'dark':'light';var meta=document.querySelector('meta[name="theme-color"]');if(!meta){meta=document.createElement('meta');meta.setAttribute('name','theme-color');document.head.appendChild(meta);}meta.setAttribute('content',dark?'#09090b':'#ffffff');}catch(e){}})();`

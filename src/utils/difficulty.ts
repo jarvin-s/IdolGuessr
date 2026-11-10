@@ -1,3 +1,5 @@
+import { getProfile, savePlayerSettings } from '@/lib/player'
+
 export type InfiniteDifficulty = 'easy' | 'normal' | 'hard' | 'challenger'
 
 export const DIFFICULTY_STORAGE_KEY = 'idol-guessr-difficulty'
@@ -57,23 +59,12 @@ export function isInfiniteDifficulty(
 }
 
 export function loadSavedDifficulty(): InfiniteDifficulty {
-    if (typeof window === 'undefined') return 'normal'
-    try {
-        const saved = localStorage.getItem(DIFFICULTY_STORAGE_KEY)
-        if (isInfiniteDifficulty(saved)) return saved
-    } catch {
-        // Ignore storage errors
-    }
-    return 'normal'
+    const saved = getProfile()?.difficulty
+    return isInfiniteDifficulty(saved) ? saved : 'normal'
 }
 
 export function saveDifficulty(difficulty: InfiniteDifficulty): void {
-    if (typeof window === 'undefined') return
-    try {
-        localStorage.setItem(DIFFICULTY_STORAGE_KEY, difficulty)
-    } catch {
-        // Ignore storage errors
-    }
+    void savePlayerSettings({ difficulty })
 }
 
 export type ImageMode = 'pixelated' | 'zoom'
@@ -85,17 +76,12 @@ export const IMAGE_MODE_LABELS: Record<ImageMode, string> = {
     zoom: 'Zoomed',
 }
 
-const ZOOMED_NOTICE_KEY = 'idol-guessr-zoomed-mode-notice-seen'
-
 export function shouldShowZoomedNotice(mode: ImageMode): boolean {
-    if (mode !== 'zoom' || typeof window === 'undefined') return false
-    try {
-        if (localStorage.getItem(ZOOMED_NOTICE_KEY)) return false
-        localStorage.setItem(ZOOMED_NOTICE_KEY, 'true')
-        return true
-    } catch {
-        return false
-    }
+    if (mode !== 'zoom') return false
+    const notices = getProfile()?.seen_notices ?? {}
+    if (notices.zoomed) return false
+    void savePlayerSettings({ seen_notices: { zoomed: true } })
+    return true
 }
 
 export function isImageMode(value: unknown): value is ImageMode {
@@ -103,23 +89,12 @@ export function isImageMode(value: unknown): value is ImageMode {
 }
 
 export function loadSavedImageMode(): ImageMode {
-    if (typeof window === 'undefined') return 'pixelated'
-    try {
-        const saved = localStorage.getItem(IMAGE_MODE_STORAGE_KEY)
-        if (isImageMode(saved)) return saved
-    } catch {
-        // Ignore storage errors
-    }
-    return 'pixelated'
+    const saved = getProfile()?.image_mode
+    return isImageMode(saved) ? saved : 'pixelated'
 }
 
 export function saveImageMode(mode: ImageMode): void {
-    if (typeof window === 'undefined') return
-    try {
-        localStorage.setItem(IMAGE_MODE_STORAGE_KEY, mode)
-    } catch {
-        // Ignore storage errors
-    }
+    void savePlayerSettings({ image_mode: mode })
 }
 
 // Scale applied to clear.png for each guess count. Index = guesses used.

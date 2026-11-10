@@ -9,6 +9,7 @@ import StatsModal from '@/components/modals/StatsModal'
 import HelpModal from '@/components/modals/HelpModal'
 import FeedbackModal from '@/components/modals/FeedbackModal'
 import InfoModal from '@/components/modals/InfoModal'
+import AccountModal from '@/components/modals/AccountModal'
 import HistoryModal from '@/components/modals/HistoryModal'
 import WinModal from '@/components/modals/WinModal'
 import {
@@ -17,6 +18,7 @@ import {
     type HistoryDailyImage,
 } from '@/lib/supabase'
 import { useGameController } from '@/hooks/useGameController'
+import { savePlayerSettings } from '@/lib/player'
 import IndexModal from '@/components/modals/IndexModal'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef, useCallback } from 'react'
@@ -62,6 +64,7 @@ export default function Home() {
     const router = useRouter()
     const [showIndexModal, setShowIndexModal] = useState(true)
     const [showInfo, setShowInfo] = useState(false)
+    const [showAccount, setShowAccount] = useState(false)
     const [showHistory, setShowHistory] = useState(false)
     const [historyDate, setHistoryDate] = useState<string | null>(null)
     const [historyImage, setHistoryImage] = useState<HistoryDailyImage | null>(
@@ -122,11 +125,11 @@ export default function Home() {
         streakMilestone,
         setShowStreakPopup,
         showGameOver,
+        lostStreak,
         handlePlayAgain,
         handleSkip,
         loadNextUnlimited,
         unlimitedCurrentStreak,
-        unlimitedMaxStreak,
     } = useGameController()
 
     const [inputMode, , inputModeReady] = useInputMode()
@@ -343,9 +346,7 @@ export default function Home() {
     }, [isInHistoryMode, handleHistoryKeyPress, historyDisabledLetters])
 
     useEffect(() => {
-        try {
-            localStorage.setItem('idol-guessr-game-mode', 'daily')
-        } catch {}
+        void savePlayerSettings({ game_mode: 'daily' })
         if (gameMode !== 'daily') {
             handleGameModeChange('daily')
         }
@@ -416,7 +417,7 @@ export default function Home() {
                 ) : (
                     <GameHeader
                         timer={timer}
-                        onShowStats={() => setShowStats(true)}
+                        onShowAccount={() => setShowAccount(true)}
                         onShowInfo={() => setShowInfo(true)}
                         gameMode={gameMode}
                         onGameModeChange={handleGameModeChange}
@@ -507,7 +508,7 @@ export default function Home() {
                                 setShowStreakPopup(false)
                             }
                             showGameOver={showGameOver}
-                            highestStreak={unlimitedMaxStreak}
+                            highestStreak={lostStreak}
                             onPlayAgain={handlePlayAgain}
                             guesses={isInHistoryMode ? historyGuesses : guesses}
                         />
@@ -617,6 +618,11 @@ export default function Home() {
                 }}
             />
 
+            <AccountModal
+                isOpen={showAccount}
+                onClose={() => setShowAccount(false)}
+            />
+
             <InfoModal
                 isOpen={showInfo}
                 onClose={() => setShowInfo(false)}
@@ -656,6 +662,9 @@ export default function Home() {
                 }}
                 onChallenge={() => {
                     router.push('/challenge', { scroll: false })
+                }}
+                onUnshuffled={() => {
+                    router.push('/unshuffled', { scroll: false })
                 }}
             />
 

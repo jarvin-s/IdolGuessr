@@ -22,8 +22,8 @@ interface GameProgressHook {
     statsLoaded: boolean
     handleGameWin: (guessNumber: number) => void
     handleGameLoss: () => void
-    saveProgress: (newGuesses: Array<'correct' | 'incorrect' | 'empty'>) => void
-    saveGuessAttempt: (guess: string) => void
+    saveProgress: () => void
+    saveGuessAttempt: () => void
     loadGuessAttempts: () => string[]
 }
 
@@ -141,14 +141,11 @@ export function useGameProgress(
         // Don't clear guess attempts here - they're needed for the modal
     }, [updateStats, dailyImage, correctAnswer, clearDailyProgress, loadGuessAttempts])
 
-    const saveProgress = useCallback(
-        (newGuesses: Array<'correct' | 'incorrect' | 'empty'>) => {
-            if (dailyImage?.id) {
-                saveDailyProgress(dailyImage.id, newGuesses)
-            }
-        },
-        [dailyImage, saveDailyProgress]
-    )
+    const saveProgress = useCallback(() => {
+        if (dailyImage?.id) {
+            saveDailyProgress()
+        }
+    }, [dailyImage, saveDailyProgress])
 
     return {
         guesses,

@@ -1,6 +1,8 @@
-import type { FeedbackTicket } from '@/lib/supabase'
+import { claimFeedbackTickets, type FeedbackTicket } from '@/lib/supabase'
+import { getProfile } from '@/lib/player'
 
 const STORAGE_KEY = 'idol-guessr-feedback-tickets'
+const memory = new Map<string, StoredTicket>()
 
 export interface StoredTicket {
     id: string
@@ -8,7 +10,7 @@ export interface StoredTicket {
     lastSeenAdminAt: string | null
 }
 
-export function getStoredTickets(): StoredTicket[] {
+function readLegacyTickets(): StoredTicket[] {
     if (typeof window === 'undefined') return []
     try {
         const raw = localStorage.getItem(STORAGE_KEY)
@@ -23,37 +25,88 @@ export function getStoredTickets(): StoredTicket[] {
     }
 }
 
-function saveStoredTickets(tickets: StoredTicket[]): void {
+export function rememberTicket(id: string, token: string): void {
+    const existing = memory.get(id)
+    memory.set(id, {
+        id,
+        token,
+        lastSeenAdminAt: existing?.lastSeenAdminAt ?? null,
+    })
+}
+
+function writeBrowserTickets(tickets: StoredTicket[]): void {
     if (typeof window === 'undefined') return
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets))
-    } catch {
-        // Storage full or unavailable
+    if (tickets.length === 0) {
+        localStorage.removeItem(STORAGE_KEY)
+        return
     }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets))
+}
+
+export function getStoredTickets(): StoredTicket[] {
+    for (const ticket of readLegacyTickets()) {
+        if (!memory.has(ticket.id)) memory.set(ticket.id, ticket)
+    }
+    return [...memory.values()]
 }
 
 export function addStoredTicket(id: string, token: string): void {
-    const tickets = getStoredTickets().filter((t) => t.id !== id)
-    tickets.unshift({ id, token, lastSeenAdminAt: null })
-    saveStoredTickets(tickets)
+    rememberTicket(id, token)
+    const next = readLegacyTickets().filter((ticket) => ticket.id !== id)
+    next.push({
+        id,
+        token,
+        lastSeenAdminAt: memory.get(id)?.lastSeenAdminAt ?? null,
+    })
+    writeBrowserTickets(next)
+}
+
+function removeBrowserTickets(ids: Set<string>): void {
+    if (ids.size === 0) return
+    writeBrowserTickets(readLegacyTickets().filter((ticket) => !ids.has(ticket.id)))
+}
+
+export async function claimAccountFeedbackTickets(): Promise<void> {
+    const profile = getProfile()
+    if (!profile || profile.is_anonymous) return
+    const stored = readLegacyTickets()
+    if (stored.length === 0) return
+    try {
+        const claimed = await claimFeedbackTickets(
+            stored.map(({ id, token }) => ({ id, token }))
+        )
+        removeBrowserTickets(new Set(claimed))
+    } catch (err) {
+        console.error('claim_feedback_tickets', err)
+    }
 }
 
 export function getTicketToken(id: string): string | null {
-    return getStoredTickets().find((t) => t.id === id)?.token ?? null
+    return getStoredTickets().find((ticket) => ticket.id === id)?.token ?? null
 }
 
 export function markSeen(id: string, lastAdminMessageAt: string | null): void {
     if (!lastAdminMessageAt) return
-    const tickets = getStoredTickets().map((t) =>
-        t.id === id ? { ...t, lastSeenAdminAt: lastAdminMessageAt } : t,
-    )
-    saveStoredTickets(tickets)
+    const current = memory.get(id)
+    if (current) memory.set(id, { ...current, lastSeenAdminAt: lastAdminMessageAt })
+}
+
+function seenAtFor(id: string): string | null {
+    const fromMemory = memory.get(id)?.lastSeenAdminAt ?? null
+    const reads = getProfile()?.seen_notices?.feedback_reads
+    const fromProfile =
+        reads && typeof reads === 'object' && !Array.isArray(reads)
+            ? (reads as Record<string, unknown>)[id]
+            : null
+    const profileAt = typeof fromProfile === 'string' ? fromProfile : null
+    if (!fromMemory) return profileAt
+    if (!profileAt) return fromMemory
+    return new Date(fromMemory).getTime() > new Date(profileAt).getTime() ? fromMemory : profileAt
 }
 
 export function hasUnread(ticket: Pick<FeedbackTicket, 'id' | 'last_admin_message_at'>): boolean {
     if (!ticket.last_admin_message_at) return false
-    const stored = getStoredTickets().find((t) => t.id === ticket.id)
-    if (!stored) return false
-    if (!stored.lastSeenAdminAt) return true
-    return new Date(ticket.last_admin_message_at).getTime() > new Date(stored.lastSeenAdminAt).getTime()
+    const seen = seenAtFor(ticket.id)
+    if (!seen) return true
+    return new Date(ticket.last_admin_message_at).getTime() > new Date(seen).getTime()
 }
