@@ -226,9 +226,6 @@ export default function InfiniteStartModal({
                 <div className='mb-4'>
                     <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-zinc-300'>
                         Image Style
-                        <span className='rounded-full bg-pink-500 px-1.5 py-0.5 text-[10px] font-bold leading-none tracking-wide text-white uppercase'>
-                            New
-                        </span>
                     </label>
                     <div ref={imageModeDropdownRef} className='relative'>
                         <button

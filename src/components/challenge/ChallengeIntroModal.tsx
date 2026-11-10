@@ -28,7 +28,7 @@ export default function ChallengeIntroModal({
 
     return (
         <div className='fixed inset-0 z-[300] flex items-center justify-center bg-black/50 p-4'>
-            <div className='modal-fade-in relative w-full max-w-lg bg-white dark:bg-zinc-900 px-8 py-6'>
+            <div className='modal-fade-in relative w-full max-w-lg bg-white px-8 py-6 dark:bg-zinc-900'>
                 <div className='mb-6 text-center'>
                     <h2 className='mb-4 text-3xl font-bold uppercase'>
                         Challenge ready!
@@ -46,7 +46,7 @@ export default function ChallengeIntroModal({
                     Start challenge!
                 </button>
 
-                <div className='my-6 flex bg-gradient-to-r from-pink-100 dark:from-pink-950 to-pink-50 dark:to-zinc-900 p-6'>
+                <div className='my-6 flex bg-gradient-to-r from-pink-100 to-pink-50 p-6 dark:from-pink-950 dark:to-zinc-900'>
                     <div className='space-y-3'>
                         <div className='flex items-center gap-1'>
                             Idols:
@@ -65,7 +65,7 @@ export default function ChallengeIntroModal({
                             <span className='font-bold text-black dark:text-zinc-100'>
                                 {formatGenFilter(genFilter)}
                             </span>
-                        </div>                        
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Confetti from 'react-confetti'
 import GameHeader from '@/components/game/GameHeader'
@@ -11,10 +11,19 @@ import StatsModal from '@/components/modals/StatsModal'
 import HelpModal from '@/components/modals/HelpModal'
 import FeedbackModal from '@/components/modals/FeedbackModal'
 import InfoModal from '@/components/modals/InfoModal'
+import AccountModal from '@/components/modals/AccountModal'
 import WinModal from '@/components/modals/WinModal'
 import InfiniteStartModal from '@/components/modals/InfiniteStartModal'
 import FilterModal from '@/components/filters/FilterModal'
 import { useGameController } from '@/hooks/useGameController'
+import {
+    clearRunEnded,
+    flushPlayerSettingsNow,
+    getProfile,
+    getUnlimitedGame,
+    runAwaitingPlayAgain,
+    savePlayerSettings,
+} from '@/lib/player'
 import { getImageUrl } from '@/lib/supabase'
 import IdolTextInput from '@/components/input/IdolTextInput'
 import { useInputMode } from '@/utils/inputMode'
@@ -35,9 +44,11 @@ type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 
 export default function InfinitePage() {
     const router = useRouter()
+    const startingRef = useRef(false)
     const [startOpen, setStartOpen] = useState(false)
     const [showFilterModal, setShowFilterModal] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
+    const [showAccount, setShowAccount] = useState(false)
     const [inputMode, , inputModeReady] = useInputMode()
     const {
         handleGameModeChange,
@@ -83,62 +94,74 @@ export default function InfinitePage() {
         streakMilestone,
         setShowStreakPopup,
         showGameOver,
+        lostStreak,
         handlePlayAgain,
         handleSkip,
         loadNextUnlimited,
         unlimitedCurrentStreak,
-        unlimitedMaxStreak,
         guesses,
     } = useGameController()
 
-    const handleStart = (
+    const handleStart = async (
         groupFilter: GroupFilter,
         genFilter: number[],
         difficulty: InfiniteDifficulty,
         selectedImageMode: ImageMode
     ) => {
+        if (startingRef.current) return
+        startingRef.current = true
         try {
-            localStorage.setItem('idol-guessr-group-filter', groupFilter)
-            localStorage.setItem('idol-guessr-gen-filter', JSON.stringify(genFilter))
+            clearRunEnded('infinite', difficulty, selectedImageMode)
+            void savePlayerSettings({
+                group_filter: groupFilter,
+                gen_filter: genFilter,
+            })
             saveDifficulty(difficulty)
             saveImageMode(selectedImageMode)
-        } catch {
-            // Ignore localStorage errors
+            await flushPlayerSettingsNow()
+            await handleGameModeChange(
+                'unlimited',
+                groupFilter,
+                genFilter,
+                difficulty,
+                selectedImageMode
+            )
+            setStartOpen(false)
+        } finally {
+            startingRef.current = false
         }
-        handleGameModeChange('unlimited', groupFilter, genFilter, difficulty, selectedImageMode)
-        setStartOpen(false)
     }
 
     useEffect(() => {
-        try {
-            const savedGroupFilter = localStorage.getItem('idol-guessr-group-filter')
-            const savedGenFilter = localStorage.getItem('idol-guessr-gen-filter')
+        const savedDifficulty = loadSavedDifficulty()
+        const savedImageMode = loadSavedImageMode()
+        setImageMode(savedImageMode)
 
-            let parsedGenFilter = DEFAULT_INFINITE_GEN_FILTER
-            if (savedGenFilter) {
-                try {
-                    const parsed = JSON.parse(savedGenFilter)
-                    if (isValidInfiniteGenFilter(parsed)) {
-                        parsedGenFilter = parsed
-                    }
-                } catch {
-                    // Keep default
-                }
-            }
-
-            const savedDifficulty = loadSavedDifficulty()
-            const savedImageMode = loadSavedImageMode()
-            setImageMode(savedImageMode)
-
-            if (savedGroupFilter === 'boy-group' || savedGroupFilter === 'girl-group' || savedGroupFilter === 'both') {
-                handleGameModeChange('unlimited', savedGroupFilter as GroupFilter, parsedGenFilter, savedDifficulty, savedImageMode)
-                setStartOpen(false)
-            } else {
-                setStartOpen(true)
-            }
-        } catch {
-            setStartOpen(true)
+        if (runAwaitingPlayAgain('infinite', savedDifficulty, savedImageMode)) {
+            setStartOpen(false)
+            return
         }
+
+        const inProgress = getUnlimitedGame(savedDifficulty, savedImageMode)
+        if (!inProgress) {
+            setStartOpen(true)
+            return
+        }
+
+        const savedGroupFilter = getProfile()?.group_filter
+        const savedGenFilter = getProfile()?.gen_filter
+        const parsedGenFilter = isValidInfiniteGenFilter(savedGenFilter)
+            ? savedGenFilter
+            : DEFAULT_INFINITE_GEN_FILTER
+        const group =
+            savedGroupFilter === 'boy-group' ||
+            savedGroupFilter === 'girl-group' ||
+            savedGroupFilter === 'both'
+                ? savedGroupFilter
+                : 'both'
+
+        handleGameModeChange('unlimited', group, parsedGenFilter, savedDifficulty, savedImageMode)
+        setStartOpen(false)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -147,7 +170,7 @@ export default function InfinitePage() {
             <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:dark:border-zinc-700 sm:shadow-lg'>
                 <GameHeader
                     timer={timer}
-                    onShowStats={() => setShowStats(true)}
+                    onShowAccount={() => setShowAccount(true)}
                     onShowInfo={() => setShowInfo(true)}
                     gameMode={'unlimited'}
                     onGameModeChange={() => {
@@ -204,7 +227,7 @@ export default function InfinitePage() {
                                 setShowStreakPopup(false)
                             }
                             showGameOver={showGameOver}
-                            highestStreak={unlimitedMaxStreak}
+                            highestStreak={lostStreak}
                             onPlayAgain={() => setShowFilterModal(true)}
                             guesses={guesses}
                         />
@@ -273,6 +296,11 @@ export default function InfinitePage() {
                     setShowFeedback(false)
                     setShowInfo(true)
                 }}
+            />
+
+            <AccountModal
+                isOpen={showAccount}
+                onClose={() => setShowAccount(false)}
             />
 
             <InfoModal

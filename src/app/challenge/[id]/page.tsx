@@ -8,6 +8,7 @@ import GuessInput from '@/components/game/GuessInput'
 import OnScreenKeyboard from '@/components/input/OnScreenKeyboard'
 import IdolTextInput from '@/components/input/IdolTextInput'
 import InfoModal from '@/components/modals/InfoModal'
+import AccountModal from '@/components/modals/AccountModal'
 import HelpModal from '@/components/modals/HelpModal'
 import FeedbackModal from '@/components/modals/FeedbackModal'
 import { useInputMode } from '@/utils/inputMode'
@@ -15,11 +16,14 @@ import ChallengeProgress from '@/components/challenge/ChallengeProgress'
 import ChallengeCompleteModal from '@/components/challenge/ChallengeCompleteModal'
 import ChallengeIntroModal from '@/components/challenge/ChallengeIntroModal'
 import { useChallengeController } from '@/hooks/useChallengeController'
+import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function ChallengePlayPage() {
     const params = useParams()
     const router = useRouter()
+    const { isGuest, profile } = useAuth()
     const challengeId = params.id as string
+    const accountNickname = !isGuest ? profile?.nickname : null
 
     const {
         challenge,
@@ -44,22 +48,22 @@ export default function ChallengePlayPage() {
         handleKeyPress,
         submitResults,
         results,
+        attemptStarted,
+        markStarted,
     } = useChallengeController(challengeId)
 
     const [showIntro, setShowIntro] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
+    const [showAccount, setShowAccount] = useState(false)
     const [showHelp, setShowHelp] = useState(false)
     const [showFeedback, setShowFeedback] = useState(false)
     const [inputMode, , inputModeReady] = useInputMode()
 
     useEffect(() => {
-        if (challenge && currentIndex === 0 && !isLoading && results.length === 0) {
-            const savedProgress = localStorage.getItem('idol-guessr-challenge-progress')
-            if (!savedProgress) {
-                setShowIntro(true)
-            }
-        }
-    }, [challenge, currentIndex, isLoading, results.length])
+        if (!challenge || isLoading) return
+        const inProgress = attemptStarted || currentIndex > 0 || results.length > 0
+        setShowIntro(!inProgress)
+    }, [challenge, currentIndex, isLoading, results.length, attemptStarted])
 
     useEffect(() => {
         if (alreadyPlayed) {
@@ -74,8 +78,9 @@ export default function ChallengePlayPage() {
         }
     }
 
-    const handleStartChallenge = () => {
-        setShowIntro(false)
+    const handleStartChallenge = async () => {
+        const started = await markStarted()
+        if (started) setShowIntro(false)
     }
 
     if (isLoading) {
@@ -135,7 +140,7 @@ export default function ChallengePlayPage() {
                 <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:dark:border-zinc-700 sm:shadow-lg'>
                     <GameHeader
                         timer={`${currentIndex + 1}/${totalIdols}`}
-                        onShowStats={() => {}}
+                        onShowAccount={() => setShowAccount(true)}
                         onShowInfo={() => setShowInfo(true)}
                         gameMode={'unlimited'}
                         onGameModeChange={() => {}}
@@ -218,6 +223,11 @@ export default function ChallengePlayPage() {
                 </div>
             )}
 
+            <AccountModal
+                isOpen={showAccount}
+                onClose={() => setShowAccount(false)}
+            />
+
             <InfoModal
                 isOpen={showInfo}
                 onClose={() => setShowInfo(false)}
@@ -256,6 +266,7 @@ export default function ChallengePlayPage() {
                 totalCorrect={totalCorrect}
                 totalIdols={totalIdols}
                 isSubmitting={isSubmitting}
+                accountNickname={accountNickname}
                 onSubmit={handleSubmitResults}
             />
         </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Confetti from 'react-confetti'
 import GameHeader from '@/components/game/GameHeader'
@@ -11,19 +11,23 @@ import StatsModal from '@/components/modals/StatsModal'
 import HelpModal from '@/components/modals/HelpModal'
 import FeedbackModal from '@/components/modals/FeedbackModal'
 import InfoModal from '@/components/modals/InfoModal'
+import AccountModal from '@/components/modals/AccountModal'
 import WinModal from '@/components/modals/WinModal'
 import HangulStartModal from '@/components/modals/HangulStartModal'
 import HangulFilterModal from '@/components/filters/HangulFilterModal'
 import { useHangulGameController } from '@/hooks/useHangulGameController'
+import { getHangulGame, runAwaitingPlayAgain } from '@/lib/player'
 import { getImageUrl } from '@/lib/supabase'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 
 export default function HangulPage() {
     const router = useRouter()
+    const startingRef = useRef(false)
     const [startOpen, setStartOpen] = useState(false)
     const [showFilterModal, setShowFilterModal] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
+    const [showAccount, setShowAccount] = useState(false)
     const {
         isLoading,
         hangulImage,
@@ -64,22 +68,23 @@ export default function HangulPage() {
         handleStart,
     } = useHangulGameController()
 
-    const onStartGame = (filter: GroupFilter) => {
-        handleStart(filter)
-        setStartOpen(false)
+    const onStartGame = async (filter: GroupFilter) => {
+        if (startingRef.current) return
+        startingRef.current = true
+        try {
+            await handleStart(filter)
+            setStartOpen(false)
+        } finally {
+            startingRef.current = false
+        }
     }
 
     useEffect(() => {
-        try {
-            const savedFilter = localStorage.getItem('idol-guessr-hangul-group-filter')
-            if (savedFilter === 'boy-group' || savedFilter === 'girl-group' || savedFilter === 'both') {
-                setStartOpen(false)
-            } else {
-                setStartOpen(true)
-            }
-        } catch {
-            setStartOpen(true)
+        if (runAwaitingPlayAgain('hangul')) {
+            setStartOpen(false)
+            return
         }
+        setStartOpen(!getHangulGame())
     }, [])
 
     return (
@@ -87,7 +92,7 @@ export default function HangulPage() {
             <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[900px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:dark:border-zinc-700 sm:shadow-lg'>
                 <GameHeader
                     timer={''}
-                    onShowStats={() => setShowStats(true)}
+                    onShowAccount={() => setShowAccount(true)}
                     onShowInfo={() => setShowInfo(true)}
                     gameMode={'hangul'}
                     onGameModeChange={() => {
@@ -175,6 +180,11 @@ export default function HangulPage() {
                     setShowFeedback(false)
                     setShowInfo(true)
                 }}
+            />
+
+            <AccountModal
+                isOpen={showAccount}
+                onClose={() => setShowAccount(false)}
             />
 
             <InfoModal

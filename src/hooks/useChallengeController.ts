@@ -5,8 +5,10 @@ import {
   getChallenge,
   submitChallengeResult,
   checkChallengePlayed,
+  startChallengeAttempt,
   getOrCreateSessionId,
   getImageUrl,
+  supabase,
   type Challenge,
   type ChallengeIdol,
   type ChallengeIdolResult,
@@ -14,15 +16,6 @@ import {
 import idolNames from '@/data/idolNames.json'
 
 const idolNamesSet = new Set(idolNames.map((name: string) => name.toUpperCase()))
-
-const CHALLENGE_STORAGE_KEY = 'idol-guessr-challenge-progress'
-
-interface ChallengeProgress {
-  challengeId: string
-  currentIndex: number
-  results: ChallengeIdolResult[]
-  currentGuesses: Array<'correct' | 'incorrect' | 'empty'>
-}
 
 export function useChallengeController(challengeId: string) {
   const [challenge, setChallenge] = useState<Challenge | null>(null)
@@ -42,6 +35,7 @@ export function useChallengeController(challengeId: string) {
   const [notInList, setNotInList] = useState(false)
 
   const [results, setResults] = useState<ChallengeIdolResult[]>([])
+  const [attemptStarted, setAttemptStarted] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -56,45 +50,12 @@ export function useChallengeController(challengeId: string) {
   const totalIdols = challenge?.idol_count ?? 0
   const totalCorrect = results.filter((r) => r.correct).length
 
-  const loadProgress = useCallback((): ChallengeProgress | null => {
-    if (typeof window === 'undefined') return null
-    try {
-      const saved = localStorage.getItem(CHALLENGE_STORAGE_KEY)
-      if (!saved) return null
-      const progress = JSON.parse(saved) as ChallengeProgress
-      if (progress.challengeId !== challengeId) return null
-      return progress
-    } catch {
-      return null
-    }
-  }, [challengeId])
-
-  const saveProgress = useCallback((
-    index: number,
-    currentResults: ChallengeIdolResult[],
-    currentGuessState: Array<'correct' | 'incorrect' | 'empty'>
-  ) => {
-    if (typeof window === 'undefined') return
-    try {
-      const progress: ChallengeProgress = {
-        challengeId,
-        currentIndex: index,
-        results: currentResults,
-        currentGuesses: currentGuessState
-      }
-      localStorage.setItem(CHALLENGE_STORAGE_KEY, JSON.stringify(progress))
-    } catch (error) {
-      console.error('Error saving challenge progress:', error)
-    }
-  }, [challengeId])
+  const saveProgress = useCallback(() => {
+    // submit_challenge_guess stores the in-progress challenge.
+  }, [])
 
   const clearProgress = useCallback(() => {
-    if (typeof window === 'undefined') return
-    try {
-      localStorage.removeItem(CHALLENGE_STORAGE_KEY)
-    } catch (error) {
-      console.error('Error clearing challenge progress:', error)
-    }
+    // The finished challenge stays on the server.
   }, [])
 
   useEffect(() => {
@@ -121,18 +82,38 @@ export function useChallengeController(challengeId: string) {
 
       setChallenge(challengeData)
 
-      const savedProgress = loadProgress()
-      if (savedProgress) {
-        setCurrentIndex(savedProgress.currentIndex)
-        setResults(savedProgress.results)
-        setGuesses(savedProgress.currentGuesses)
+      const { data } = await supabase.rpc('get_challenge_progress', {
+        p_challenge_id: challengeId,
+      })
+      const saved = data as {
+        index?: number
+        results?: ChallengeIdolResult[]
+        current_guesses?: string[]
+        started?: boolean
+      } | null
+      if (saved && typeof saved.index === 'number') {
+        setCurrentIndex(saved.index)
+        setResults(saved.results ?? [])
+        const slots: Array<'correct' | 'incorrect' | 'empty'> = [
+          'empty', 'empty', 'empty', 'empty', 'empty', 'empty',
+        ]
+        ;(saved.current_guesses ?? []).forEach((_, index) => {
+          if (index < 6) slots[index] = 'incorrect'
+        })
+        setGuesses(slots)
+        setAttemptStarted(
+          Boolean(saved.started) ||
+            saved.index > 0 ||
+            (saved.results?.length ?? 0) > 0 ||
+            (saved.current_guesses?.length ?? 0) > 0,
+        )
       }
 
       setIsLoading(false)
     }
 
     void loadChallenge()
-  }, [challengeId, loadProgress])
+  }, [challengeId])
 
   useEffect(() => {
     const update = () => setWindowDimensions({
@@ -159,9 +140,9 @@ export function useChallengeController(challengeId: string) {
       setGameWon(false)
       setGameLost(false)
       setIsAnimating(false)
-      saveProgress(nextIndex, results, ['empty', 'empty', 'empty', 'empty', 'empty', 'empty'])
+      saveProgress()
     }
-  }, [challenge, currentIndex, results, saveProgress, clearProgress])
+  }, [challenge, currentIndex, saveProgress, clearProgress])
 
   const recordResult = useCallback((correct: boolean, guessCount: number, guessAttempts: string[]) => {
     if (!currentIdol) return
@@ -175,10 +156,16 @@ export function useChallengeController(challengeId: string) {
 
     setResults((prev) => {
       const newResults = [...prev, result]
-      saveProgress(currentIndex, newResults, guesses)
+      saveProgress()
       return newResults
     })
-  }, [currentIdol, currentIndex, guesses, saveProgress])
+  }, [currentIdol, saveProgress])
+
+  const markStarted = useCallback(async () => {
+    const ok = await startChallengeAttempt(challengeId)
+    if (ok) setAttemptStarted(true)
+    return ok
+  }, [challengeId])
 
   const submitResults = useCallback(async (nickname: string | null) => {
     if (!challenge || isSubmitting) return false
@@ -201,6 +188,7 @@ export function useChallengeController(challengeId: string) {
   }, [challenge, challengeId, results, isSubmitting, clearProgress])
 
   const guessAttemptsRef = useRef<string[]>([])
+  const challengeGuessLock = useRef(false)
 
   const handleKeyPress = useCallback((key: string, guessOverride?: string) => {
     if (isComplete || !currentIdol) return
@@ -227,13 +215,19 @@ export function useChallengeController(challengeId: string) {
         }
 
         guessAttemptsRef.current.push(normalizedGuess)
-
-        const normalizedName = currentIdol.name?.toUpperCase().trim() || ''
-        const normalizedAltName = currentIdol.alt_name?.toUpperCase().trim() || ''
-        let isCorrect = normalizedGuess === normalizedName
-        if (normalizedAltName && !isCorrect) {
-          isCorrect = normalizedGuess === normalizedAltName
-        }
+        if (challengeGuessLock.current) return
+        challengeGuessLock.current = true
+        void (async () => {
+          try {
+        const { data, error } = await supabase.rpc('submit_challenge_guess', {
+          p_challenge_id: challengeId,
+          p_index: currentIndex,
+          p_guess: normalizedGuess,
+        })
+        if (error || !data) return
+        const isCorrect = Boolean((data as { correct?: boolean }).correct)
+        const answer = String((data as { answer?: string }).answer || '')
+        if (answer) currentIdol.name = answer
 
         setIsAnimating(true)
 
@@ -259,7 +253,7 @@ export function useChallengeController(challengeId: string) {
                   setTimeout(() => moveToNextIdol(), 2000)
                 }, 300)
               } else {
-                saveProgress(currentIndex, results, newGuesses)
+                saveProgress()
               }
 
               return newGuesses
@@ -284,6 +278,10 @@ export function useChallengeController(challengeId: string) {
 
           setTimeout(() => moveToNextIdol(), 2000)
         }
+          } finally {
+            challengeGuessLock.current = false
+          }
+        })()
       }
     } else if (key === '✕') {
       if (!gameWon && !gameLost) {
@@ -383,6 +381,8 @@ export function useChallengeController(challengeId: string) {
     totalCorrect,
     isComplete,
     isSubmitting,
+    attemptStarted,
+    markStarted,
 
     // Actions
     handleKeyPress,
