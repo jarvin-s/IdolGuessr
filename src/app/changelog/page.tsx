@@ -14,8 +14,18 @@ export const metadata: Metadata = {
 
 const entries: { date: string; changes: string[] }[] = [
     {
+        date: 'November 10, 2026',
+        changes: [
+            'IdolGuessr 2.0 RELEASE',
+            'Added Unshuffled mode',
+            'Added Leaderboard',
+            'Added User authentication',
+            'Added User profiles',
+        ],
+    },
+    {
         date: 'October 26, 2026',
-        changes: ['Added shoutouts for who picked today\'s idol'],
+        changes: ["Added shoutouts for who picked today's idol"],
     },
     {
         date: 'October 21, 2026',
@@ -27,7 +37,9 @@ const entries: { date: string; changes: string[] }[] = [
     },
     {
         date: 'October 6, 2026',
-        changes: ['Added difficulty levels to Infinite mode (Easy, Normal, Hard, Challenger)'],
+        changes: [
+            'Added difficulty levels to Infinite mode (Easy, Normal, Hard, Challenger)',
+        ],
     },
     {
         date: 'September 28, 2026',
@@ -77,7 +89,7 @@ export default function ChangelogPage() {
                 <div className='mb-6 flex items-center justify-between'>
                     <Link
                         href='/'
-                        className='flex h-8 items-center justify-center gap-2 rounded-full bg-gray-100 dark:bg-zinc-800 px-3 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
+                        className='flex h-8 items-center justify-center gap-2 rounded-full bg-gray-100 px-3 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                     >
                         <svg
                             className='h-4 w-4 text-gray-600 dark:text-zinc-400'
@@ -118,7 +130,7 @@ export default function ChangelogPage() {
                     {entries.map((entry) => (
                         <div
                             key={entry.date}
-                            className='border-l-2 border-gray-200 dark:border-zinc-700 pl-4'
+                            className='border-l-2 border-gray-200 pl-4 dark:border-zinc-700'
                         >
                             <span className='text-md font-bold text-pink-400'>
                                 {entry.date}
