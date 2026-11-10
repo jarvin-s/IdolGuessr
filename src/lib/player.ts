@@ -799,7 +799,7 @@ export async function fetchLeaderboard(mode: string, difficulty = '', imageMode 
     })
     if (error) throw error
     return data as {
-        rows: Array<{ rank: number; nickname: string; max_streak: number; is_me: boolean }>
+        rows: Array<{ rank: number; nickname: string; avatar_url: string | null; max_streak: number; is_me: boolean }>
         me: { rank: number | null; nickname: string | null; max_streak: number; eligible: boolean; is_anonymous: boolean } | null
     }
 }
