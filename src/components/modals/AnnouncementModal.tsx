@@ -53,11 +53,10 @@ export default function AnnouncementModal() {
                     INFO
                 </h1>
                 <p className='mt-4 text-lg leading-relaxed'>
-                    This is a testing environment for IdolGuessr!
+                    IdolGuessr just had a big update!
                 </p>
                 <p className='mt-4 text-lg leading-relaxed'>
-                    Expect bugs, try to find bugs and in general try to break
-                    the app, and then be sure to let me know :)
+                    Check out the new features and let me know what you think!
                 </p>
 
                 <h2 className={`${proximaNovaBold.className} mt-6 text-xl`}>
@@ -66,7 +65,8 @@ export default function AnnouncementModal() {
                 <ul className='mt-3 list-disc space-y-2 pl-5 text-lg leading-relaxed'>
                     <li>
                         Sign in to save your streak and pick a nickname.
-                        You&apos;ll find it under the account button.
+                        You&apos;ll find it under the account button (pink
+                        button top right).
                     </li>
                     <li>A leaderboard for the highest streaks.</li>
                     <li>
