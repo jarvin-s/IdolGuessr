@@ -1,4 +1,5 @@
 import type { FeedbackTicket } from '@/lib/supabase'
+import { TicketOpenerLine } from './TicketOpener'
 import {
     CATEGORY_LABELS,
     StatusPill,
@@ -16,6 +17,7 @@ interface TicketListProps {
     emptyMessage?: string
     selectedId?: string | null
     allTicketsForNumbering?: FeedbackTicket[]
+    showOpener?: boolean
 }
 
 export default function TicketList({
@@ -27,6 +29,7 @@ export default function TicketList({
     emptyMessage = 'No tickets yet.',
     selectedId,
     allTicketsForNumbering,
+    showOpener = false,
 }: TicketListProps) {
     const numberingTickets = allTicketsForNumbering ?? tickets
     if (isLoading && tickets.length === 0) {
@@ -69,6 +72,7 @@ export default function TicketList({
                                 <div className='mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-zinc-400'>
                                     <StatusPill status={ticket.status} />
                                     <span>{CATEGORY_LABELS[ticket.category] ?? ticket.category}</span>
+                                    {showOpener && <TicketOpenerLine opener={ticket.opener} />}
                                     <span>{formatTicketDate(ticket.updated_at)}</span>
                                 </div>
                             </div>

@@ -25,7 +25,7 @@ export default function InfoModal({
     onShowHistory,
     gameMode = 'daily',
 }: InfoModalProps) {
-    const feedbackUnread = useFeedbackUnread(isOpen)
+    const feedbackUnread = useFeedbackUnread()
     const [inputMode, setInputMode] = useInputMode()
 
     if (!isOpen) return null

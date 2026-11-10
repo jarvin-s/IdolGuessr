@@ -1,0 +1,7 @@
+'use client'
+
+import UnshuffledGame from '@/components/unshuffled/UnshuffledGame'
+
+export default function UnshuffledDailyPage() {
+    return <UnshuffledGame mode='daily' />
+}

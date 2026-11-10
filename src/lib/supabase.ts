@@ -48,6 +48,15 @@ export interface CurrentDaily {
 export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
 export type TicketCategory = 'general' | 'bug' | 'feature' | 'improvement'
 
+export interface TicketOpener {
+    user_id: string
+    email: string | null
+    name: string | null
+    avatar_url: string | null
+    nickname: string | null
+    provider: string | null
+}
+
 export interface FeedbackTicket {
     id: string
     ticket_number?: number | null
@@ -59,6 +68,7 @@ export interface FeedbackTicket {
     last_user_message_at: string | null
     last_admin_message_at: string | null
     token?: string
+    opener?: TicketOpener | null
 }
 
 export interface FeedbackMessage {
@@ -254,6 +264,31 @@ function parseJson(value: unknown): unknown {
     }
 }
 
+function asText(value: unknown): string | null {
+    return typeof value === 'string' && value.length > 0 ? value : null
+}
+
+function normalizeOpener(value: unknown): TicketOpener | null {
+    if (!value || typeof value !== 'object') return null
+    const row = value as Record<string, unknown>
+    if (typeof row.user_id !== 'string') return null
+    return {
+        user_id: row.user_id,
+        email: asText(row.email),
+        name: asText(row.name),
+        avatar_url: asText(row.avatar_url),
+        nickname: asText(row.nickname),
+        provider: asText(row.provider),
+    }
+}
+
+function normalizeTicket(value: unknown): FeedbackTicket | null {
+    if (!value || typeof value !== 'object') return null
+    const row = value as FeedbackTicket
+    if (typeof row.id !== 'string') return null
+    return { ...row, opener: normalizeOpener(row.opener) }
+}
+
 export async function claimFeedbackTickets(
     tickets: { id: string; token: string }[]
 ): Promise<string[]> {
@@ -370,40 +405,35 @@ export async function checkIsAdmin(): Promise<boolean> {
 export async function adminListTickets(
     status?: TicketStatus | 'all'
 ): Promise<FeedbackTicket[]> {
-    let query = supabase
-        .from('feedback_tickets')
-        .select(
-            'id, category, subject, status, created_at, updated_at, last_user_message_at, last_admin_message_at'
-        )
-        .order('updated_at', { ascending: false })
-    if (status && status !== 'all') query = query.eq('status', status)
-    const { data, error } = await query
+    const { data, error } = await supabase.rpc('admin_list_feedback_tickets', {
+        p_status: status && status !== 'all' ? status : null,
+    })
     if (error) throw error
-    return (data ?? []) as FeedbackTicket[]
+    const rows = parseJson(data)
+    if (!Array.isArray(rows)) return []
+    return rows
+        .map(normalizeTicket)
+        .filter((ticket): ticket is FeedbackTicket => ticket !== null)
 }
 
 export async function adminGetThread(
     ticketId: string
 ): Promise<FeedbackThread> {
-    const [ticketRes, messagesRes] = await Promise.all([
-        supabase
-            .from('feedback_tickets')
-            .select(
-                'id, category, subject, status, created_at, updated_at, last_user_message_at, last_admin_message_at'
-            )
-            .eq('id', ticketId)
-            .single(),
-        supabase
-            .from('feedback_messages')
-            .select('id, ticket_id, sender, body, created_at')
-            .eq('ticket_id', ticketId)
-            .order('created_at', { ascending: true }),
-    ])
-    if (ticketRes.error) throw ticketRes.error
-    if (messagesRes.error) throw messagesRes.error
+    const { data, error } = await supabase.rpc('admin_get_feedback_thread', {
+        p_ticket_id: ticketId,
+    })
+    if (error) throw error
+    const row = parseJson(data) as {
+        ticket?: unknown
+        messages?: unknown
+    } | null
+    const ticket = normalizeTicket(row?.ticket)
+    if (!ticket) throw new Error('Ticket was not found')
     return {
-        ticket: ticketRes.data as FeedbackTicket,
-        messages: (messagesRes.data ?? []) as FeedbackMessage[],
+        ticket,
+        messages: Array.isArray(row?.messages)
+            ? (row.messages as FeedbackMessage[])
+            : [],
     }
 }
 

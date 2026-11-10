@@ -111,5 +111,17 @@ export function useUnshuffledGame() {
         setState(createUnshuffledState(SCATTER_SEED))
     }, [])
 
-    return { ...state, place, returnToTray, check, shuffle }
+    const restoreSolved = useCallback((checksUsed: number) => {
+        const board = Array.from({ length: SLOT_COUNT }, (_, slot) => slot)
+        setState({
+            board,
+            tray: [],
+            checksUsed,
+            correctSlots: board,
+            won: true,
+            scatterSeed: SCATTER_SEED,
+        })
+    }, [])
+
+    return { ...state, place, returnToTray, check, shuffle, restoreSolved }
 }

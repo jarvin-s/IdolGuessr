@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
+import { useAuth } from '@/components/auth/AuthProvider'
 import { fetchLeaderboard } from '@/lib/player'
 import {
     DIFFICULTIES,
@@ -56,7 +57,9 @@ function AccountImage({ src, size }: { src: string; size: 'podium' | 'list' }) {
 
 function PodiumPortrait({ src }: { src?: string | null }) {
     if (!src) {
-        return <div className='h-16 w-16 rounded-full bg-gray-200 dark:bg-zinc-800' />
+        return (
+            <div className='h-16 w-16 rounded-full bg-gray-200 dark:bg-zinc-800' />
+        )
     }
     return <AccountImage src={src} size='podium' />
 }
@@ -95,7 +98,10 @@ function TopThree({ rows }: { rows: LeaderboardRow[] }) {
                             className='flex w-1/3 max-w-28 flex-col items-center'
                         >
                             {rank === 1 ? (
-                                <span className='text-3xl leading-none' aria-hidden>
+                                <span
+                                    className='text-3xl leading-none'
+                                    aria-hidden
+                                >
                                     👑
                                 </span>
                             ) : null}
@@ -154,6 +160,8 @@ function OptionGroup({
 }
 
 export default function LeaderboardPage() {
+    const { profile, isGuest } = useAuth()
+    const needsNickname = !profile?.nickname?.trim()
     const [tab, setTab] = useState<Tab>('daily')
     const [difficulty, setDifficulty] = useState<InfiniteDifficulty>('normal')
     const [imageMode, setImageMode] = useState<ImageMode>('pixelated')
@@ -224,6 +232,16 @@ export default function LeaderboardPage() {
                 Highest streak. Guests and accounts without a nickname are left
                 off.
             </p>
+            {needsNickname ? (
+                <p className='mt-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-zinc-900 dark:text-amber-100'>
+                    {isGuest ? 'Sign in, then choose' : 'Choose'} a nickname on
+                    your{' '}
+                    <Link href='/profile' className='font-semibold underline'>
+                        profile page
+                    </Link>{' '}
+                    and you will show up on the leaderboard.
+                </p>
+            ) : null}
             <div className='mt-6 space-y-4'>
                 <OptionGroup label='Gamemode:'>
                     <div className='flex rounded-full bg-gray-100 p-1 dark:bg-zinc-800'>
@@ -318,14 +336,26 @@ export default function LeaderboardPage() {
             ) : null}
             {me ? (
                 <p className='mt-6 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-zinc-700'>
-                    <span className='font-bold'>You:</span>{' '}
-                    {me.nickname ?? 'no nickname'} ·{' '}
-                    <span className='font-bold'>Best streak:</span>{' '}
+                    <span className='font-bold'>You:</span> {me.nickname ?? '?'}{' '}
+                    · <span className='font-bold'>Best streak:</span>{' '}
                     {me.max_streak} · <span className='font-bold'>Rank:</span>{' '}
-                    {me.rank ?? '-'}{' '}
-                    {me.is_anonymous || !me.eligible
-                        ? ' · sign in and set a nickname to be ranked'
-                        : ''}
+                    {me.rank ?? '?'}
+                    {me.nickname ? null : (
+                        <>
+                            {' '}
+                            ·{' '}
+                            {me.is_anonymous
+                                ? 'Sign in and add a nickname on your '
+                                : 'Add a nickname on your '}
+                            <Link
+                                href='/profile'
+                                className='font-semibold underline'
+                            >
+                                profile page
+                            </Link>{' '}
+                            and you will show up on the leaderboard.
+                        </>
+                    )}
                 </p>
             ) : null}
         </main>

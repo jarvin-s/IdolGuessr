@@ -666,6 +666,9 @@ export default function Home() {
                 onUnshuffled={() => {
                     router.push('/unshuffled', { scroll: false })
                 }}
+                onUnshuffledDaily={() => {
+                    router.push('/unshuffled/daily', { scroll: false })
+                }}
             />
 
             {gameMode === 'daily' && !isInHistoryMode && (

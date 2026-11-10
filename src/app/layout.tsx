@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/next'
 import LiveAnnouncementBanner from '@/components/announcements/LiveAnnouncementBanner'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { AuthProvider } from '@/components/auth/AuthProvider'
+import { FeedbackNoticeProvider } from '@/components/feedback/FeedbackNoticeProvider'
 import GuestSavePrompt from '@/components/auth/GuestSavePrompt'
 import { themeInitScript } from '@/components/theme/theme'
 import AnnouncementModal from '@/components/modals/AnnouncementModal'
@@ -56,6 +57,11 @@ export const metadata: Metadata = {
         'guess kpop idol',
         'guess idol kpop',
         'guess kpop',
+        'kpop guess',
+        'kpop guessing',
+        'kpop idol guessing',
+        'guessing kpop',
+        'guessing the kpop idol',
         'kpop guess idol',
     ],
     openGraph: {
@@ -80,10 +86,12 @@ export default function RootLayout({
                 <AnnouncementModal />
                 <ThemeProvider>
                     <AuthProvider>
-                        {children}
-                        <GuestSavePrompt />
-                        <LiveAnnouncementBanner />
-                        <Analytics />
+                        <FeedbackNoticeProvider>
+                            {children}
+                            <GuestSavePrompt />
+                            <LiveAnnouncementBanner />
+                            <Analytics />
+                        </FeedbackNoticeProvider>
                     </AuthProvider>
                 </ThemeProvider>
                 <meta name="google-site-verification" content="MdKcxKgV8Gu3dX6zl6vvcc2j7s1XCV3d2ta--42CZbU" />
