@@ -41,21 +41,6 @@ async function withPreview(row: SongRow): Promise<UnshuffledSong> {
     }
 }
 
-export async function getUnshuffledSong(): Promise<UnshuffledSong> {
-    const { data, error } = await supabase
-        .from('unshuffled_songs')
-        .select('id, itunes_track_id, song_name, artist_name')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-    if (error || !data) {
-        throw new Error(error?.message ?? 'No unshuffled song is available')
-    }
-
-    return withPreview(data)
-}
-
 export async function getRandomUnshuffledSong(
     excludeId?: number
 ): Promise<UnshuffledSong> {

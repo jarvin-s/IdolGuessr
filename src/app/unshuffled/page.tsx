@@ -19,7 +19,6 @@ import {
 import { useSnippetPlayer } from '@/hooks/useSnippetPlayer'
 import {
     getRandomUnshuffledSong,
-    getUnshuffledSong,
     submitUnshuffledResult,
     type UnshuffledSong,
 } from '@/lib/unshuffled'
@@ -74,7 +73,7 @@ export default function UnshuffledPage() {
 
     useEffect(() => {
         let cancelled = false
-        getUnshuffledSong()
+        getRandomUnshuffledSong()
             .then((next) => {
                 if (!cancelled) setSong(next)
             })
@@ -300,14 +299,21 @@ export default function UnshuffledPage() {
                             onDragEnd={handleDragEnd}
                         />
                         <div className='relative z-0 mx-auto w-full max-w-[320px] md:max-w-[27.5rem] lg:col-start-2 lg:row-start-1'>
-                            <div className='mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2'>
+                            <div className='mb-3 flex flex-col items-center gap-y-2'>
                                 <div
                                     aria-hidden
-                                    className='invisible rounded-full px-3 py-1.5 font-mono text-sm font-bold tabular-nums'
+                                    className='hidden rounded-full px-3 py-1.5 font-mono text-sm font-bold tabular-nums md:invisible md:block'
                                 >
                                     {formatUnshuffledTime(displaySeconds)}
                                 </div>
-                                <div className='flex min-w-0 items-center justify-center gap-1 md:gap-2'>
+                                <div
+                                    className={`rounded-full bg-gray-200 px-3 py-1.5 font-mono text-xl font-bold text-black dark:bg-zinc-800 dark:text-zinc-100 ${
+                                        started ? '' : 'invisible'
+                                    }`}
+                                >
+                                    {formatUnshuffledTime(displaySeconds)}
+                                </div>
+                                <div className='order-2 flex min-w-0 items-center justify-center gap-1 md:order-none md:gap-2'>
                                     <button
                                         type='button'
                                         onClick={handleCheck}
@@ -336,11 +342,11 @@ export default function UnshuffledPage() {
                                         type='button'
                                         onClick={() => void loadRandomSong()}
                                         disabled={songLoading}
-                                        className='inline-flex items-center justify-center gap-1 rounded-full bg-gray-200 p-2 text-[13px] font-bold whitespace-nowrap transition-colors hover:bg-gray-300 md:px-3 md:py-2 md:text-sm dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                                        className='inline-flex cursor-pointer items-center justify-center gap-1 rounded-full bg-pink-500 p-2 text-[13px] font-bold whitespace-nowrap text-white transition-colors hover:bg-pink-600 md:px-3 md:py-2 md:text-sm dark:bg-pink-800 dark:hover:bg-pink-700'
                                     >
                                         {songLoading
                                             ? 'Loading…'
-                                            : 'Random song'}
+                                            : 'Get random song'}
                                     </button>
                                     <button
                                         type='button'
@@ -369,13 +375,6 @@ export default function UnshuffledPage() {
                                             Reset
                                         </span>
                                     </button>
-                                </div>
-                                <div
-                                    className={`rounded-full bg-gray-200 px-3 py-1.5 font-mono text-sm font-bold text-black tabular-nums dark:bg-zinc-800 dark:text-zinc-100 ${
-                                        started ? '' : 'invisible'
-                                    }`}
-                                >
-                                    {formatUnshuffledTime(displaySeconds)}
                                 </div>
                             </div>
                             <PuzzleBoard
