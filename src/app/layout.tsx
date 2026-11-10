@@ -57,6 +57,11 @@ export const metadata: Metadata = {
         'guess kpop idol',
         'guess idol kpop',
         'guess kpop',
+        'kpop guess',
+        'kpop guessing',
+        'kpop idol guessing',
+        'guessing kpop',
+        'guessing the kpop idol',
         'kpop guess idol',
     ],
     openGraph: {
