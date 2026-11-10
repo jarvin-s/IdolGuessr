@@ -342,8 +342,18 @@ export default function UnshuffledPage() {
                                         type='button'
                                         onClick={() => void loadRandomSong()}
                                         disabled={songLoading}
-                                        className='inline-flex cursor-pointer items-center justify-center gap-1 rounded-full bg-pink-500 p-2 text-[13px] font-bold whitespace-nowrap text-white transition-colors hover:bg-pink-600 md:px-3 md:py-2 md:text-sm dark:bg-pink-800 dark:hover:bg-pink-700'
+                                        className='inline-flex cursor-pointer items-center justify-center gap-1 rounded-full bg-zinc-500 p-2 text-[13px] font-bold whitespace-nowrap text-white transition-colors hover:bg-zinc-600 md:px-3 md:py-2 md:text-sm dark:bg-zinc-800 dark:hover:bg-zinc-700'
                                     >
+                                        <span
+                                            aria-hidden
+                                            className='inline-block h-4 w-4 bg-current mask-contain mask-center mask-no-repeat'
+                                            style={{
+                                                maskImage:
+                                                    'url(/icons/dice.svg)',
+                                                WebkitMaskImage:
+                                                    'url(/icons/dice.svg)',
+                                            }}
+                                        />
                                         {songLoading
                                             ? 'Loading…'
                                             : 'Get random song'}
