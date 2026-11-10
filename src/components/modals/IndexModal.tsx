@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
+import UnshuffledModeModal from '@/components/unshuffled/UnshuffledModeModal'
 import { getDailyCount, getTodayDailyGuessCount } from '@/lib/supabase'
 
 interface IndexModalProps {
@@ -9,6 +10,7 @@ interface IndexModalProps {
     onHangul: () => void
     onChallenge?: () => void
     onUnshuffled?: () => void
+    onUnshuffledDaily?: () => void
 }
 
 export default function IndexModal({
@@ -18,11 +20,17 @@ export default function IndexModal({
     onHangul,
     onChallenge,
     onUnshuffled,
+    onUnshuffledDaily,
 }: IndexModalProps) {
     const [isClosing, setIsClosing] = useState(false)
+    const [unshuffledOpen, setUnshuffledOpen] = useState(false)
     const [dailyCount, setDailyCount] = useState<number | null>(null)
     const [todayGuessCount, setTodayGuessCount] = useState<number | null>(null)
     const [todayLabel, setTodayLabel] = useState<string | null>(null)
+
+    useEffect(() => {
+        if (!isOpen) setUnshuffledOpen(false)
+    }, [isOpen])
 
     useEffect(() => {
         setTodayLabel(
@@ -70,7 +78,7 @@ export default function IndexModal({
     }
 
     const handleUnshuffled = () => {
-        onUnshuffled?.()
+        setUnshuffledOpen(true)
     }
 
     return (
@@ -163,6 +171,12 @@ export default function IndexModal({
                     </p>
                 )}
             </div>
+            <UnshuffledModeModal
+                open={unshuffledOpen}
+                onClose={() => setUnshuffledOpen(false)}
+                onDaily={() => onUnshuffledDaily?.()}
+                onUnlimited={() => onUnshuffled?.()}
+            />
         </div>
     )
 }

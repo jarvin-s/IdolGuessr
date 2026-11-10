@@ -1,6 +1,12 @@
 'use client'
 
-import { useRef, useState, type CSSProperties, type PointerEvent } from 'react'
+import {
+    useEffect,
+    useRef,
+    useState,
+    type CSSProperties,
+    type PointerEvent,
+} from 'react'
 import { createPortal } from 'react-dom'
 
 const DRAG_THRESHOLD = 5
@@ -87,13 +93,22 @@ export default function PuzzlePiece({
     const origin = useRef({ x: 0, y: 0 })
     const dragging = useRef(false)
     const moved = useRef(false)
+    const cleanup = useRef<(() => void) | null>(null)
     const [ghost, setGhost] = useState<{
         x: number
         y: number
         size: number
     } | null>(null)
 
+    useEffect(() => () => cleanup.current?.(), [])
+
     function onPointerDown(event: PointerEvent<HTMLButtonElement>) {
+        if (event.button !== 0) return
+        // A text selection lets the browser start a native drag (no-drop cursor) and cancel ours
+        event.preventDefault()
+        window.getSelection()?.removeAllRanges()
+        cleanup.current?.()
+
         const target = event.currentTarget
         origin.current = { x: event.clientX, y: event.clientY }
         dragging.current = false
@@ -114,10 +129,21 @@ export default function PuzzlePiece({
             })
             onDragMove(slotAt(ev.clientX, ev.clientY, target))
         }
-        const finish = (ev: globalThis.PointerEvent) => {
+        const detach = () => {
             window.removeEventListener('pointermove', move)
             window.removeEventListener('pointerup', finish)
-            window.removeEventListener('pointercancel', finish)
+            window.removeEventListener('pointercancel', cancel)
+            cleanup.current = null
+        }
+        const cancel = () => {
+            detach()
+            dragging.current = false
+            moved.current = false
+            setGhost(null)
+            onDragMove(null)
+        }
+        const finish = (ev: globalThis.PointerEvent) => {
+            detach()
             const wasDragging = dragging.current
             const didMove = moved.current
             dragging.current = false
@@ -133,7 +159,8 @@ export default function PuzzlePiece({
         }
         window.addEventListener('pointermove', move)
         window.addEventListener('pointerup', finish)
-        window.addEventListener('pointercancel', finish)
+        window.addEventListener('pointercancel', cancel)
+        cleanup.current = cancel
     }
 
     return (
@@ -158,6 +185,8 @@ export default function PuzzlePiece({
                 } ${
                     ghost ? 'opacity-40' : ''
                 } ${className}`}
+                draggable={false}
+                onDragStart={(event) => event.preventDefault()}
                 onPointerDown={onPointerDown}
             >
                 <BlurredArtwork piece={piece} artworkUrl={artworkUrl} />

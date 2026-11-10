@@ -17,7 +17,7 @@ const entries: { date: string; changes: string[] }[] = [
         date: 'November 10, 2026',
         changes: [
             'IdolGuessr 2.0 RELEASE',
-            'Added Unshuffled mode',
+            'Added Unshuffled mode (daily/infinite)',
             'Added Leaderboard',
             'Added User authentication',
             'Added User profiles',
