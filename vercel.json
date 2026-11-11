@@ -2,7 +2,8 @@
     "git": {
         "deploymentEnabled": {
             "feature/*": false,
-            "refactor-codebase": false
+            "refactor-codebase": false,
+            "IT-*": false
         }
     }
 }
