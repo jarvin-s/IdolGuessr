@@ -536,7 +536,10 @@ export async function judgeRoundGuess(input: {
     roundGuessActive = true
     try {
         const streakBefore = findStreak(modeForStreak, difficultyForStreak, imageModeForStreak)?.current_streak ?? 0
-        const focusKey = input.imgBucket || (input.idolId && input.idolId > 0 ? String(input.idolId) : '')
+        const focusKey =
+            input.pool === 'hangul' && input.idolId && input.idolId > 0
+                ? String(input.idolId)
+                : input.imgBucket || (input.idolId && input.idolId > 0 ? String(input.idolId) : '')
         if (focusKey) {
             const focused = await focusIssuedIdol(input.pool, focusKey, input.difficulty, input.imageMode)
             if (!focused) return null

@@ -297,7 +297,9 @@ export function useHangulStats() {
     }, [])
 
     const saveGameState = useCallback((gameState: HangulGameState) => {
-        const key = gameState.imgBucket || (gameState.idolId && gameState.idolId > 0 ? String(gameState.idolId) : '')
+        const key = gameState.idolId && gameState.idolId > 0
+            ? String(gameState.idolId)
+            : gameState.imgBucket
         if (!key) return
         void focusIssuedIdol('hangul', key)
     }, [])
