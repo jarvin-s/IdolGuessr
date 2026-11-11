@@ -437,13 +437,22 @@ export function useHangulGameController() {
         [loadNextHangul, hangulStats]
     )
 
+    const skipInFlightRef = useRef(false)
     const handleSkip = useCallback(() => {
-        if (!hangulImage || skipsRemaining <= 0) return
+        if (!hangulImage || skipsRemaining <= 0 || skipInFlightRef.current) return
+        skipInFlightRef.current = true
         void (async () => {
-            const left = await consumeRoundSkip('hangul')
-            if (left == null) return
-            setSkipsRemaining(left)
-            loadNextHangul(left)
+            try {
+                const left = await consumeRoundSkip('hangul')
+                if (left == null) {
+                    setSkipsRemaining(0)
+                    return
+                }
+                setSkipsRemaining(left)
+                loadNextHangul(left)
+            } finally {
+                skipInFlightRef.current = false
+            }
         })()
     }, [hangulImage, skipsRemaining, loadNextHangul])
 

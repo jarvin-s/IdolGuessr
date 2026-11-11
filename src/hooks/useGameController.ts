@@ -900,13 +900,22 @@ export function useGameController() {
         [loadNextUnlimited, unlimitedStats, difficulty, imageMode, setImageMode]
     )
 
+    const skipInFlightRef = useRef(false)
     const handleSkip = useCallback(() => {
-        if (!dailyImage || skipsRemaining <= 0) return
+        if (!dailyImage || skipsRemaining <= 0 || skipInFlightRef.current) return
+        skipInFlightRef.current = true
         void (async () => {
-            const left = await consumeRoundSkip('unlimited', difficulty, imageMode)
-            if (left == null) return
-            setSkipsRemaining(left)
-            loadNextUnlimited(left)
+            try {
+                const left = await consumeRoundSkip('unlimited', difficulty, imageMode)
+                if (left == null) {
+                    setSkipsRemaining(0)
+                    return
+                }
+                setSkipsRemaining(left)
+                loadNextUnlimited(left)
+            } finally {
+                skipInFlightRef.current = false
+            }
         })()
     }, [dailyImage, skipsRemaining, loadNextUnlimited, difficulty, imageMode])
 
