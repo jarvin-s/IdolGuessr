@@ -425,6 +425,7 @@ export async function judgeDailyGuess(guess: string, dailyId?: number): Promise<
 }
 
 const focusedIssued = new Map<string, string>()
+const focusBlocked = new Set<string>()
 
 function focusSlot(pool: string, difficulty: string, imageMode: string) {
     return `${pool}\0${difficulty}\0${imageMode}`
@@ -494,6 +495,8 @@ export async function focusIssuedIdol(
     const mode = pool === 'hangul' ? 'hangul' : 'infinite'
     if (runEndedLocally(mode, difficulty, imageMode)) return false
     const slot = focusSlot(pool, difficulty, imageMode)
+    const blockKey = `${slot}\0${imgBucket}`
+    if (focusBlocked.has(blockKey)) return false
     if (focusedIssued.get(slot) === imgBucket) return true
     focusedIssued.set(slot, imgBucket)
     const { error } = await supabase.rpc('focus_issued_idol', {
@@ -502,12 +505,17 @@ export async function focusIssuedIdol(
         p_difficulty: difficulty,
         p_image_mode: imageMode,
     })
-    if (!error) return true
+    if (!error) {
+        focusBlocked.delete(blockKey)
+        return true
+    }
     if (focusedIssued.get(slot) === imgBucket) focusedIssued.delete(slot)
     const message = String(error.message)
-    if (!message.includes('round_in_progress') && !message.includes('round_finished')) {
-        console.error('focus_issued_idol', error)
+    if (message.includes('round_in_progress') || message.includes('round_finished')) {
+        focusBlocked.add(blockKey)
+        return false
     }
+    console.error('focus_issued_idol', error)
     return false
 }
 
@@ -569,7 +577,10 @@ export async function consumeRoundSkip(pool: 'unlimited' | 'hangul', difficulty 
         pool === 'hangul' ? {} : { p_difficulty: difficulty, p_image_mode: imageMode },
     )
     if (error) {
-        console.error('skip round', error)
+        const message = String(error.message)
+        if (!message.includes('no_skips') && !message.includes('no_active_round')) {
+            console.error('skip round', error)
+        }
         return null
     }
     return Number((data as { skips_remaining?: number })?.skips_remaining ?? 0)
@@ -582,14 +593,21 @@ export async function consumeRoundHint(pool: 'unlimited' | 'hangul', difficulty 
         p_image_mode: imageMode,
     })
     if (error) {
-        console.error('hint', error)
+        const message = String(error.message)
+        if (!message.includes('no_hints') && !message.includes('no_active_round')) {
+            console.error('hint', error)
+        }
         return null
     }
     return Number((data as { hints_remaining?: number })?.hints_remaining ?? 0)
 }
 
 export async function releaseRound(pool: 'unlimited' | 'hangul', difficulty = '', imageMode = '') {
-    focusedIssued.delete(focusSlot(pool, difficulty, imageMode))
+    const slot = focusSlot(pool, difficulty, imageMode)
+    focusedIssued.delete(slot)
+    for (const key of focusBlocked) {
+        if (key.startsWith(`${slot}\0`)) focusBlocked.delete(key)
+    }
     await supabase.rpc('release_round', {
         p_pool: pool,
         p_difficulty: difficulty,

@@ -30,6 +30,9 @@ type LeaderboardRow = {
 }
 
 const PODIUM = [2, 1, 3] as const
+const LIST_ROW_HEIGHT = '3rem'
+const LIST_ROW_GAP = '0.5rem'
+const VISIBLE_LIST_ROWS = 12
 
 const IMAGE_MODES: ImageMode[] = ['pixelated', 'zoom']
 
@@ -301,13 +304,18 @@ export default function LeaderboardPage() {
                     No ranked streaks yet.
                 </p>
             ) : rows.some((row) => row.rank > 3) ? (
-                <ol className='mt-6 space-y-2'>
+                <ol
+                    className='hide-scrollbar mt-6 flex flex-col gap-2 overflow-y-auto'
+                    style={{
+                        maxHeight: `calc(${VISIBLE_LIST_ROWS} * ${LIST_ROW_HEIGHT} + ${VISIBLE_LIST_ROWS} * ${LIST_ROW_GAP} + ${LIST_ROW_HEIGHT} / 2)`,
+                    }}
+                >
                     {rows
                         .filter((row) => row.rank > 3)
                         .map((row) => (
                             <li
                                 key={`${row.rank}-${row.nickname}`}
-                                className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm ${
+                                className={`flex h-12 shrink-0 items-center justify-between gap-3 rounded-lg px-3 text-sm ${
                                     row.is_me
                                         ? 'bg-amber-50 dark:bg-zinc-800'
                                         : 'bg-gray-50 dark:bg-zinc-900'
