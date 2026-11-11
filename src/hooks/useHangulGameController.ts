@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { clearRunEnded, consumeRoundSkip, endedRunStreak, flushPlayerSettingsNow, getHangulGame, getProfile, judgeRoundGuess, runAwaitingPlayAgain, savePlayerSettings, takeHangulImages } from '@/lib/player'
+import { clearRunEnded, consumeRoundSkip, endedRunStreak, flushPlayerSettingsNow, getHangulGame, getProfile, judgeRoundGuess, refreshOverview, runAwaitingPlayAgain, savePlayerSettings, takeHangulImages } from '@/lib/player'
 import {
     type HangulImage,
     getHangulImageUrl,
@@ -90,6 +90,7 @@ export function useHangulGameController() {
             const lastMilestone = milestones.filter((m) => m <= currentStreak).pop() || 0
             lastStreakMilestoneRef.current = lastMilestone
 
+            await refreshOverview().catch(() => undefined)
             const savedGameState = hangulStats.loadGameState()
 
             if (savedGameState) {

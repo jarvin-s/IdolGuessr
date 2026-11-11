@@ -334,7 +334,7 @@ export function getHangulGame(): HangulGameState | null {
         hangulName: resumed.idol.hangul_name,
         groupName: idol.group_name,
         skipsRemaining: game.skips_remaining ?? undefined,
-        guesses: padGuesses(game.guesses, 6),
+        guesses: padGuesses(game.guesses, 3),
         savedAt: new Date().toISOString(),
         currentImageIndex: queue.length > 0 ? resumed.cursor + 1 : undefined,
         prefetchedImages: queue.length
