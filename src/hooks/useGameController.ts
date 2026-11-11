@@ -10,6 +10,7 @@ import {
     getProfile,
     judgeDailyGuess,
     judgeRoundGuess,
+    refreshOverview,
     runAwaitingPlayAgain,
     savePlayerSettings,
     takeUnlimitedImages,
@@ -281,6 +282,9 @@ export function useGameController() {
                 milestones.filter((m) => m <= currentStreak).pop() || 0
             lastStreakMilestoneRef.current = lastMilestone
 
+            // The cached overview does not follow rounds played since it was
+            // fetched; resuming from it can pick an idol the server has moved past.
+            await refreshOverview().catch(() => undefined)
             const savedGameState = unlimitedStats.loadGameState(
                 activeDifficulty,
                 activeImageMode
