@@ -62,7 +62,7 @@ export default function HangulDisplay({
         }
     }, [hangulImage?.img_bucket])
 
-    const hasGroupHint = !!hangulImage?.group_name
+    const groupLabel = imageRevealed ? hangulImage?.group_name : ''
 
     return (
         <div className='relative mb-3 min-h-0 w-full flex-1 sm:mx-auto sm:max-w-md'>
@@ -88,10 +88,10 @@ export default function HangulDisplay({
                                 {hangulName}
                             </h1>
                             {/* Group Name Hint */}
-                            {imageRevealed && hangulImage?.group_name && (
+                            {imageRevealed && groupLabel && (
                                 <div className='mt-2 rounded-md bg-[#fff97f] px-4 py-2'>
                                     <span className='text-lg font-semibold text-black md:text-xl'>
-                                        {hangulImage.group_name}
+                                        {groupLabel}
                                     </span>
                                 </div>
                             )}
@@ -109,34 +109,24 @@ export default function HangulDisplay({
                         <div className='absolute top-3 left-3 z-10 flex items-center gap-2'>
                             <button
                                 onClick={() => {
-                                    if (!imageRevealed && hasGroupHint) {
-                                        onRevealImage()
-                                    }
+                                    if (!imageRevealed) onRevealImage()
                                 }}
                                 className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all md:text-sm ${
-                                    imageRevealed || !hasGroupHint
+                                    imageRevealed
                                         ? 'cursor-not-allowed bg-gray-200 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'
                                         : 'text-black hover:scale-105 active:scale-95'
                                 }`}
                                 style={{
-                                    backgroundColor:
-                                        imageRevealed || !hasGroupHint
-                                            ? 'rgb(229, 229, 229)'
-                                            : 'rgb(255, 249, 127)',
+                                    backgroundColor: imageRevealed
+                                        ? 'rgb(229, 229, 229)'
+                                        : 'rgb(255, 249, 127)',
                                     border: '1px solid #00000012',
-                                    cursor:
-                                        imageRevealed || !hasGroupHint
-                                            ? 'not-allowed'
-                                            : 'pointer',
+                                    cursor: imageRevealed ? 'not-allowed' : 'pointer',
                                 }}
-                                disabled={imageRevealed || !hasGroupHint}
+                                disabled={imageRevealed}
                             >
                                 <HintButton />
-                                {!hasGroupHint
-                                    ? 'HINT'
-                                    : imageRevealed
-                                      ? 'GROUP REVEALED'
-                                      : 'HINT'}
+                                {imageRevealed ? 'GROUP REVEALED' : 'HINT'}
                             </button>
                         </div>
                         <div className='absolute top-3 right-3 z-10'>

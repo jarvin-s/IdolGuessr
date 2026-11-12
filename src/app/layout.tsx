@@ -63,6 +63,17 @@ export const metadata: Metadata = {
         'guessing kpop',
         'guessing the kpop idol',
         'kpop guess idol',
+        'guessing app kpop',
+        'kpop guessing app',
+        'guessing kpop online',
+        'guess kpop online',
+        'guess kpop app',
+        'kpop guess app',
+        'guessing kpop idol app',
+        'kpop guessing idol app',
+        'idol kpop guessing app',
+        'idol kpop guess app',
+        'kpop idol guess app',
     ],
     openGraph: {
         title: 'IdolGuessr - K-pop Idol Guessing Game',
@@ -94,7 +105,10 @@ export default function RootLayout({
                         </FeedbackNoticeProvider>
                     </AuthProvider>
                 </ThemeProvider>
-                <meta name="google-site-verification" content="MdKcxKgV8Gu3dX6zl6vvcc2j7s1XCV3d2ta--42CZbU" />
+                <meta
+                    name='google-site-verification'
+                    content='MdKcxKgV8Gu3dX6zl6vvcc2j7s1XCV3d2ta--42CZbU'
+                />
                 <Script
                     src='https://www.googletagmanager.com/gtag/js?id=G-6V9ZCS0XZP'
                     strategy='afterInteractive'

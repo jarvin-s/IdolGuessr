@@ -5,6 +5,11 @@ import {
 } from '@/utils/genFilter'
 import { supabaseAnonKey, supabaseUrl } from '@/lib/supabase/env'
 import { randomId } from '@/utils/randomId'
+import {
+    loadCurrentDaily,
+    startHangulRound,
+    startInfiniteRound,
+} from '@/lib/game/actions'
 
 export const supabase = createBrowserClient(supabaseUrl(), supabaseAnonKey())
 
@@ -85,12 +90,7 @@ export interface FeedbackThread {
 }
 
 export async function getDailyImage(): Promise<CurrentDaily | null> {
-    const { data, error } = await supabase.rpc('get_current_daily')
-    if (error || !data?.length) {
-        console.error('get_current_daily error:', error)
-        return null
-    }
-    return data[0] as CurrentDaily
+    return loadCurrentDaily()
 }
 
 const SEEN_IDOLS_KEY = 'seen-idols'
@@ -145,13 +145,14 @@ export function clearSeenHangulIdols(): void {
     localStorage.removeItem(SEEN_HANGUL_KEY)
 }
 
-function withoutAnswer<T extends { name?: string; alt_name?: string }>(
+function withoutAnswer<T extends { name?: string; alt_name?: string; group_name?: string }>(
     rows: T[] | null
 ): T[] {
     return (rows ?? []).map((row) => ({
         ...row,
         name: '',
         alt_name: undefined,
+        group_name: undefined,
     }))
 }
 
@@ -193,15 +194,15 @@ export async function getMultipleRandomHangulImages(
         clearSeenHangulIdols,
         addSeenHangulIdol,
         async (exclude) => {
-            const result = await supabase.rpc('start_hangul_round', {
-                p_group: groupFilter ?? null,
-                p_count: count,
-                p_exclude: exclude,
-                p_bind: bind,
+            const result = await startHangulRound({
+                group: groupFilter ?? null,
+                count,
+                exclude,
+                bind,
             })
             return {
-                data: result.data as HangulImage[] | null,
-                error: result.error,
+                data: result.rows as HangulImage[] | null,
+                error: result.error ? { message: result.error } : null,
             }
         },
         '[Hangul DB Request] Error:'
@@ -229,18 +230,18 @@ export async function getMultipleRandomUnlimitedImages(
         clearSeenIdols,
         addSeenIdol,
         async (exclude) => {
-            const result = await supabase.rpc('start_infinite_round', {
-                p_difficulty: options?.difficulty || 'normal',
-                p_image_mode: options?.imageMode || 'pixelated',
-                p_group: groupFilter ?? null,
-                p_gens: isFilteringByGen ? genFilter : null,
-                p_count: count,
-                p_exclude: exclude,
-                p_bind: bind,
+            const result = await startInfiniteRound({
+                difficulty: options?.difficulty || 'normal',
+                imageMode: options?.imageMode || 'pixelated',
+                group: groupFilter ?? null,
+                gens: isFilteringByGen ? (genFilter ?? null) : null,
+                count,
+                exclude,
+                bind,
             })
             return {
-                data: result.data as DailyImage[] | null,
-                error: result.error,
+                data: result.rows as DailyImage[] | null,
+                error: result.error ? { message: result.error } : null,
             }
         },
         '[DB Request] Error:'
@@ -736,7 +737,7 @@ export async function getDailyImageByDate(
     const { data, error } = await supabase
         .from('dailies_public')
         .select(
-            'id, group_type, play_date, img_bucket, group_name, chosen_by, chosen_by_url'
+            'id, group_type, play_date, img_bucket, chosen_by, chosen_by_url'
         )
         .gte('play_date', startOfDay)
         .lte('play_date', endOfDay)

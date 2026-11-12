@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { revealHangulGroup } from '@/lib/game/actions'
 import { clearRunEnded, consumeRoundSkip, endedRunStreak, flushPlayerSettingsNow, getHangulGame, getProfile, judgeRoundGuess, refreshOverview, runAwaitingPlayAgain, savePlayerSettings, takeHangulImages } from '@/lib/player'
 import {
     type HangulImage,
@@ -178,7 +179,7 @@ export function useHangulGameController() {
                     setHangulImage(savedImage)
                     setHangulName(savedGameState.hangulName)
                     setCorrectAnswer(decodedName.toUpperCase())
-                    setImageRevealed(savedGameState.imageRevealed || false)
+                    setImageRevealed(Boolean(savedGameState.imageRevealed || savedGameState.groupName))
                     setSkipsRemaining(savedGameState.skipsRemaining ?? 3)
                 })
 
@@ -737,6 +738,14 @@ export function useHangulGameController() {
         hangulStats,
     ])
 
+    const revealGroup = useCallback(async () => {
+        if (imageRevealed) return
+        const groupName = await revealHangulGroup()
+        if (!groupName) return
+        setHangulImage((current) => (current ? { ...current, group_name: groupName } : current))
+        setImageRevealed(true)
+    }, [imageRevealed])
+
     const handleStart = useCallback((filter: GroupFilter) => {
         clearRunEnded('hangul')
         setGroupFilter(filter)
@@ -766,6 +775,7 @@ export function useHangulGameController() {
         handleKeyPress,
         // Image reveal
         imageRevealed,
+        revealGroup,
         setImageRevealed,
         // UI state
         showConfetti,

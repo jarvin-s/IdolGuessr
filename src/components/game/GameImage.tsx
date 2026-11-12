@@ -292,7 +292,7 @@ export default function GameImage({
                 {gameMode === 'unlimited' && !gameWon && !gameLost && (
                     <>
                         <div className='absolute top-3 left-3 z-10 flex items-center gap-2'>
-                            {maxHints > 0 && dailyImage?.group_name && (
+                            {maxHints > 0 && dailyImage && (
                                 <button
                                     onClick={() => {
                                         const revealedHere =
@@ -334,8 +334,9 @@ export default function GameImage({
                                     }
                                 >
                                     <HintButton />
-                                    {hintUsedOnIdol === dailyImage.img_bucket ||
-                                    groupNameRevealed
+                                    {(hintUsedOnIdol === dailyImage.img_bucket ||
+                                        groupNameRevealed) &&
+                                    dailyImage.group_name
                                         ? dailyImage.group_name
                                         : hintsRemaining <= 0
                                           ? 'HINT (0)'

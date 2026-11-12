@@ -42,7 +42,7 @@ export default function HangulPage() {
         isAnimating,
         handleKeyPress,
         imageRevealed,
-        setImageRevealed,
+        revealGroup,
         showConfetti,
         windowDimensions,
         showStats,
@@ -122,7 +122,9 @@ export default function HangulPage() {
                             gameWon={gameWon}
                             gameLost={gameLost}
                             imageRevealed={imageRevealed}
-                            onRevealImage={() => setImageRevealed(true)}
+                            onRevealImage={() => {
+                                void revealGroup()
+                            }}
                             onPass={
                                 !gameWon && !gameLost && skipsRemaining > 0
                                     ? handleSkip

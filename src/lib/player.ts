@@ -7,6 +7,7 @@ import {
     type DailyImage,
     type HangulImage,
 } from '@/lib/supabase'
+import { revealInfiniteGroup } from '@/lib/game/actions'
 import { encodeIdolName } from '@/utils/encoding'
 import type { ImageMode, InfiniteDifficulty } from '@/utils/difficulty'
 import type {
@@ -590,19 +591,8 @@ export async function consumeRoundSkip(pool: 'unlimited' | 'hangul', difficulty 
 }
 
 export async function consumeRoundHint(pool: 'unlimited' | 'hangul', difficulty = '', imageMode = '') {
-    const { data, error } = await supabase.rpc('consume_round_hint', {
-        p_pool: pool,
-        p_difficulty: difficulty,
-        p_image_mode: imageMode,
-    })
-    if (error) {
-        const message = String(error.message)
-        if (!message.includes('no_hints') && !message.includes('no_active_round')) {
-            console.error('hint', error)
-        }
-        return null
-    }
-    return Number((data as { hints_remaining?: number })?.hints_remaining ?? 0)
+    if (pool === 'hangul') return null
+    return revealInfiniteGroup(difficulty, imageMode)
 }
 
 export async function releaseRound(pool: 'unlimited' | 'hangul', difficulty = '', imageMode = '') {

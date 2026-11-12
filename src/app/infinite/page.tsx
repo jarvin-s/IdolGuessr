@@ -88,7 +88,6 @@ export default function InfinitePage() {
         maxHints,
         maxSkips,
         hintUsedOnIdol,
-        setHintUsedOnIdol,
         consumeHint,
         showStreakPopup,
         streakMilestone,
@@ -218,8 +217,6 @@ export default function InfinitePage() {
                             hintUsedOnIdol={hintUsedOnIdol}
                             onHintUse={() => {
                                 consumeHint()
-                                if (dailyImage?.img_bucket)
-                                    setHintUsedOnIdol(dailyImage.img_bucket)
                             }}
                             showStreakPopup={showStreakPopup}
                             streakMilestone={streakMilestone}

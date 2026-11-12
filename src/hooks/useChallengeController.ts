@@ -228,6 +228,8 @@ export function useChallengeController(challengeId: string) {
         const isCorrect = Boolean((data as { correct?: boolean }).correct)
         const answer = String((data as { answer?: string }).answer || '')
         if (answer) currentIdol.name = answer
+        const groupName = String((data as { group_name?: string }).group_name || '')
+        if (groupName) currentIdol.group_name = groupName
 
         setIsAnimating(true)
 
