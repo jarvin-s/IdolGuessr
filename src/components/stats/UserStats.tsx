@@ -57,6 +57,7 @@ export interface UnlimitedGameState {
     groupCategory?: string
     base64Group?: string
     base64Idol?: string
+    imageToken?: string
     encodedIdolName: string
     encodedAltName?: string
     groupName?: string
@@ -78,6 +79,7 @@ export interface UnlimitedGameState {
         group_category?: string
         base64_group?: string
         base64_idol?: string
+        image_token?: string
         group_name?: string
         zoom_x?: number | null
         zoom_y?: number | null

@@ -1,5 +1,6 @@
 'use server'
 
+import { sealUnlimitedPath } from '@/lib/game/imageToken'
 import { createServerSupabase } from '@/lib/supabase/server'
 
 type Row = Record<string, unknown>
@@ -15,6 +16,18 @@ function stripRound(row: Row): Row {
     next.name = ''
     delete next.alt_name
     delete next.group_name
+    return next
+}
+
+function sealUnlimitedImage(row: Row): Row {
+    const next = { ...row }
+    const category = typeof next.group_category === 'string' ? next.group_category : ''
+    const group = typeof next.base64_group === 'string' ? next.base64_group : ''
+    const bucket = typeof next.img_bucket === 'string' ? next.img_bucket : ''
+    if (!category || !group || !bucket) return next
+    next.image_token = sealUnlimitedPath(category, group, bucket)
+    delete next.base64_group
+    delete next.base64_idol
     return next
 }
 
@@ -62,7 +75,36 @@ export async function startInfiniteRound(input: {
         p_bind: input.bind,
     })
     if (error) return { rows: null as Row[] | null, error: error.message }
-    return { rows: asRows(data).map(stripRound), error: null as string | null }
+    return {
+        rows: asRows(data).map((row) => sealUnlimitedImage(stripRound(row))),
+        error: null as string | null,
+    }
+}
+
+export async function loadMyOverview() {
+    const supabase = await createServerSupabase()
+    const { data, error } = await supabase.rpc('get_my_overview')
+    if (error || !data || typeof data !== 'object') {
+        return { overview: null, error: error?.message ?? 'get_my_overview' }
+    }
+    const overview = data as { active_games?: unknown }
+    if (Array.isArray(overview.active_games)) {
+        overview.active_games = overview.active_games.map((game) => {
+            if (!game || typeof game !== 'object') return game
+            const row = { ...(game as Row) }
+            if (row.mode !== 'infinite') return row
+            if (row.idol && typeof row.idol === 'object') {
+                row.idol = sealUnlimitedImage(row.idol as Row)
+            }
+            if (Array.isArray(row.queue)) {
+                row.queue = row.queue.map((item) =>
+                    item && typeof item === 'object' ? sealUnlimitedImage(item as Row) : item
+                )
+            }
+            return row
+        })
+    }
+    return { overview: data, error: null as string | null }
 }
 
 export async function startHangulRound(input: {

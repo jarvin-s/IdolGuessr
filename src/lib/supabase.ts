@@ -26,6 +26,7 @@ export interface DailyImage {
     group_category?: string
     base64_group?: string
     base64_idol?: string
+    image_token?: string
     hangul_name?: string
     gen?: number
     chosen_by?: string | null
@@ -248,7 +249,7 @@ export async function getMultipleRandomUnlimitedImages(
     )
     if (!data) return []
     const rows = withoutAnswer(data).filter((img) => {
-        if (!img.group_category || !img.base64_group) return false
+        if (!img.group_category || !(img.base64_group || img.image_token)) return false
         if (!bind && groupFilter && img.group_category !== groupFilter)
             return false
         return true
@@ -534,10 +535,15 @@ export function getImageUrl(
     guessNumber: number | 'clear',
     mode: 'daily' | 'unlimited' = 'daily',
     groupCategory?: string,
-    base64Group?: string
+    base64Group?: string,
+    imageToken?: string
 ): string {
     const fileName =
         guessNumber === 'clear' ? 'clear.png' : `00${guessNumber}.png`
+
+    if (mode === 'unlimited' && imageToken) {
+        return `/api/unlimited-image/${imageToken}/${fileName}`
+    }
 
     if (mode === 'unlimited') {
         if (!groupCategory || !base64Group || !imgBucket) {
