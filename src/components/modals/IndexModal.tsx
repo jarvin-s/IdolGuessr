@@ -94,7 +94,7 @@ export default function IndexModal({
                         alt='IdolGuessr Logo'
                         width={350}
                         height={350}
-                        className='h-[clamp(8rem,24svh,14rem)] w-auto dark:invert'
+                        className='h-auto w-auto dark:invert'
                     />
                 </div>
 
