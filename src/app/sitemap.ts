@@ -29,6 +29,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
             lastModified: new Date(),
         },
         {
+            url: `${baseUrl}/duels`,
+            lastModified: new Date(),
+        },
+        {
             url: `${baseUrl}/leaderboard`,
             lastModified: new Date(),
         },

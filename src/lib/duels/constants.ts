@@ -1,0 +1,12 @@
+export const START_HP = 6000
+export const ROUND_SECONDS = 30
+export const COUNTDOWN_SECONDS = 3
+export const INTERMISSION_SECONDS = 5
+export const PRESSURE_SECONDS = 10
+export const MAX_SCORE = 5000
+export const MIN_CORRECT_SCORE = 500
+export const MAX_ROUNDS = 15
+export const LOBBY_TTL_MINUTES = 60
+export const QUEUE_STALE_SECONDS = 45
+export const QUEUE_HEARTBEAT_SECONDS = 15
+export const MATCH_IDLE_ABANDON_SECONDS = 120

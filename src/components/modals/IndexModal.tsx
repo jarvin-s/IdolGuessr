@@ -11,6 +11,7 @@ interface IndexModalProps {
     onInfinite: () => void
     onHangul: () => void
     onChallenge?: () => void
+    onDuels?: () => void
     onUnshuffled?: () => void
     onUnshuffledDaily?: () => void
     onClassic?: () => void
@@ -23,6 +24,7 @@ export default function IndexModal({
     onInfinite,
     onHangul,
     onChallenge,
+    onDuels,
     onUnshuffled,
     onUnshuffledDaily,
     onClassic,
@@ -162,6 +164,15 @@ export default function IndexModal({
                                 Challenge
                             </button>
                         </div>
+                        <div className='relative flex flex-row items-center justify-center'>
+                            <button
+                                onClick={() => onDuels?.()}
+                                className='flex w-22.5 cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                            >
+                                <DuelsIcon />
+                                Duels
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -250,6 +261,31 @@ function ClassicIcon() {
             <rect x='14' y='3' width='7' height='7' rx='1.5' opacity='0.45' />
             <rect x='3' y='14' width='7' height='7' rx='1.5' opacity='0.7' />
             <rect x='14' y='14' width='7' height='7' rx='1.5' opacity='0.3' />
+        </svg>
+    )
+}
+
+function DuelsIcon() {
+    return (
+        <svg
+            xmlns='http://www.w3.org/2000/svg'
+            width='36'
+            height='36'
+            viewBox='0 0 24 24'
+            fill='none'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        >
+            <path d='M14.5 17.5 3 6V3h3l11.5 11.5' />
+            <path d='M13 19l6-6' />
+            <path d='m16 16 4 4' />
+            <path d='m19 21 2-2' />
+            <path d='M14.5 6.5 21 3v3l-6.5 11.5' />
+            <path d='m5 14 4 4' />
+            <path d='m8 16-4 4' />
+            <path d='m3 21 2-2' />
         </svg>
     )
 }

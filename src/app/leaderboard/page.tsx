@@ -4,6 +4,8 @@ import { useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { fetchLeaderboard } from '@/lib/player'
+import { fetchDuelLeaderboard } from '@/lib/duels/api'
+import type { DuelLeaderboardMe, DuelLeaderboardRow } from '@/lib/duels/types'
 import {
     DIFFICULTIES,
     DIFFICULTY_LABELS,
@@ -18,6 +20,7 @@ const TABS = [
     { id: 'infinite', label: 'Infinite' },
     { id: 'hangul', label: 'Hangul' },
     { id: 'classic', label: 'Classic' },
+    { id: 'duels', label: 'Duels' },
 ] as const
 
 const CLASSIC_LISTS = [
@@ -189,10 +192,79 @@ function OptionGroup({
     )
 }
 
+function DuelsList({
+    rows,
+    me,
+}: {
+    rows: DuelLeaderboardRow[]
+    me: DuelLeaderboardMe | null
+}) {
+    const percent = (rate: number) => `${Math.round(rate * 100)}%`
+    return (
+        <div className='mt-6'>
+            {rows.length === 0 ? (
+                <p className='text-sm text-gray-500'>No ranked duels yet.</p>
+            ) : (
+                <ol className='flex flex-col gap-2'>
+                    {rows.map((row) => (
+                        <li
+                            key={`${row.rank}-${row.nickname}`}
+                            className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm ${
+                                row.is_me
+                                    ? 'bg-amber-50 dark:bg-zinc-800'
+                                    : 'bg-gray-50 dark:bg-zinc-900'
+                            }`}
+                        >
+                            <span className='flex min-w-0 items-center gap-2'>
+                                {row.avatar_url ? (
+                                    <AccountImage src={row.avatar_url} size='list' />
+                                ) : null}
+                                <span className='truncate'>
+                                    {row.rank}. {row.nickname}
+                                </span>
+                                {row.is_me ? <YouBadge prominent={false} /> : null}
+                            </span>
+                            <span className='shrink-0 tabular-nums'>
+                                {row.wins}-{row.losses} · {percent(row.win_rate)}
+                            </span>
+                        </li>
+                    ))}
+                </ol>
+            )}
+            {me ? (
+                <p className='mt-6 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-zinc-700'>
+                    {me.eligible ? (
+                        me.matches_needed > 0 ? (
+                            <>Play {me.matches_needed} more duels to qualify.</>
+                        ) : (
+                            <>
+                                <span className='font-bold'>You:</span> {me.nickname} · {me.wins}-
+                                {me.losses} · {percent(me.win_rate)}
+                                {me.rank ? ` · Rank ${me.rank}` : ''}
+                            </>
+                        )
+                    ) : (
+                        <>
+                            {me.matches === 0 ? 'Sign in, then choose' : 'Choose'} a nickname on
+                            your{' '}
+                            <Link href='/profile' className='font-semibold underline'>
+                                profile page
+                            </Link>{' '}
+                            and you will show up on the leaderboard.
+                        </>
+                    )}
+                </p>
+            ) : null}
+        </div>
+    )
+}
+
 export default function LeaderboardPage() {
     const { profile, isGuest } = useAuth()
     const needsNickname = !profile?.nickname?.trim()
     const [tab, setTab] = useState<Tab>('daily')
+    const [duelRows, setDuelRows] = useState<DuelLeaderboardRow[]>([])
+    const [duelMe, setDuelMe] = useState<DuelLeaderboardMe | null>(null)
     const [classicList, setClassicList] =
         useState<(typeof CLASSIC_LISTS)[number]['id']>('daily')
     const [difficulty, setDifficulty] = useState<InfiniteDifficulty>('normal')
@@ -209,9 +281,24 @@ export default function LeaderboardPage() {
     const [error, setError] = useState('')
 
     useEffect(() => {
+        const requested = new URLSearchParams(window.location.search).get('tab')
+        if (requested === 'duels') setTab('duels')
+    }, [])
+
+    useEffect(() => {
         let cancelled = false
         const load = async () => {
             try {
+                if (tab === 'duels') {
+                    const data = await fetchDuelLeaderboard()
+                    if (cancelled) return
+                    setDuelRows(data.rows ?? [])
+                    setDuelMe(data.me)
+                    setRows([])
+                    setMe(null)
+                    setError('')
+                    return
+                }
                 const data = await fetchLeaderboard(
                     tab,
                     tab === 'infinite'
@@ -266,9 +353,11 @@ export default function LeaderboardPage() {
             </Link>
             <h1 className='mt-4 text-3xl font-bold uppercase'>Leaderboard</h1>
             <p className='mt-2 text-sm text-gray-500 dark:text-zinc-400'>
-                {tab === 'classic'
-                    ? 'Highest streak. Equal streaks go to the lower average guesses. Guests and accounts without a nickname are left off.'
-                    : 'Highest streak. Guests and accounts without a nickname are left off.'}
+                {tab === 'duels'
+                    ? 'Win rate after at least 10 duels. Guests and accounts without a nickname are left off.'
+                    : tab === 'classic'
+                      ? 'Highest streak. Equal streaks go to the lower average guesses. Guests and accounts without a nickname are left off.'
+                      : 'Highest streak. Guests and accounts without a nickname are left off.'}
             </p>
             {needsNickname ? (
                 <p className='mt-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-zinc-900 dark:text-amber-100'>
@@ -351,12 +440,16 @@ export default function LeaderboardPage() {
                 ) : null}
             </div>
             {error ? <p className='mt-4 text-sm'>{error}</p> : null}
-            <TopThree rows={rows} showAverage={tab === 'classic'} />
-            {rows.length === 0 ? (
+            {tab === 'duels' ? (
+                <DuelsList rows={duelRows} me={duelMe} />
+            ) : (
+                <TopThree rows={rows} showAverage={tab === 'classic'} />
+            )}
+            {tab !== 'duels' && rows.length === 0 ? (
                 <p className='mt-6 text-sm text-gray-500'>
                     No ranked streaks yet.
                 </p>
-            ) : rows.some((row) => row.rank > 3) ? (
+            ) : tab !== 'duels' && rows.some((row) => row.rank > 3) ? (
                 <ol
                     className='hide-scrollbar mt-6 flex flex-col gap-2 overflow-y-auto'
                     style={{
@@ -406,7 +499,7 @@ export default function LeaderboardPage() {
                         ))}
                 </ol>
             ) : null}
-            {me ? (
+            {tab !== 'duels' && me ? (
                 <p className='mt-6 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-zinc-700'>
                     <span className='font-bold'>You:</span> {me.nickname ?? '?'}{' '}
                     · <span className='font-bold'>Best streak:</span>{' '}

@@ -402,9 +402,9 @@ export default function DailyClient({
 
     return (
         <div className='fixed inset-0 flex flex-col justify-center overflow-hidden bg-white dark:bg-zinc-950'>
-            <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-[1400px] sm:max-w-md sm:rounded-[15px] sm:border-1 sm:border-gray-200 sm:shadow-lg sm:dark:border-zinc-700'>
+            <div className='mx-auto flex h-full w-full max-w-none flex-col sm:max-h-350 sm:max-w-md sm:rounded-[15px] sm:border sm:border-gray-200 sm:shadow-lg sm:dark:border-zinc-700'>
                 {isInHistoryMode ? (
-                    <div className='flex w-full flex-shrink-0 flex-col gap-3 p-4'>
+                    <div className='flex w-full shrink-0 flex-col gap-3 p-4'>
                         <div className='flex w-full items-center justify-between'>
                             <button
                                 onClick={handleExitHistoryMode}
@@ -547,11 +547,11 @@ export default function DailyClient({
 
                     {!inputModeReady ? (
                         <div
-                            className='invisible flex-shrink-0 pb-4'
+                            className='invisible shrink-0 pb-4'
                             aria-hidden='true'
                         />
                     ) : inputMode === 'text' && !isInHistoryMode ? (
-                        <div className='flex-shrink-0 pb-4'>
+                        <div className='shrink-0 pb-4'>
                             <IdolTextInput
                                 onSubmit={(guess) =>
                                     handleKeyPress('ENTER', guess)
@@ -616,7 +616,7 @@ export default function DailyClient({
                                         ? historyDisabledLetters
                                         : disabledLetters
                                 }
-                                className='flex-shrink-0 pb-4'
+                                className='shrink-0 pb-4'
                             />
                         </>
                     )}
@@ -693,6 +693,9 @@ export default function DailyClient({
                 }}
                 onChallenge={() => {
                     router.push('/challenge', { scroll: false })
+                }}
+                onDuels={() => {
+                    router.push('/duels', { scroll: false })
                 }}
                 onUnshuffled={() => {
                     router.push('/unshuffled/infinite', { scroll: false })
@@ -775,7 +778,7 @@ export default function DailyClient({
             {/* Win modal disabled for past idols */}
 
             {showConfetti && windowDimensions.width > 0 && (
-                <div className='pointer-events-none fixed inset-0 z-[9999]'>
+                <div className='pointer-events-none fixed inset-0 z-9999'>
                     <Confetti
                         width={windowDimensions.width}
                         height={windowDimensions.height}
