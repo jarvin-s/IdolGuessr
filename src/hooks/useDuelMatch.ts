@@ -11,7 +11,6 @@ import {
 import { COUNTDOWN_SECONDS, ROUND_SECONDS } from '@/lib/duels/constants'
 import { duelErrorCode, duelErrorMessage } from '@/lib/duels/errors'
 import { ensureRealtimeAuth, subscribeDuelMatch } from '@/lib/duels/realtime'
-import { getRevealStep } from '@/lib/duels/reveal'
 import type {
     DuelGuessResult,
     DuelMatchEvent,
@@ -89,11 +88,17 @@ function reduce(model: Model, action: Action): Model {
     if (action.type === 'guess_result') {
         const duel = model.duel
         if (!duel) return model
-        const overlay = duel.current_round?.idol ?? model.overlayIdol
         if (action.result.resolved_state) {
+            const resolved = action.result.resolved_state
+            const finishedNo = resolved.last_result?.round_no
+            const current = duel.current_round
+            const overlay =
+                current && (finishedNo == null || current.round_no === finishedNo)
+                    ? current.idol
+                    : model.overlayIdol ?? current?.idol ?? null
             return {
                 ...model,
-                duel: action.result.resolved_state,
+                duel: resolved,
                 overlayIdol: overlay,
                 error: null,
             }
@@ -146,9 +151,14 @@ function reduce(model: Model, action: Action): Model {
         }
     }
     if (event.type === 'round_resolved') {
+        const nextNo = event.next_round?.round_no
+        const current = duel.current_round
+        const alreadyAdvanced = current?.round_no === nextNo
         return {
             ...model,
-            overlayIdol: duel.current_round?.idol ?? model.overlayIdol,
+            overlayIdol: alreadyAdvanced
+                ? model.overlayIdol
+                : current?.idol ?? model.overlayIdol,
             duel: {
                 ...duel,
                 team_hp: event.result.team_hp,
@@ -270,10 +280,10 @@ export function useDuelMatch(matchId: string) {
         const duel = model.duel
         const round = duel?.current_round
         if (!duel) {
-            return { phase: 'loading' as DuelPhase, secondsLeft: 0, revealStep: 0, pressured: false }
+            return { phase: 'loading' as DuelPhase, secondsLeft: 0, pressured: false }
         }
         if (duel.status !== 'active' || !round) {
-            return { phase: 'finished' as DuelPhase, secondsLeft: 0, revealStep: 0, pressured: false }
+            return { phase: 'finished' as DuelPhase, secondsLeft: 0, pressured: false }
         }
         const starts = Date.parse(round.starts_at)
         const deadline = Date.parse(round.deadline)
@@ -284,7 +294,6 @@ export function useDuelMatch(matchId: string) {
             return {
                 phase: 'intermission' as DuelPhase,
                 secondsLeft: Math.max(0, (countdownAt - tick) / 1000),
-                revealStep: 0,
                 pressured,
             }
         }
@@ -292,7 +301,6 @@ export function useDuelMatch(matchId: string) {
             return {
                 phase: 'countdown' as DuelPhase,
                 secondsLeft: Math.max(0, (starts - tick) / 1000),
-                revealStep: 0,
                 pressured,
             }
         }
@@ -300,14 +308,12 @@ export function useDuelMatch(matchId: string) {
             return {
                 phase: 'playing' as DuelPhase,
                 secondsLeft: Math.max(0, (deadline - tick) / 1000),
-                revealStep: getRevealStep(tick - starts, duel.config.difficulty),
                 pressured,
             }
         }
         return {
             phase: 'resolving' as DuelPhase,
             secondsLeft: 0,
-            revealStep: getRevealStep(ROUND_SECONDS * 1000, duel.config.difficulty),
             pressured,
         }
     }, [model.duel, tick])
@@ -342,7 +348,6 @@ export function useDuelMatch(matchId: string) {
         state: model.duel,
         phase: derived.phase,
         secondsLeft: derived.secondsLeft,
-        revealStep: derived.revealStep,
         pressured: derived.pressured,
         feed: model.feed,
         onlineIds: model.onlineIds,

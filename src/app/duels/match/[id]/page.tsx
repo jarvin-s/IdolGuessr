@@ -56,6 +56,8 @@ export default function DuelMatchPage() {
     const round = state.current_round
     const showOverlay = match.phase === 'intermission' && !!state.last_result
     const showResult = match.phase === 'finished'
+    const solved =
+        !!selfId && !!round && round.correct_players.includes(selfId)
     const idol = showOverlay ? match.overlayIdol ?? round?.idol : round?.idol
     const playing = match.phase === 'playing' || match.phase === 'resolving'
     const showCountdown = match.phase === 'countdown'
@@ -88,8 +90,9 @@ export default function DuelMatchPage() {
                         idol={idol}
                         difficulty={state.config.difficulty}
                         imageMode={state.config.image_mode}
-                        step={match.revealStep}
-                        revealed={match.phase === 'resolving' || showOverlay}
+                        guessesUsed={round?.my_guesses.length ?? 0}
+                        maxGuesses={round?.max_guesses ?? 6}
+                        revealed={match.phase === 'resolving' || showOverlay || solved}
                     />
                 ) : (
                     <div className='aspect-square w-full rounded-lg bg-zinc-200 dark:bg-zinc-800' />

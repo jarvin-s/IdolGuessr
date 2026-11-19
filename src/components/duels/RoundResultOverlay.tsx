@@ -52,7 +52,8 @@ export default function RoundResultOverlay({
                         idol={idol}
                         difficulty={difficulty}
                         imageMode={imageMode}
-                        step={0}
+                        guessesUsed={0}
+                        maxGuesses={difficulty === 'challenger' ? 3 : 6}
                         revealed
                     />
                 ) : null}
