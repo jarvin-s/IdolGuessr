@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
+import DuelChoiceModal from '@/components/duels/DuelChoiceModal'
+import DuelJoinModal from '@/components/duels/DuelJoinModal'
 import DuelSetupModal from '@/components/duels/DuelSetupModal'
 import QueueScreen from '@/components/duels/QueueScreen'
 import { createDuelLobby } from '@/lib/duels/api'
@@ -14,7 +16,7 @@ function DuelsHub() {
     const router = useRouter()
     const params = useSearchParams()
     const queue = useDuelQueue()
-    const [open, setOpen] = useState(true)
+    const [step, setStep] = useState<'choice' | 'create' | 'join' | 'quick' | null>('choice')
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState('')
     const code = params.get('code')
@@ -58,7 +60,7 @@ function DuelsHub() {
                     <p className='text-sm text-zinc-500'>Invite a friend or jump into a 1v1.</p>
                     <button
                         type='button'
-                        onClick={() => setOpen(true)}
+                        onClick={() => setStep('choice')}
                         className='mt-4 cursor-pointer rounded-full bg-pink-500 px-4 py-2 text-white'
                     >
                         Play
@@ -66,20 +68,32 @@ function DuelsHub() {
                 </div>
             )}
             {queue.error ? <p className='mt-3 text-sm text-red-600'>{queue.error}</p> : null}
-            <DuelSetupModal
-                open={open && !queue.searching}
+            <DuelChoiceModal
+                open={step === 'choice' && !queue.searching}
                 onClose={() => {
-                    setOpen(false)
+                    setStep(null)
                     router.push('/')
                 }}
+                onCreate={() => setStep('create')}
+                onJoin={() => setStep('join')}
+                onQuickMatch={() => setStep('quick')}
+            />
+            <DuelSetupModal
+                open={(step === 'create' || step === 'quick') && !queue.searching}
+                mode={step === 'quick' ? 'quick' : 'create'}
+                onClose={() => setStep('choice')}
                 onCreate={(format, config) => void create(format, config)}
-                onJoinCode={(next) => router.push(`/duels/${next}`)}
                 onQuickMatch={(config) => {
-                    setOpen(false)
+                    setStep(null)
                     void queue.join(config)
                 }}
                 busy={busy}
                 error={error}
+            />
+            <DuelJoinModal
+                open={step === 'join' && !queue.searching}
+                onClose={() => setStep('choice')}
+                onJoin={(next) => router.push(`/duels/${next}`)}
             />
         </main>
     )
