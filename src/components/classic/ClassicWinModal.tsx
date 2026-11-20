@@ -52,7 +52,7 @@ export default function ClassicWinModal({
     }
 
     return (
-        <div className='fixed inset-0 z-[500] flex items-center justify-center bg-black/40 px-4'>
+        <div className='fixed inset-0 z-500 flex items-center justify-center bg-black/40 px-4'>
             <div
                 className='w-full max-w-sm rounded-md bg-white border border-pink-600 p-6 text-center shadow-xl dark:bg-zinc-900'
                 role='dialog'
@@ -66,6 +66,7 @@ export default function ClassicWinModal({
                         width={160}
                         height={160}
                         className='mx-auto h-60 w-60 object-cover'
+                        unoptimized
                     />
                 ) : null}
                 <h2 id='classic-result-title' className='mt-3 text-2xl font-bold'>
@@ -82,14 +83,14 @@ export default function ClassicWinModal({
                     <button
                         type='button'
                         onClick={() => void share()}
-                        className='mx-auto mt-4 block w-[200px] cursor-pointer rounded-full bg-gray-100 hover:bg-gray-200 dark:hover:text-white transition-colors dark:hover:bg-zinc-800 dark:bg-zinc-900 border border-pink-600 font-bold px-4 py-1.5 text-pink-600'
+                        className='mx-auto mt-4 block w-50 cursor-pointer rounded-full bg-gray-100 hover:bg-gray-200 dark:hover:text-white transition-colors dark:hover:bg-zinc-800 dark:bg-zinc-900 border border-pink-600 font-bold px-4 py-1.5 text-pink-600'
                     >
                         {copied ? 'Copied' : 'Share'}
                     </button>
                     <button
                             type='button'
                             onClick={onClose}
-                            className='mx-auto mt-3 block w-[200px] cursor-pointer rounded-full bg-pink-600 hover:bg-pink-700 transition-colors font-bold px-4 py-1.5 text-white'
+                            className='mx-auto mt-3 block w-50 cursor-pointer rounded-full bg-pink-600 hover:bg-pink-700 transition-colors font-bold px-4 py-1.5 text-white'
                         >
                             Close
                     </button>
@@ -98,7 +99,7 @@ export default function ClassicWinModal({
                     <button
                         type='button'
                         onClick={onNext}
-                        className='mx-auto mt-3 block w-[200px] cursor-pointer rounded-full bg-pink-600 hover:bg-pink-700 transition-colors font-bold px-4 py-1.5 text-white'
+                        className='mx-auto mt-3 block w-50 cursor-pointer rounded-full bg-pink-600 hover:bg-pink-700 transition-colors font-bold px-4 py-1.5 text-white'
                     >
                         Next idol
                     </button>

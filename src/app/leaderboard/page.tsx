@@ -69,6 +69,7 @@ function AccountImage({ src, size }: { src: string; size: 'podium' | 'list' }) {
             className={`rounded-full object-cover ${
                 size === 'podium' ? 'h-16 w-16' : 'h-8 w-8'
             }`}
+            unoptimized
         />
     )
 }

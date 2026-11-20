@@ -29,6 +29,7 @@ export default function GuessRow({
                         width={120}
                         height={120}
                         className='h-full w-full object-cover'
+                        unoptimized
                     />
                 ) : (
                     <div className='h-full w-full bg-zinc-200 dark:bg-zinc-800' />
