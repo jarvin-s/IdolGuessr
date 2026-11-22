@@ -8,4 +8,10 @@ export const COUNTRIES: Record<string, { name: string; code: string }> = {
     American: { name: 'American', code: 'us' },
     Australian: { name: 'Australian', code: 'au' },
     Canadian: { name: 'Canadian', code: 'ca' },
+    French: { name: 'French', code: 'fr' },
+    New_Zealand: { name: 'New Zealand', code: 'nz' },
+    Philippines: { name: 'Philippines', code: 'ph' },
+    German: { name: 'German', code: 'de' },
+    British: { name: 'British', code: 'gb' },
+    Hong_Kong: { name: 'Hong Kong', code: 'hk' },
 }

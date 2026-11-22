@@ -9,6 +9,7 @@ export type ClassicGroup = 'boy-group' | 'girl-group' | 'both'
 export interface AttributeCell {
     value: string | number | null
     status: AttributeStatus
+    matched?: string[]
 }
 
 export interface ClassicFeedback {
@@ -76,6 +77,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     return !!value && typeof value === 'object' && !Array.isArray(value)
 }
 
+function matchedList(value: unknown): string[] | undefined {
+    if (!Array.isArray(value)) return undefined
+    const items = value.filter((item): item is string => typeof item === 'string' && item.trim() !== '')
+    return items.length > 0 ? items : undefined
+}
+
 function cell(value: unknown): AttributeCell {
     const record = isRecord(value) ? value : {}
     const raw = record.value
@@ -86,6 +93,7 @@ function cell(value: unknown): AttributeCell {
             status === 'correct' || status === 'partial' || status === 'wrong' || status === 'higher' || status === 'lower'
                 ? status
                 : 'wrong',
+        matched: matchedList(record.matched),
     }
 }
 

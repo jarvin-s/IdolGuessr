@@ -44,6 +44,7 @@ export default function GuessRow({
                     column={column.key}
                     value={guess[column.key].value}
                     status={guess[column.key].status}
+                    matched={guess[column.key].matched}
                     animate={animate}
                     flipMs={FLIP_MS}
                     delay={animate ? FLIP_STAGGER_MS * index : 0}

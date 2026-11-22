@@ -20,15 +20,29 @@ function formatHeight(value: string | number) {
     return `${cm}cm/${feet}'${inches}`
 }
 
-function NationalityValue({ value }: { value: string }) {
+function NationalityValue({ value, matched }: { value: string; matched?: string[] }) {
     const parts = value.split(',').map((part) => part.trim()).filter(Boolean)
+    const hits = new Set((matched ?? []).map((part) => part.trim().toLowerCase()))
+    const split = parts.length > 1 && hits.size > 0 && parts.some((part) => !hits.has(part.toLowerCase()))
     return (
         <span className='flex flex-col items-center gap-1'>
             {parts.map((part) => {
                 const country = COUNTRIES[part]
-                if (!country) return <span key={part}>{part}</span>
+                const correct = split && hits.has(part.toLowerCase())
+                const fade = split && !correct ? 'opacity-40' : ''
+                const label = country?.name ?? part
+                const labelClass = correct
+                    ? 'rounded-md bg-green-600 px-1.5 py-0.5 text-xs leading-none font-semibold text-white'
+                    : 'text-xs leading-none'
+                if (!country) {
+                    return (
+                        <span key={part} className={fade}>
+                            <span className={labelClass}>{label}</span>
+                        </span>
+                    )
+                }
                 return (
-                    <span key={part} className='flex flex-col items-center gap-0.5'>
+                    <span key={part} className={`flex flex-col items-center gap-0.5 ${fade}`}>
                         <Image
                             src={`/flags/${country.code}.svg`}
                             alt={country.name}
@@ -36,7 +50,7 @@ function NationalityValue({ value }: { value: string }) {
                             height={0}
                             className='w-10 h-10'
                         />
-                        <span className='text-xs leading-none'>{country.name}</span>
+                        <span className={labelClass}>{label}</span>
                     </span>
                 )
             })}
@@ -54,6 +68,7 @@ export default function AttributeCell({
     column,
     value,
     status,
+    matched,
     animate = false,
     flipMs = 850,
     delay = 0,
@@ -62,6 +77,7 @@ export default function AttributeCell({
     column: string
     value: string | number | null
     status: AttributeStatus
+    matched?: string[]
     animate?: boolean
     flipMs?: number
     delay?: number
@@ -95,7 +111,11 @@ export default function AttributeCell({
                     />
                 )}
                 <span className='relative z-10 min-w-0 leading-tight wrap-break-word'>
-                    {showNationality ? <NationalityValue value={value} /> : formatAttribute(column, value)}
+                    {showNationality ? (
+                        <NationalityValue value={value} matched={matched} />
+                    ) : (
+                        formatAttribute(column, value)
+                    )}
                 </span>
             </div>
             {animate && (
