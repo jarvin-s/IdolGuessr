@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import localFont from 'next/font/local'
+import posthog from 'posthog-js'
 import type { Session } from '@supabase/supabase-js'
 import {
     checkIsAdmin,
@@ -18,6 +19,11 @@ const proximaNovaBold = localFont({
 })
 
 type AuthState = 'loading' | 'signed-out' | 'unauthorized' | 'admin'
+
+const posthogConfigured = Boolean(
+    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
+        process.env.NEXT_PUBLIC_POSTHOG_HOST
+)
 
 export default function AdminShell({
     children,
@@ -69,6 +75,11 @@ export default function AdminShell({
           ? 'Announcements'
           : 'Admin'
 
+    const handleSignOut = async () => {
+        if (posthogConfigured) posthog.reset()
+        await signOutAdmin()
+    }
+
     return (
         <main className='min-h-screen overflow-x-hidden bg-gray-50 p-3 sm:p-8 dark:bg-zinc-950'>
             <div className='mx-auto w-full max-w-6xl min-w-0'>
@@ -110,7 +121,7 @@ export default function AdminShell({
                                     {session.user.email}
                                 </span>
                                 <button
-                                    onClick={() => signOutAdmin()}
+                                    onClick={() => void handleSignOut()}
                                     className='cursor-pointer rounded-full bg-gray-200 px-3 py-1.5 transition-colors hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-600'
                                 >
                                     Sign out
@@ -158,6 +169,13 @@ function LoginForm() {
         setError(null)
         try {
             await signInAdmin(email.trim(), password)
+            const { data } = await supabase.auth.getUser()
+            const user = data.user
+            if (posthogConfigured && user && !user.is_anonymous) {
+                posthog.identify(user.id, {
+                    ...(user.email ? { email: user.email } : {}),
+                })
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Sign in failed')
         } finally {

@@ -11,7 +11,7 @@ import IdolSearchInput from '@/components/classic/IdolSearchInput'
 import GameHeader from '@/components/game/GameHeader'
 import AccountModal from '@/components/modals/AccountModal'
 import FeedbackModal from '@/components/modals/FeedbackModal'
-import HelpModal from '@/components/modals/HelpModal'
+import ClassicHelpModal from '@/components/classic/ClassicHelpModal'
 import InfoModal from '@/components/modals/InfoModal'
 import {
     getClassicPool,
@@ -24,7 +24,7 @@ import {
     type ClassicGroup,
     type ClassicMode,
 } from '@/lib/classic'
-import { getClassicGame, subscribePlayer } from '@/lib/player'
+import { getClassicGame, getProfile, playerReady, savePlayerSettings, subscribePlayer } from '@/lib/player'
 
 function friendly(error: unknown) {
     const message =
@@ -85,6 +85,21 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
         sync()
         return subscribePlayer(sync)
     }, [mode])
+
+    const dismissHelp = (reopenInfo = false) => {
+        setShowHelp(false)
+        if (reopenInfo) setShowInfo(true)
+        void savePlayerSettings({ seen_notices: { classic: true } })
+    }
+
+    useEffect(() => {
+        const check = () => {
+            if (!playerReady()) return
+            if (!getProfile()?.seen_notices?.classic) setShowHelp(true)
+        }
+        check()
+        return subscribePlayer(check)
+    }, [])
 
     useEffect(() => {
         let cancel = false
@@ -261,7 +276,7 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
             <div className='mx-auto w-full max-w-7xl px-4 pb-6'>
                 <div className='mx-auto mt-4 w-full max-w-md'>
                     <div className='mb-3 text-center'>
-                        <h1 className='text-5xl font-bold text-white'>
+                        <h1 className='text-5xl font-bold dark:text-white text-black'>
                             Classic
                         </h1>
                         {mode === 'daily' && winCount !== null && (
@@ -313,12 +328,25 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
                                 {error}
                             </p>
                         )}
+                        {mode === 'daily' &&
+                            game?.status === 'in_progress' &&
+                            game.guesses.length >= 3 && (
+                                <div className='mt-4 flex justify-center'>
+                                    <button
+                                        type='button'
+                                        onClick={() => setConfirmGiveUp(true)}
+                                        className='cursor-pointer rounded-full bg-pink-600 px-4 py-2 font-bold text-white hover:bg-pink-700'
+                                    >
+                                        Give up
+                                    </button>
+                                </div>
+                            )}
                         <GuessGrid
                             guesses={game?.guesses ?? []}
                             newestId={newestId}
                             onRevealEnd={finishReveal}
                         />
-                        {game?.status === 'in_progress' && (
+                        {mode === 'infinite' && game?.status === 'in_progress' && (
                             <div className='mt-4 flex justify-center'>
                                 <button
                                     type='button'
@@ -377,13 +405,10 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
                 onShowHistory={() => {}}
                 gameMode='unlimited'
             />
-            <HelpModal
+            <ClassicHelpModal
                 isOpen={showHelp}
-                onClose={() => setShowHelp(false)}
-                onBack={() => {
-                    setShowHelp(false)
-                    setShowInfo(true)
-                }}
+                onClose={() => dismissHelp(false)}
+                onBack={() => dismissHelp(true)}
             />
             <FeedbackModal
                 isOpen={showFeedback}

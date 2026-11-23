@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import posthog from 'posthog-js'
 import { revealHangulGroup } from '@/lib/game/actions'
 import { clearRunEnded, consumeRoundSkip, endedRunStreak, flushPlayerSettingsNow, getHangulGame, getProfile, judgeRoundGuess, refreshOverview, runAwaitingPlayAgain, savePlayerSettings, takeHangulImages } from '@/lib/player'
 import {
@@ -15,6 +16,11 @@ import { useHangulStats } from '@/components/stats/UserStats'
 import { encodeIdolName, decodeIdolName } from '@/utils/encoding'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
+
+const posthogConfigured = Boolean(
+    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
+        process.env.NEXT_PUBLIC_POSTHOG_HOST
+)
 
 export function useHangulGameController() {
     const [currentGuess, setCurrentGuess] = useState('')
@@ -451,6 +457,11 @@ export function useHangulGameController() {
                     return
                 }
                 setSkipsRemaining(left)
+                if (posthogConfigured) {
+                    posthog.capture('hangul_game_round_skipped', {
+                        skips_remaining: left,
+                    })
+                }
                 loadNextHangul(left)
             } finally {
                 skipInFlightRef.current = false
@@ -507,6 +518,12 @@ export function useHangulGameController() {
                                             hangulStats.stats.currentStreak
                                         setFinalStreak(streakBeforeReset)
                                         setGameLost(true)
+                                        if (posthogConfigured) {
+                                            posthog.capture('hangul_game_round_completed', {
+                                                outcome: 'lost',
+                                                guess_count: 3,
+                                            })
+                                        }
                                         if (!lossRecordedRef.current) {
                                             lossRecordedRef.current = true
                                             if (!hasTrackedCurrentGame.current && streakBeforeReset >= 1) {
@@ -525,6 +542,12 @@ export function useHangulGameController() {
                     } else {
                         const emptyIndex = guesses.findIndex((g) => g === 'empty')
                         setGameWon(true)
+                        if (posthogConfigured) {
+                            posthog.capture('hangul_game_round_completed', {
+                                outcome: 'won',
+                                guess_count: 3 - remainingGuesses + 1,
+                            })
+                        }
                         setCorrectAnswer(matchedAnswer)
                         setIsAnimating(false)
                         setCurrentGuess('')
@@ -747,6 +770,9 @@ export function useHangulGameController() {
     }, [imageRevealed])
 
     const handleStart = useCallback((filter: GroupFilter) => {
+        if (posthogConfigured) {
+            posthog.capture('hangul_game_started', { group_filter: filter })
+        }
         clearRunEnded('hangul')
         setGroupFilter(filter)
         void savePlayerSettings({ hangul_group_filter: filter })

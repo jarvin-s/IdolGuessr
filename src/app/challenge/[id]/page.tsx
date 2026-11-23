@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import posthog from 'posthog-js'
 import GameHeader from '@/components/game/GameHeader'
 import GameImage from '@/components/game/GameImage'
 import GuessInput from '@/components/game/GuessInput'
@@ -17,6 +18,11 @@ import ChallengeCompleteModal from '@/components/challenge/ChallengeCompleteModa
 import ChallengeIntroModal from '@/components/challenge/ChallengeIntroModal'
 import { useChallengeController } from '@/hooks/useChallengeController'
 import { useAuth } from '@/components/auth/AuthProvider'
+
+const posthogConfigured = Boolean(
+    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
+        process.env.NEXT_PUBLIC_POSTHOG_HOST
+)
 
 export default function ChallengePlayPage() {
     const params = useParams()
@@ -74,13 +80,28 @@ export default function ChallengePlayPage() {
     const handleSubmitResults = async (nickname: string | null) => {
         const success = await submitResults(nickname)
         if (success) {
+            if (posthogConfigured) {
+                posthog.capture('challenge_completed', {
+                    total_correct: totalCorrect,
+                    total_idols: totalIdols,
+                    is_guest: isGuest,
+                })
+            }
             router.push(`/challenge/${challengeId}/results`)
         }
     }
 
     const handleStartChallenge = async () => {
         const started = await markStarted()
-        if (started) setShowIntro(false)
+        if (started) {
+            if (posthogConfigured) {
+                posthog.capture('challenge_started', {
+                    total_idols: totalIdols,
+                    is_guest: isGuest,
+                })
+            }
+            setShowIntro(false)
+        }
     }
 
     if (isLoading) {

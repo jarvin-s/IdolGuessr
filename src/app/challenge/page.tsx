@@ -2,11 +2,17 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import posthog from 'posthog-js'
 import ChallengeCreateModal from '@/components/challenge/ChallengeCreateModal'
 import { createChallenge, getOrCreateSessionId } from '@/lib/supabase'
 
 type GroupFilter = 'boy-group' | 'girl-group' | 'both'
 type IdolCount = 5 | 10 | 15 | 20
+
+const posthogConfigured = Boolean(
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
+    process.env.NEXT_PUBLIC_POSTHOG_HOST
+)
 
 export default function ChallengePage() {
   const router = useRouter()
@@ -26,6 +32,13 @@ export default function ChallengePage() {
       const challengeId = await createChallenge(sessionId, idolCount, groupFilter, genFilter)
 
       if (challengeId) {
+        if (posthogConfigured) {
+          posthog.capture('challenge_created', {
+            idol_count: idolCount,
+            group_filter: groupFilter,
+            generation_count: genFilter.length,
+          })
+        }
         router.push(`/challenge/${challengeId}`)
       } else {
         setError('Failed to create challenge. Please try again.')

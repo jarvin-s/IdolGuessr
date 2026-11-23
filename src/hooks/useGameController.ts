@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { usePathname } from 'next/navigation'
+import posthog from 'posthog-js'
 import {
     clearRunEnded,
     consumeRoundHint,
@@ -55,6 +56,11 @@ function restoredHints(
 
 const idolNamesSet = new Set(
     idolNames.map((name: string) => name.toUpperCase())
+)
+
+const posthogConfigured = Boolean(
+    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
+        process.env.NEXT_PUBLIC_POSTHOG_HOST
 )
 
 export function useGameController(initialDaily?: CurrentDaily | null) {
@@ -916,6 +922,14 @@ export function useGameController(initialDaily?: CurrentDaily | null) {
                     return
                 }
                 setSkipsRemaining(left)
+                if (posthogConfigured) {
+                    posthog.capture('classic_game_round_skipped', {
+                        game_mode: 'unlimited',
+                        difficulty,
+                        image_mode: imageMode,
+                        skips_remaining: left,
+                    })
+                }
                 loadNextUnlimited(left)
             } finally {
                 skipInFlightRef.current = false
@@ -1015,6 +1029,15 @@ export function useGameController(initialDaily?: CurrentDaily | null) {
                             if (remainingAfterThis === 0) {
                                 setTimeout(() => {
                                     setGameLost(true)
+                                    if (posthogConfigured) {
+                                        posthog.capture('classic_game_round_completed', {
+                                            game_mode: gameMode,
+                                            outcome: 'lost',
+                                            guess_count: guessLimit,
+                                            difficulty,
+                                            image_mode: imageMode,
+                                        })
+                                    }
                                     if (gameMode === 'daily') {
                                         handleGameLoss()
                                         setTimeout(() => {
@@ -1050,6 +1073,15 @@ export function useGameController(initialDaily?: CurrentDaily | null) {
                             (g) => g === 'empty'
                         )
                         setGameWon(true)
+                        if (posthogConfigured) {
+                            posthog.capture('classic_game_round_completed', {
+                                game_mode: gameMode,
+                                outcome: 'won',
+                                guess_count: guessNumber,
+                                difficulty,
+                                image_mode: imageMode,
+                            })
+                        }
                         if (gameMode === 'unlimited')
                             setCorrectAnswer(matchedAnswer)
                         if (gameMode === 'daily') setShowConfetti(true)
@@ -1137,14 +1169,14 @@ export function useGameController(initialDaily?: CurrentDaily | null) {
             }
             if (event.repeat) return
             const key = event.key.toUpperCase()
-            if (key === 'ENTER' || key === 'BACKSPACE' || /^[A-Z]$/.test(key)) {
+            if (key === 'ENTER' || key === 'BACKSPACE' || /^[A-Z0-9]$/.test(key)) {
                 event.preventDefault()
             }
             if (key === 'ENTER') {
                 handleKeyPress('ENTER')
             } else if (key === 'BACKSPACE') {
                 handleKeyPress('✕')
-            } else if (/^[A-Z]$/.test(key)) {
+            } else if (/^[A-Z0-9]$/.test(key)) {
                 if (!disabledLetters.has(key)) {
                     handleKeyPress(key)
                 }

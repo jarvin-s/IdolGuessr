@@ -1,10 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import posthog from 'posthog-js'
 import copy from 'copy-to-clipboard'
 import ShareModal from './ShareModal'
 import { useShareImage } from '@/hooks/useShareImage'
 import { generateShareText } from '@/utils/shareText'
+
+const posthogConfigured = Boolean(
+    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
+        process.env.NEXT_PUBLIC_POSTHOG_HOST
+)
 
 interface ShareButtonProps {
     correctAnswer: string
@@ -47,6 +53,13 @@ export default function ShareButton({
             try {
                 const clipboardItem = new ClipboardItem({ 'image/png': blob })
                 await navigator.clipboard.write([clipboardItem])
+                if (posthogConfigured) {
+                    posthog.capture('game_shared', {
+                        format: 'png',
+                        outcome: isWin ? 'won' : 'lost',
+                        guess_count: guessCount,
+                    })
+                }
                 setCopyStatus('copied-png')
                 setTimeout(() => {
                     setCopyStatus('idle')
@@ -62,6 +75,13 @@ export default function ShareButton({
                 link.click()
                 document.body.removeChild(link)
                 URL.revokeObjectURL(url)
+                if (posthogConfigured) {
+                    posthog.capture('game_shared', {
+                        format: 'png_download',
+                        outcome: isWin ? 'won' : 'lost',
+                        guess_count: guessCount,
+                    })
+                }
                 setIsModalOpen(false)
             }
         } catch (error) {
@@ -77,6 +97,13 @@ export default function ShareButton({
 
         const success = copy(textResult)
         if (success) {
+            if (posthogConfigured) {
+                posthog.capture('game_shared', {
+                    format: 'text',
+                    outcome: isWin ? 'won' : 'lost',
+                    guess_count: guessCount,
+                })
+            }
             setCopyStatus('copied-text')
             setTimeout(() => {
                 setCopyStatus('idle')

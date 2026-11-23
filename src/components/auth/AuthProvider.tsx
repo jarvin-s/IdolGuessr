@@ -7,6 +7,7 @@ import {
     useState,
     type ReactNode,
 } from 'react'
+import posthog from 'posthog-js'
 import { supabase, setAccountId } from '@/lib/supabase'
 import {
     getProfile,
@@ -35,6 +36,11 @@ const AuthContext = createContext<AuthContextValue>({
     signOut: async () => {},
 })
 
+const posthogConfigured = Boolean(
+    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
+        process.env.NEXT_PUBLIC_POSTHOG_HOST
+)
+
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [ready, setReady] = useState(false)
     const [profile, setProfile] = useState<PlayerProfile | null>(null)
@@ -61,6 +67,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             setAccountId(user?.id ?? null)
             await refreshOverview()
+            if (posthogConfigured && user && !user.is_anonymous) {
+                const profile = getProfile()
+                posthog.identify(user.id, {
+                    ...(user.email ? { email: user.email } : {}),
+                    ...(profile?.nickname
+                        ? { nickname: profile.nickname }
+                        : {}),
+                })
+            }
             await importLegacyProgress()
             await claimAccountFeedbackTickets()
             if (!cancelled) {
@@ -75,6 +90,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             unsubscribe()
         }
     }, [])
+
+    const signOut = async () => {
+        if (posthogConfigured) posthog.reset()
+        await signOutToGuest()
+    }
 
     if (!ready) {
         return (
@@ -91,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 profile,
                 isGuest: profile?.is_anonymous !== false,
                 signInWithGoogle,
-                signOut: signOutToGuest,
+                signOut,
             }}
         >
             {error ? (

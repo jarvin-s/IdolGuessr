@@ -48,3 +48,4 @@ migrations
 *.yaml
 
 /api/node_modules
+.env.local

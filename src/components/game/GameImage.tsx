@@ -2,6 +2,7 @@ import { getImageUrl } from '@/lib/supabase'
 import { getZoomScale, type ImageMode } from '@/utils/difficulty'
 import StreakPopup from './StreakPopup'
 import GameOverModal from './GameOverModal'
+import { motion } from 'motion/react'
 import Image from 'next/image'
 import { useCallback, useEffect, useState, useRef, type CSSProperties } from 'react'
 import localFont from 'next/font/local'
@@ -211,6 +212,33 @@ export default function GameImage({
                     <div className='flex h-full w-full items-center justify-center'>
                         <div className='text-gray-400 dark:text-zinc-500'>Loading...</div>
                     </div>
+                ) : dailyImage && isZoom && gameMode === 'unlimited' ? (
+                    <motion.div
+                        className='absolute inset-0'
+                        key={dailyImage.img_bucket}
+                        initial={{ y: '-100%' }}
+                        animate={{ y: '0%' }}
+                        transition={{ duration: 1.5, ease: 'easeOut' }}
+                    >
+                        <div className='absolute inset-0 overflow-hidden rounded-lg'>
+                            <motion.div
+                                className='absolute inset-0'
+                                animate={{ scale: zoomScale }}
+                                transition={{ duration: 0.7, ease: 'easeOut' }}
+                                style={{ transformOrigin: zoomOrigin }}
+                            >
+                                <SlotImage
+                                    src={zoomUrl}
+                                    bucket={dailyImage.img_bucket}
+                                    slot='clear'
+                                    onSettled={markSlotLoaded}
+                                    className='pointer-events-none rounded-lg object-cover'
+                                    style={FILL_STYLE}
+                                    priority
+                                />
+                            </motion.div>
+                        </div>
+                    </motion.div>
                 ) : dailyImage && isZoom ? (
                     <div
                         className='absolute inset-0 transition-transform duration-1500 ease-out'
@@ -239,6 +267,55 @@ export default function GameImage({
                             />
                         </div>
                     </div>
+                ) : dailyImage && gameMode === 'unlimited' ? (
+                    <motion.div
+                        className='absolute inset-0'
+                        key={dailyImage.img_bucket}
+                        initial={{ y: '-100%' }}
+                        animate={{ y: '0%' }}
+                        transition={{ duration: 1.5, ease: 'easeOut' }}
+                    >
+                        {mountedSlots.map(({ num: imageNum, index, url }) => {
+                            const isVisible = imageNumber === imageNum
+                            const isPastImage = index < currentIndex
+                            const bucket = dailyImage.img_bucket
+                            return (
+                                <motion.div
+                                    key={url}
+                                    className='absolute inset-0 overflow-hidden rounded-lg'
+                                    animate={{
+                                        opacity: isVisible ? 1 : 0,
+                                        x: isVisible
+                                            ? '0%'
+                                            : isPastImage
+                                              ? '-150%'
+                                              : '150%',
+                                        rotate: isVisible
+                                            ? 0
+                                            : isPastImage
+                                              ? -15
+                                              : 15,
+                                    }}
+                                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                                    style={{
+                                        pointerEvents: isVisible
+                                            ? 'auto'
+                                            : 'none',
+                                    }}
+                                >
+                                    <SlotImage
+                                        src={url}
+                                        bucket={bucket}
+                                        slot={imageNum}
+                                        onSettled={markSlotLoaded}
+                                        className='pointer-events-none rounded-lg object-cover'
+                                        style={FILL_STYLE}
+                                        priority={index === 0}
+                                    />
+                                </motion.div>
+                            )
+                        })}
+                    </motion.div>
                 ) : dailyImage ? (
                     <div
                         className='absolute inset-0 transition-transform duration-1500 ease-out'
@@ -370,15 +447,23 @@ export default function GameImage({
                                     {skipsRemaining === 0 ? 0 : skipsRemaining})
                                 </button>
                                 {showMinusOne && (
-                                    <div
-                                        className='pointer-events-none absolute top-0 right-1/2 translate-x-1/2 text-2xl font-bold text-red-500'
-                                        style={{
-                                            animation:
-                                                'float-up 1s ease-out forwards',
+                                    <motion.div
+                                        className='pointer-events-none absolute top-0 right-1/2 text-2xl font-bold text-red-500'
+                                        initial={{ x: '50%', y: 0, scale: 1, opacity: 1 }}
+                                        animate={{
+                                            x: '50%',
+                                            y: -60,
+                                            scale: [1, 1.2, 0.8],
+                                            opacity: [1, 1, 0],
+                                        }}
+                                        transition={{
+                                            duration: 1,
+                                            ease: 'easeOut',
+                                            times: [0, 0.5, 1],
                                         }}
                                     >
                                         -1
-                                    </div>
+                                    </motion.div>
                                 )}
                             </div>
                         )}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import posthog from 'posthog-js'
 import localFont from 'next/font/local'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { createFeedbackTicket, type TicketCategory } from '@/lib/supabase'
@@ -14,6 +15,10 @@ const proximaNovaBold = localFont({
 })
 
 const MAX_LENGTH = 2000
+const posthogConfigured = Boolean(
+    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
+        process.env.NEXT_PUBLIC_POSTHOG_HOST
+)
 
 interface NewTicketFormProps {
     onCreated: (ticketId: string) => void
@@ -40,6 +45,12 @@ export default function NewTicketForm({ onCreated }: NewTicketFormProps) {
             if (isGuest) addStoredTicket(id, access_token)
             else rememberTicket(id, access_token)
             notifyFeedbackTicketsChanged()
+            if (posthogConfigured) {
+                posthog.capture('feedback_submitted', {
+                    category,
+                    is_guest: isGuest,
+                })
+            }
             setMessage('')
             setCategory('general')
             onCreated(id)
