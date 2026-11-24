@@ -589,6 +589,12 @@ const announcementColumns =
     'id, message, display_seconds, is_active, created_at, updated_at'
 
 export async function getActiveAnnouncement(): Promise<Announcement | null> {
+    try {
+        const response = await fetch('/api/announcement')
+        if (response.ok) return ((await response.json()) as Announcement | null) ?? null
+    } catch {
+        // fall through to the direct query
+    }
     const { data, error } = await supabase
         .from('announcements')
         .select(announcementColumns)

@@ -18,6 +18,8 @@ export async function updateSession(request: NextRequest) {
             },
         },
     })
-    await supabase.auth.getUser()
+    // Refreshes the cookie only when the access token expired. getUser would hit
+    // Auth and Postgres on every request; nothing here trusts the session.
+    await supabase.auth.getSession()
     return response
 }

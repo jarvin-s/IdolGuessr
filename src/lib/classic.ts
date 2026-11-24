@@ -185,12 +185,26 @@ export function idolPortrait(idol: {
     )
 }
 
+async function fetchClassicPoolRows(): Promise<Array<Record<string, unknown>>> {
+    try {
+        const response = await fetch('/api/classic-pool')
+        if (response.ok) {
+            const rows: unknown = await response.json()
+            if (Array.isArray(rows) && rows.length > 0) return rows as Array<Record<string, unknown>>
+        }
+    } catch {
+        // fall through to the direct RPC
+    }
+    const { data, error } = await supabase.rpc('get_classic_pool')
+    if (error) throw new Error(error.message)
+    return (data ?? []) as Array<Record<string, unknown>>
+}
+
 export function getClassicPool(): Promise<ClassicCandidate[]> {
     if (!poolPromise) {
         poolPromise = (async () => {
-            const { data, error } = await supabase.rpc('get_classic_pool')
-            if (error) throw new Error(error.message)
-            return ((data ?? []) as Array<Record<string, unknown>>).flatMap((row): ClassicCandidate[] => {
+            const data = await fetchClassicPoolRows()
+            return data.flatMap((row): ClassicCandidate[] => {
                 const id = typeof row.id === 'number' ? row.id : Number(row.id)
                 if (!Number.isFinite(id) || typeof row.name !== 'string') return []
                 return [

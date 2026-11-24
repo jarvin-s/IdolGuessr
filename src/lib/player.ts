@@ -488,8 +488,8 @@ export async function refreshOverview() {
     overview = data as Overview
     applySettingsLocally(pendingSettings)
     ready = true
-    const { data: userData } = await supabase.auth.getUser()
-    userId = userData.user?.id ?? overview?.profile?.id ?? null
+    const { data: sessionData } = await supabase.auth.getSession()
+    userId = sessionData.session?.user.id ?? overview?.profile?.id ?? null
     emit()
     if (Object.keys(unverifiedSettings).length > 0) scheduleSettingsFlush()
     return overview
@@ -1069,7 +1069,14 @@ export async function importLegacyProgress() {
             console.error('import_legacy_progress', error)
             return
         }
-        await refreshOverview()
+        // An empty import only stamps legacy_imported_at, so skip the refetch.
+        if (overview) {
+            overview = {
+                ...overview,
+                profile: { ...overview.profile, legacy_imported_at: new Date().toISOString() },
+            }
+            emit()
+        }
         return
     }
 
