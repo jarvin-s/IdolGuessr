@@ -14,6 +14,13 @@ export const metadata: Metadata = {
 
 const entries: { date: string; changes: string[] }[] = [
     {
+        date: 'November 26, 2026',
+        changes: [
+            'Added Colorblind mode',
+            'Added Attribute icons',
+        ],
+    },
+    {
         date: 'November 25, 2026',
         changes: [
             'Added pages to the leaderboard',

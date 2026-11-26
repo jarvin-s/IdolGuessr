@@ -8,6 +8,9 @@ import {
     type PointerEvent,
 } from 'react'
 import { createPortal } from 'react-dom'
+import FeedbackIcon from '@/components/theme/FeedbackIcon'
+import { useColorblind } from '@/components/theme/ColorblindProvider'
+import { feedbackPalette } from '@/lib/feedbackPalette'
 
 const DRAG_THRESHOLD = 5
 const BLUR_BLEED = 0.35
@@ -97,6 +100,8 @@ export default function PuzzlePiece({
     onDragMove,
     onDragEnd,
 }: PuzzlePieceProps) {
+    const { colorblind } = useColorblind()
+    const ring = feedbackPalette(colorblind).ring
     const origin = useRef({ x: 0, y: 0 })
     const dragging = useRef(false)
     const moved = useRef(false)
@@ -187,7 +192,7 @@ export default function PuzzlePiece({
                     active
                         ? 'border-2 border-white'
                         : correct
-                          ? 'border-2 border-green-400'
+                          ? `border-2 ${ring}`
                           : ''
                 } ${
                     ghost ? 'opacity-40' : ''
@@ -203,6 +208,11 @@ export default function PuzzlePiece({
                 >
                     <BlurredArtwork piece={piece} artworkUrl={artworkUrl} />
                 </span>
+                {correct && !active && (
+                    <span className='pointer-events-none absolute top-1 left-1 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-white/90 text-zinc-900'>
+                        <FeedbackIcon mark='correct' className='h-3 w-3' />
+                    </span>
+                )}
                 {locked && (
                     <span
                         aria-hidden

@@ -145,15 +145,36 @@ export default function ClassicWinModal({
                                 onClick={share}
                                 className='mb-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-pink-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-pink-700'
                             >
-                                <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                    <path
-                                        strokeLinecap='round'
-                                        strokeLinejoin='round'
-                                        strokeWidth={2}
-                                        d='M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z'
+                                {copied ? (
+                                    <motion.svg
+                                        key='copied'
+                                        initial={{ scale: 0.5, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ type: 'spring', duration: 0.35, bounce: 0.45 }}
+                                        className='h-5 w-5'
+                                        fill='none'
+                                        stroke='currentColor'
+                                        viewBox='0 0 24 24'
+                                        aria-hidden='true'
+                                    >
+                                        <path
+                                            strokeLinecap='round'
+                                            strokeLinejoin='round'
+                                            strokeWidth={2}
+                                            d='M5 13l4 4L19 7'
+                                        />
+                                    </motion.svg>
+                                ) : (
+                                    <span
+                                        aria-hidden
+                                        className='inline-block h-5 w-5 bg-current mask-contain mask-center mask-no-repeat'
+                                        style={{
+                                            maskImage: 'url(/icons/copy.svg)',
+                                            WebkitMaskImage: 'url(/icons/copy.svg)',
+                                        }}
                                     />
-                                </svg>
-                                {copied ? 'Copied' : 'Share'}
+                                )}
+                                {copied ? 'Copied' : 'Copy results'}
                             </button>
                         ) : (
                             <button

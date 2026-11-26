@@ -303,7 +303,7 @@ export default function IdolSearchInput({
                 />
                 {showGroup && pinned && (
                     <span
-                        className={`max-w-[40%] shrink truncate rounded-full bg-pink-600 px-2.5 py-1 text-xs font-bold text-white ${
+                        className={`shrink-0 whitespace-nowrap rounded-full bg-pink-600 px-2.5 py-1 text-xs font-bold text-white ${
                             showGuess ? 'mr-1' : 'mr-3'
                         }`}
                     >
@@ -324,92 +324,92 @@ export default function IdolSearchInput({
                 )}
             </div>
             <AnimatePresence>
-            {open && matches.length > 0 && (
-                <motion.ul
-                    key='idol-results'
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.16, ease: 'easeOut' }}
-                    className='absolute z-20 mt-2 max-h-80 w-full overflow-auto rounded-2xl border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900'
-                >
-                    {matches.map((idol, index) => {
-                        const guessed = excluded.has(idol.id)
-                        const portrait = idolPortrait(idol)
-                        const shared = isShared(idol.name)
-                        const marked =
-                            hover === index ||
-                            (keyboardPick && index === active) ||
-                            (!queryIsAmbiguous &&
-                                !keyboardPick &&
-                                hover < 0 &&
-                                index === active)
-                        return (
-                            <li key={idol.id}>
-                                <button
-                                    type='button'
-                                    disabled={guessed}
-                                    aria-label={
-                                        shared && idol.groupName
-                                            ? `${idol.name}, ${idol.groupName}`
-                                            : idol.name
-                                    }
-                                    onMouseEnter={() => setHover(index)}
-                                    onMouseLeave={() =>
-                                        setHover((current) =>
-                                            current === index ? -1 : current
-                                        )
-                                    }
-                                    onMouseDown={(event) =>
-                                        event.preventDefault()
-                                    }
-                                    onClick={() => fill(idol)}
-                                    className={`flex w-full items-center gap-3 px-3 py-2 text-left ${
-                                        marked
-                                            ? 'bg-zinc-100 dark:bg-zinc-800'
-                                            : ''
-                                    } ${guessed ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}
-                                >
-                                    {portrait ? (
-                                        <Image
-                                            src={portrait}
-                                            alt=''
-                                            width={36}
-                                            height={36}
-                                            className='h-9 w-9 rounded object-cover'
-                                            unoptimized
-                                        />
-                                    ) : (
-                                        <div className='h-9 w-9 rounded bg-zinc-200 dark:bg-zinc-800' />
-                                    )}
-                                    <span className='min-w-0'>
-                                        <span className='flex min-w-0 items-center gap-2'>
-                                            <span className='truncate font-semibold'>
-                                                {idol.name}
+                {open && matches.length > 0 && (
+                    <motion.ul
+                        key='idol-results'
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.16, ease: 'easeOut' }}
+                        className='absolute z-20 mt-2 max-h-80 w-full overflow-auto rounded-2xl border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900'
+                    >
+                        {matches.map((idol, index) => {
+                            const guessed = excluded.has(idol.id)
+                            const portrait = idolPortrait(idol)
+                            const shared = isShared(idol.name)
+                            const marked =
+                                hover === index ||
+                                (keyboardPick && index === active) ||
+                                (!queryIsAmbiguous &&
+                                    !keyboardPick &&
+                                    hover < 0 &&
+                                    index === active)
+                            return (
+                                <li key={idol.id}>
+                                    <button
+                                        type='button'
+                                        disabled={guessed}
+                                        aria-label={
+                                            shared && idol.groupName
+                                                ? `${idol.name}, ${idol.groupName}`
+                                                : idol.name
+                                        }
+                                        onMouseEnter={() => setHover(index)}
+                                        onMouseLeave={() =>
+                                            setHover((current) =>
+                                                current === index ? -1 : current
+                                            )
+                                        }
+                                        onMouseDown={(event) =>
+                                            event.preventDefault()
+                                        }
+                                        onClick={() => fill(idol)}
+                                        className={`flex w-full items-center gap-3 px-3 py-2 text-left ${
+                                            marked
+                                                ? 'bg-zinc-100 dark:bg-zinc-800'
+                                                : ''
+                                        } ${guessed ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}
+                                    >
+                                        {portrait ? (
+                                            <Image
+                                                src={portrait}
+                                                alt=''
+                                                width={36}
+                                                height={36}
+                                                className='h-9 w-9 rounded object-cover'
+                                                unoptimized
+                                            />
+                                        ) : (
+                                            <div className='h-9 w-9 rounded bg-zinc-200 dark:bg-zinc-800' />
+                                        )}
+                                        <span className='min-w-0 flex-1'>
+                                            <span className='flex min-w-0 items-center gap-2'>
+                                                <span className='min-w-0 truncate font-semibold'>
+                                                    {idol.name}
+                                                </span>
+                                                {shared && idol.groupName && (
+                                                    <span className='shrink-0 whitespace-nowrap rounded-full bg-pink-600/15 px-2 py-0.5 text-[11px] font-bold text-pink-700 dark:bg-pink-500/20 dark:text-pink-300'>
+                                                        {idol.groupName}
+                                                    </span>
+                                                )}
                                             </span>
-                                            {shared && idol.groupName && (
-                                                <span className='max-w-[55%] shrink truncate rounded-full bg-pink-600/15 px-2 py-0.5 text-[11px] font-bold text-pink-700 dark:bg-pink-500/20 dark:text-pink-300'>
-                                                    {idol.groupName}
+                                            {(!shared || guessed) && (
+                                                <span className='block truncate text-xs text-gray-500 dark:text-zinc-400'>
+                                                    {shared
+                                                        ? 'Guessed'
+                                                        : idol.groupName}
+                                                    {!shared && guessed
+                                                        ? ' · Guessed'
+                                                        : ''}
                                                 </span>
                                             )}
                                         </span>
-                                        {(!shared || guessed) && (
-                                            <span className='block truncate text-xs text-gray-500 dark:text-zinc-400'>
-                                                {shared
-                                                    ? 'Guessed'
-                                                    : idol.groupName}
-                                                {!shared && guessed
-                                                    ? ' · Guessed'
-                                                    : ''}
-                                            </span>
-                                        )}
-                                    </span>
-                                </button>
-                            </li>
-                        )
-                    })}
-                </motion.ul>
-            )}
+                                    </button>
+                                </li>
+                            )
+                        })}
+                    </motion.ul>
+                )}
             </AnimatePresence>
         </div>
     )

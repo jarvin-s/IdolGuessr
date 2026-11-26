@@ -4,19 +4,16 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { AnimatePresence, motion } from 'motion/react'
 import { COUNTRIES } from '@/components/classic/countries'
+import FeedbackIcon, { type FeedbackMark } from '@/components/theme/FeedbackIcon'
+import { useColorblind } from '@/components/theme/ColorblindProvider'
+import { feedbackPalette, type FeedbackTone } from '@/lib/feedbackPalette'
 import { getImageUrl } from '@/lib/supabase'
 
 type Tab = 'play' | 'attributes'
 
-type Tone = 'correct' | 'partial' | 'wrong'
+type Tone = Extract<FeedbackTone, 'correct' | 'partial' | 'wrong'>
 
-const TONE: Record<Tone, string> = {
-    correct: 'bg-[#3aa346]',
-    partial: 'bg-[#e39b2b]',
-    wrong: 'bg-[#d64545]',
-}
-
-function NationalityFlags({ value, matched }: { value: string; matched?: string[] }) {
+function NationalityFlags({ value, matched, matchedClass }: { value: string; matched?: string[]; matchedClass: string }) {
     const parts = value.split(',').map((part) => part.trim()).filter(Boolean)
     const hits = new Set((matched ?? []).map((part) => part.trim().toLowerCase()))
     const split = parts.length > 1 && hits.size > 0 && parts.some((part) => !hits.has(part.toLowerCase()))
@@ -37,7 +34,7 @@ function NationalityFlags({ value, matched }: { value: string; matched?: string[
                                 className='h-8 w-8'
                             />
                         ) : null}
-                        <span className={correct ? 'rounded-md bg-green-600 px-1 py-0.5 text-[10px] leading-none font-semibold' : 'text-[10px] leading-none font-semibold'}>
+                        <span className={correct ? `rounded-md px-1 py-0.5 text-[10px] leading-none font-semibold text-white ${matchedClass}` : 'text-[10px] leading-none font-semibold'}>
                             {country?.name ?? part}
                         </span>
                     </span>
@@ -60,8 +57,11 @@ function Tile({
     arrow?: 'up' | 'down'
     matched?: string[]
 }) {
+    const { colorblind, attributeIcons } = useColorblind()
+    const palette = feedbackPalette(colorblind)
+    const mark: FeedbackMark | null = attributeIcons && !arrow ? tone : null
     return (
-        <div className={`relative flex h-30 w-[7.5rem] shrink-0 flex-col items-center justify-center overflow-hidden rounded-md px-2 text-center text-white ${TONE[tone]}`}>
+        <div className={`relative flex h-30 w-[7.5rem] shrink-0 flex-col items-center justify-center overflow-hidden rounded-md px-2 text-center text-white ${palette[tone]}`}>
             {arrow && (
                 <span
                     aria-hidden
@@ -73,10 +73,15 @@ function Tile({
                     }}
                 />
             )}
+            {mark && (
+                <span className='absolute top-1 right-1 z-10 text-white'>
+                    <FeedbackIcon mark={mark} className='h-3.5 w-3.5' />
+                </span>
+            )}
             <span className='relative z-10 text-[11px] leading-none font-medium text-white/80'>{label}</span>
             {label === 'Nationality' ? (
                 <span className='relative z-10 mt-1'>
-                    <NationalityFlags value={value} matched={matched} />
+                    <NationalityFlags value={value} matched={matched} matchedClass={palette.matched} />
                 </span>
             ) : (
                 <span className='relative z-10 mt-1 text-sm leading-tight font-bold'>{value}</span>
@@ -109,10 +114,12 @@ function Example({
     title: string
     name: string
     tiles: Array<{ label: string; value: string; tone: Tone; arrow?: 'up' | 'down'; matched?: string[] }>
-    notes?: Array<{ swatch: string; text: string }>
+    notes?: Array<{ tone: Tone; text: string }>
     showSearch?: boolean
 }) {
     const portrait = portraitUrl(name)
+    const { colorblind } = useColorblind()
+    const palette = feedbackPalette(colorblind)
     return (
         <section>
             <p className='text-base font-bold tracking-[0.14em] text-gray-400 uppercase dark:text-zinc-500'>{step}</p>
@@ -148,7 +155,7 @@ function Example({
                     <ul className='mt-3 space-y-1.5'>
                         {notes.map((note) => (
                             <li key={note.text} className='flex items-start gap-2 text-sm leading-snug text-gray-600 dark:text-zinc-300'>
-                                <span className={`mt-0.5 h-3 w-3 shrink-0 rounded-sm ${note.swatch}`} />
+                                <span className={`mt-0.5 h-3 w-3 shrink-0 rounded-sm ${palette[note.tone]}`} />
                                 <span>{note.text}</span>
                             </li>
                         ))}
@@ -166,7 +173,7 @@ const ATTRIBUTES: Array<{
 }> = [
     {
         name: 'Group',
-        text: 'Green when the idol is in the same group.',
+        text: 'A check when the idol is in the same group.',
         tiles: [
             { label: 'Group', value: 'aespa', tone: 'correct' },
             { label: 'Group', value: 'BLACKPINK', tone: 'wrong' },
@@ -174,7 +181,7 @@ const ATTRIBUTES: Array<{
     },
     {
         name: 'Gender',
-        text: 'Green when the idol has the same gender.',
+        text: 'A check when the idol has the same gender.',
         tiles: [
             { label: 'Gender', value: 'Female', tone: 'correct' },
             { label: 'Gender', value: 'Male', tone: 'wrong' },
@@ -182,7 +189,7 @@ const ATTRIBUTES: Array<{
     },
     {
         name: 'Generation',
-        text: 'Green when it matches. An up arrow means the idol is a later generation (higher number), and a down arrow means an earlier one (lower number).',
+        text: 'A check when it matches. An up arrow means the idol is a later generation (higher number), and a down arrow means an earlier one (lower number).',
         tiles: [
             { label: 'Gen', value: '4', tone: 'correct' },
             { label: 'Gen', value: '3', tone: 'wrong', arrow: 'up' },
@@ -191,7 +198,7 @@ const ATTRIBUTES: Array<{
     },
     {
         name: 'Agency',
-        text: 'Green when the idol is in the same agency. Yellow when the agency shares a parent agency.',
+        text: 'A check when the idol is in the same agency. A half-mark when the agency shares a parent agency.',
         tiles: [
             { label: 'Agency', value: 'SM Entertainment', tone: 'correct' },
             { label: 'Agency', value: 'HYBE', tone: 'partial' },
@@ -200,7 +207,7 @@ const ATTRIBUTES: Array<{
     },
     {
         name: 'Nationality',
-        text: 'Green when the idol is from the same nationality. Yellow when at least one nationality matches. A matching flag stays bright when there are several.',
+        text: 'A check when the idol is from the same nationality. A half-mark when at least one nationality matches. A matching flag stays bright when there are several.',
         tiles: [
             { label: 'Nationality', value: 'Korean', tone: 'correct' },
             { label: 'Nationality', value: 'Korean, Chinese', tone: 'partial', matched: ['Korean'] },
@@ -209,7 +216,7 @@ const ATTRIBUTES: Array<{
     },
     {
         name: 'Positions',
-        text: 'Green when the idol has the same positions. Yellow when at least one position is shared.',
+        text: 'A check when the idol has the same positions. A half-mark when at least one position is shared.',
         tiles: [
             { label: 'Positions', value: 'Vocalist', tone: 'correct' },
             { label: 'Positions', value: 'Rapper', tone: 'partial' },
@@ -218,7 +225,7 @@ const ATTRIBUTES: Array<{
     },
     {
         name: 'Birth year',
-        text: 'Green when the year matches. An up arrow means the idol is younger (lower number), and a down arrow means older (higher number).',
+        text: 'A check when the year matches. An up arrow means the idol is younger (lower number), and a down arrow means older (higher number).',
         tiles: [
             { label: 'Birth year', value: '2000', tone: 'correct' },
             { label: 'Birth year', value: '1996', tone: 'wrong', arrow: 'up' },
@@ -227,7 +234,7 @@ const ATTRIBUTES: Array<{
     },
     {
         name: 'Height',
-        text: 'Green when the height matches. An up arrow means the idol is taller, and a down arrow means shorter.',
+        text: 'A check when the height matches. An up arrow means the idol is taller, and a down arrow means shorter.',
         tiles: [
             { label: 'Height', value: '168cm', tone: 'correct' },
             { label: 'Height', value: '160cm', tone: 'wrong', arrow: 'up' },
@@ -320,9 +327,9 @@ export default function ClassicHelpModal({
                                     { label: 'Birth year', value: '1996', tone: 'wrong', arrow: 'up' },
                                 ]}
                                 notes={[
-                                    { swatch: 'bg-[#3aa346]', text: 'Female and Korean match the idol.' },
-                                    { swatch: 'bg-[#e39b2b]', text: 'Yellow means a partial match, such as a shared position or one of two countries is correct.' },
-                                    { swatch: 'bg-[#d64545]', text: 'An up arrow means the idol is a later generation (higher number), younger, or taller.' },
+                                    { tone: 'correct', text: 'Female and Korean match the idol.' },
+                                    { tone: 'partial', text: 'A half-mark is a partial match, such as a shared position or one of two countries.' },
+                                    { tone: 'wrong', text: 'An up arrow means the idol is a later generation (higher number), younger, or taller.' },
                                 ]}
                             />
 
@@ -340,8 +347,8 @@ export default function ClassicHelpModal({
                                     { label: 'Birth year', value: '2001', tone: 'wrong', arrow: 'down' },
                                 ]}
                                 notes={[
-                                    { swatch: 'bg-[#3aa346]', text: 'Group, gender, generation, agency, and nationality all match.' },
-                                    { swatch: 'bg-[#d64545]', text: '2001 is too recent. The idol was born earlier (lower number).' },
+                                    { tone: 'correct', text: 'Group, gender, generation, agency, and nationality all match.' },
+                                    { tone: 'wrong', text: '2001 is too recent. The idol was born earlier (lower number).' },
                                 ]}
                             />
 

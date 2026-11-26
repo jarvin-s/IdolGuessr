@@ -1,3 +1,4 @@
+import { GuessDot } from '@/components/theme/FeedbackIcon'
 import localFont from 'next/font/local'
 
 const proximaNovaBold = localFont({
@@ -96,12 +97,12 @@ export default function HelpModal({ isOpen, onClose, onBack }: HelpModalProps) {
                             }}
                         />
                         <div className='flex h-6 items-center justify-center gap-1 rounded-sm bg-black px-2'>
-                            <div className='h-2.5 w-2.5 rounded-full bg-red-400/75' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-white' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-white' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-white' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-white' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-white' />
+                            <GuessDot guess='incorrect' />
+                            <GuessDot guess='empty' />
+                            <GuessDot guess='empty' />
+                            <GuessDot guess='empty' />
+                            <GuessDot guess='empty' />
+                            <GuessDot guess='empty' />
                         </div>
                     </div>
                     <div className='flex flex-col gap-2 select-none'>
@@ -114,12 +115,12 @@ export default function HelpModal({ isOpen, onClose, onBack }: HelpModalProps) {
                             }}
                         />
                         <div className='flex h-6 items-center justify-center gap-1 rounded-sm bg-black px-2'>
-                            <div className='h-2.5 w-2.5 rounded-full bg-red-400/75' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-red-400/75' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-white' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-white' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-white' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-white' />
+                            <GuessDot guess='incorrect' />
+                            <GuessDot guess='incorrect' />
+                            <GuessDot guess='empty' />
+                            <GuessDot guess='empty' />
+                            <GuessDot guess='empty' />
+                            <GuessDot guess='empty' />
                         </div>
                     </div>
                     <div className='flex flex-col gap-2 select-none'>
@@ -132,12 +133,12 @@ export default function HelpModal({ isOpen, onClose, onBack }: HelpModalProps) {
                             }}
                         />
                         <div className='flex h-6 items-center justify-center gap-1 rounded-sm bg-black px-2'>
-                            <div className='h-2.5 w-2.5 rounded-full bg-red-400/75' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-red-400/75' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-green-400' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-white' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-white' />
-                            <div className='h-2.5 w-2.5 rounded-full bg-white' />
+                            <GuessDot guess='incorrect' />
+                            <GuessDot guess='incorrect' />
+                            <GuessDot guess='correct' />
+                            <GuessDot guess='empty' />
+                            <GuessDot guess='empty' />
+                            <GuessDot guess='empty' />
                         </div>
                     </div>
                 </div>

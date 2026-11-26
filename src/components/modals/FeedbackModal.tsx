@@ -18,7 +18,6 @@ import {
     type StoredTicket,
 } from '@/utils/feedbackTickets'
 import { useAuth } from '@/components/auth/AuthProvider'
-import { getProfile, savePlayerSettings } from '@/lib/player'
 import { useTicketLiveUpdates } from '@/hooks/useTicketLiveUpdates'
 import NewTicketForm from '@/components/feedback/NewTicketForm'
 import TicketList from '@/components/feedback/TicketList'
@@ -32,14 +31,6 @@ import {
 const proximaNovaBold = localFont({
     src: '../../../public/fonts/proximanova_bold.otf',
 })
-
-function hasSeenFeedbackIntro(): boolean {
-    return Boolean(getProfile()?.seen_notices?.feedback_intro)
-}
-
-function markFeedbackIntroSeen(): void {
-    void savePlayerSettings({ seen_notices: { feedback_intro: true } })
-}
 
 interface FeedbackModalProps {
     isOpen: boolean
@@ -64,7 +55,6 @@ export default function FeedbackModal({
     const [threadError, setThreadError] = useState<string | null>(null)
     const [, setSeenVersion] = useState(0)
     const [storedTickets, setStoredTickets] = useState<StoredTicket[]>([])
-    const [showIntroPopup, setShowIntroPopup] = useState(false)
     const threadRef = useRef<FeedbackThread | null>(null)
     threadRef.current = thread
 
@@ -93,29 +83,34 @@ export default function FeedbackModal({
         }
     }, [])
 
-    const openThread = useCallback(async (ticketId: string) => {
-        const token = getTicketToken(ticketId)
-        if (!token) return
-        setThreadError(null)
-        setView('thread')
-        try {
-            const data = await getFeedbackThread(ticketId, token)
-            setThread(data)
-            markSeen(ticketId, data.ticket.last_admin_message_at)
-            void markFeedbackRead(ticketId, data.ticket.last_admin_message_at)
-            syncUnread()
-            setSeenVersion((v) => v + 1)
-        } catch (err) {
-            console.error('Error loading ticket:', err)
-            setThreadError('Could not load this ticket.')
-        }
-    }, [syncUnread])
+    const openThread = useCallback(
+        async (ticketId: string) => {
+            const token = getTicketToken(ticketId)
+            if (!token) return
+            setThreadError(null)
+            setView('thread')
+            try {
+                const data = await getFeedbackThread(ticketId, token)
+                setThread(data)
+                markSeen(ticketId, data.ticket.last_admin_message_at)
+                void markFeedbackRead(
+                    ticketId,
+                    data.ticket.last_admin_message_at
+                )
+                syncUnread()
+                setSeenVersion((v) => v + 1)
+            } catch (err) {
+                console.error('Error loading ticket:', err)
+                setThreadError('Could not load this ticket.')
+            }
+        },
+        [syncUnread]
+    )
 
     useEffect(() => {
         if (!isOpen) return
         let cancelled = false
         setThread(null)
-        setShowIntroPopup(!hasSeenFeedbackIntro())
         void (async () => {
             const stored = getStoredTickets()
             if (!cancelled) setView(stored.length > 0 ? 'list' : 'new')
@@ -126,11 +121,6 @@ export default function FeedbackModal({
             cancelled = true
         }
     }, [isOpen, loadTickets])
-
-    const dismissIntroPopup = () => {
-        markFeedbackIntroSeen()
-        setShowIntroPopup(false)
-    }
 
     const handleLiveUpdate = useCallback(
         async (ticketId: string) => {
@@ -143,7 +133,10 @@ export default function FeedbackModal({
                 if (threadRef.current?.ticket.id !== ticketId) return
                 setThread(data)
                 markSeen(ticketId, data.ticket.last_admin_message_at)
-                void markFeedbackRead(ticketId, data.ticket.last_admin_message_at)
+                void markFeedbackRead(
+                    ticketId,
+                    data.ticket.last_admin_message_at
+                )
                 syncUnread()
                 setSeenVersion((v) => v + 1)
             } catch (err) {
@@ -185,19 +178,21 @@ export default function FeedbackModal({
 
     return (
         <div className='bg-opacity-50 fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4'>
-            <div className='relative flex max-h-[90dvh] w-full max-w-md min-w-0 flex-col overflow-y-auto rounded-lg bg-white dark:bg-zinc-900 p-4 sm:p-6'>
+            <div className='relative flex max-h-[90dvh] w-full max-w-md min-w-0 flex-col overflow-y-auto rounded-lg bg-white p-4 sm:p-6 dark:bg-zinc-900'>
                 <div className='mb-6 flex items-center justify-between'>
                     <button
                         onClick={handleBack}
-                        className='flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full bg-gray-100 dark:bg-zinc-800 px-3 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
+                        className='flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full bg-gray-100 px-3 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                         aria-label='Go back'
                     >
                         <ArrowLeftIcon />
-                        <span className='text-sm text-gray-600 dark:text-zinc-400'>Go back</span>
+                        <span className='text-sm text-gray-600 dark:text-zinc-400'>
+                            Go back
+                        </span>
                     </button>
                     <button
                         onClick={onClose}
-                        className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700'
+                        className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                         aria-label='Close Feedback'
                     >
                         <svg
@@ -222,7 +217,7 @@ export default function FeedbackModal({
                             className={`${proximaNovaBold.className} mb-3 text-xl break-words uppercase`}
                         >
                             {activeTicketNumberLabel && (
-                                <span className='mr-2 font-mono text-base text-gray-500 dark:text-zinc-400 normal-case'>
+                                <span className='mr-2 font-mono text-base text-gray-500 normal-case dark:text-zinc-400'>
                                     {activeTicketNumberLabel}
                                 </span>
                             )}
@@ -286,7 +281,7 @@ export default function FeedbackModal({
                             ticket and we&apos;ll get back to you there.
                         </p>
 
-                        <div className='mt-4 flex rounded-full bg-gray-100 dark:bg-zinc-800 p-1'>
+                        <div className='mt-4 flex rounded-full bg-gray-100 p-1 dark:bg-zinc-800'>
                             <TabButton
                                 active={view === 'new'}
                                 onClick={() => setView('new')}
@@ -330,34 +325,6 @@ export default function FeedbackModal({
                         )}
                     </>
                 )}
-
-                {showIntroPopup && (
-                    <div
-                        className='absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-black/50 p-4'
-                        role='dialog'
-                        aria-labelledby='feedback-intro-title'
-                        aria-modal='true'
-                    >
-                        <div className='w-full max-w-sm rounded-lg bg-white dark:bg-zinc-900 p-6 shadow-lg'>
-                            <h2
-                                id='feedback-intro-title'
-                                className={`${proximaNovaBold.className} text-xl uppercase`}
-                            >
-                                Heads up!
-                            </h2>
-                            <p className='mt-3 text-base text-black dark:text-zinc-100'>
-                                You can now open a support ticket! Simply fill in the form and submit your feedback and you should see your ticket, I&apos;ll try to respond as fast as I can. :)
-                            </p>
-                            <button
-                                type='button'
-                                onClick={dismissIntroPopup}
-                                className='mt-5 w-full cursor-pointer rounded-full bg-pink-500 px-4 py-2 font-medium text-white transition-colors hover:bg-pink-600'
-                            >
-                                Got it
-                            </button>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     )
@@ -378,8 +345,8 @@ function TabButton({
             onClick={onClick}
             className={`flex flex-1 cursor-pointer items-center justify-center rounded-full px-3 py-1.5 text-sm transition-colors ${
                 active
-                    ? 'bg-white dark:bg-zinc-900 font-medium text-black dark:text-zinc-100 shadow-sm'
-                    : 'text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-zinc-100'
+                    ? 'bg-white font-medium text-black shadow-sm dark:bg-zinc-900 dark:text-zinc-100'
+                    : 'text-gray-600 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-100'
             }`}
         >
             {children}

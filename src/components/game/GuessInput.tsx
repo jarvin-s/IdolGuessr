@@ -1,3 +1,9 @@
+'use client'
+
+import FeedbackIcon from '@/components/theme/FeedbackIcon'
+import { useColorblind } from '@/components/theme/ColorblindProvider'
+import { feedbackPalette } from '@/lib/feedbackPalette'
+
 interface GuessInputProps {
     currentGuess: string
     correctAnswer?: string
@@ -17,6 +23,9 @@ export default function GuessInput({
     isAnimating = false,
     notInList = false,
 }: GuessInputProps) {
+    const { colorblind } = useColorblind()
+    const palette = feedbackPalette(colorblind)
+
     const truncateText = (text: string, maxLength: number = 20) => {
         return text.length > maxLength ? text.slice(0, maxLength) : text
     }
@@ -27,7 +36,8 @@ export default function GuessInput({
                 text: truncateText(correctAnswer),
                 subText: '',
                 textColor: 'text-white',
-                bgColor: 'bg-green-400',
+                bgColor: palette.bannerCorrect,
+                mark: 'correct' as const,
             }
         }
         if (gameLost) {
@@ -35,22 +45,26 @@ export default function GuessInput({
                 text: `Nice try! It was ${correctAnswer}`,
                 subText: '',
                 textColor: 'text-white',
-                bgColor: 'bg-red-400',
+                bgColor: palette.bannerWrong,
+                mark: 'wrong' as const,
             }
         }
         if (notInList) {
             return {
+                text: '',
                 subText: 'NOT IN IDOL LIST',
                 textColor: 'text-white',
-                bgColor: 'bg-red-400',
+                bgColor: palette.bannerWrong,
+                mark: 'wrong' as const,
             }
         }
         if (lastIncorrectGuess) {
             return {
-                text: truncateText(lastIncorrectGuess),
+                text: 'INCORRECT',
                 subText: '',
                 textColor: 'text-white',
-                bgColor: 'bg-red-400',
+                bgColor: palette.bannerWrong,
+                mark: 'wrong' as const,
             }
         }
         if (currentGuess) {
@@ -59,6 +73,7 @@ export default function GuessInput({
                 subText: '',
                 textColor: 'text-black dark:text-zinc-100',
                 bgColor: 'bg-gray-200 dark:bg-zinc-800',
+                mark: null,
             }
         }
         return {
@@ -66,6 +81,7 @@ export default function GuessInput({
             subText: '',
             textColor: 'text-black/30 dark:text-zinc-100/30',
             bgColor: 'bg-gray-200 dark:bg-zinc-800',
+            mark: null,
         }
     }
 
@@ -81,7 +97,8 @@ export default function GuessInput({
                 }`}
                 style={{ minHeight: '3rem' }}
             >
-                <span className={`w-full text-lg break-words select-none ${display.textColor}`}>
+                <span className={`flex w-full items-center justify-center gap-2 text-lg break-words select-none ${display.textColor}`}>
+                    {display.mark && <FeedbackIcon mark={display.mark} className='h-5 w-5 shrink-0' />}
                     {display.text}
                 </span>
                 {display.subText && (

@@ -4,6 +4,7 @@ import Script from 'next/script'
 import './globals.css'
 import { Analytics } from '@vercel/analytics/next'
 import LiveAnnouncementBanner from '@/components/announcements/LiveAnnouncementBanner'
+import { ColorblindProvider } from '@/components/theme/ColorblindProvider'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import { FeedbackNoticeProvider } from '@/components/feedback/FeedbackNoticeProvider'
@@ -21,7 +22,9 @@ function siteOrigin() {
     const vercelUrl = process.env.VERCEL_URL ?? ''
     if (vercelUrl.includes('j390jefj890wef')) return TEST_SITE
     const vercelEnv = process.env.NEXT_PUBLIC_VERCEL_ENV
-    const isTest = vercelEnv ? vercelEnv !== 'production' : process.env.NODE_ENV !== 'production'
+    const isTest = vercelEnv
+        ? vercelEnv !== 'production'
+        : process.env.NODE_ENV !== 'production'
     return isTest ? TEST_SITE : PRODUCTION_SITE
 }
 
@@ -91,14 +94,14 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         title: 'IdolGuessr - K-pop Idol Guessing Game',
         description:
-            'Guess your favourite K-pop idols through clues, pixelated images and much more!',
+            'Guess your favorite K-pop idols through clues, pixelated images and much more!',
         images: [shareImage],
-        site: 'IdolGuessr'
+        site: 'IdolGuessr',
     },
     openGraph: {
         title: 'IdolGuessr - K-pop Idol Guessing Game',
         description:
-            'Guess your favourite K-pop idols through clues, pixelated images and much more!',
+            'Guess your favorite K-pop idols through clues, pixelated images and much more!',
         images: [
             {
                 url: shareImage,
@@ -124,14 +127,16 @@ export default function RootLayout({
             >
                 <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
                 <ThemeProvider>
-                    <AuthProvider>
-                        <FeedbackNoticeProvider>
-                            {children}
-                            <GuestSavePrompt />
-                            <LiveAnnouncementBanner />
-                            <Analytics />
-                        </FeedbackNoticeProvider>
-                    </AuthProvider>
+                    <ColorblindProvider>
+                        <AuthProvider>
+                            <FeedbackNoticeProvider>
+                                {children}
+                                <GuestSavePrompt />
+                                <LiveAnnouncementBanner />
+                                <Analytics />
+                            </FeedbackNoticeProvider>
+                        </AuthProvider>
+                    </ColorblindProvider>
                 </ThemeProvider>
                 <meta
                     name='google-site-verification'

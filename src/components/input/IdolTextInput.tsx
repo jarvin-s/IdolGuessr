@@ -1,6 +1,9 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import FeedbackIcon from '@/components/theme/FeedbackIcon'
+import { useColorblind } from '@/components/theme/ColorblindProvider'
+import { feedbackPalette } from '@/lib/feedbackPalette'
 import idolNames from '@/data/idolNames.json'
 
 const LISTBOX_ID = 'idol-guess-suggestions'
@@ -173,15 +176,16 @@ export default function IdolTextInput({
         correctAnswer
     ).trim()
 
-    const borderClass = showingCorrect
-        ? 'border-green-400'
-        : showingLoss || feedback
-          ? 'border-red-400'
-          : 'border-gray-300 dark:border-zinc-600'
-    const bgClass = showingCorrect
-        ? 'bg-green-400'
-        : showingLoss || feedback
-          ? 'bg-red-400'
+    const { colorblind } = useColorblind()
+    const palette = feedbackPalette(colorblind)
+    const result = showingCorrect ? 'correct' : showingLoss || feedback ? 'wrong' : null
+    const borderClass = result
+        ? 'border-transparent'
+        : 'border-gray-300 dark:border-zinc-600'
+    const bgClass = result === 'correct'
+        ? palette.bannerCorrect
+        : result === 'wrong'
+          ? palette.bannerWrong
           : 'bg-gray-200 dark:bg-zinc-800'
 
     return (
@@ -191,6 +195,11 @@ export default function IdolTextInput({
                     isAnimating && !gameWon ? 'shake-animation' : ''
                 }`}
             >
+                {result && (
+                    <span className='ml-3 shrink-0 text-white'>
+                        <FeedbackIcon mark={result} className='h-5 w-5' />
+                    </span>
+                )}
                 <input
                     ref={inputRef}
                     type='text'

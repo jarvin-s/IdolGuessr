@@ -1023,7 +1023,9 @@ function isLegacyImportKey(key: string) {
     return (
         key.startsWith('idol-guessr-') &&
         !key.startsWith(LEGACY_BACKUP_PREFIX) &&
-        key !== 'idol-guessr-theme'
+        key !== 'idol-guessr-theme' &&
+        key !== 'idol-guessr-colorblind' &&
+        key !== 'idol-guessr-attribute-icons'
     )
 }
 

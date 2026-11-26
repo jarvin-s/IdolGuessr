@@ -109,21 +109,21 @@ export default function IndexModal({
                 <div className='mt-8 flex flex-col items-center gap-3 md:flex-row'>
                     <div className='flex justify-center gap-3'>
                         <div className='relative flex flex-row items-center justify-center'>
+                            <span className='absolute -top-2 z-10 rounded-full bg-pink-500 px-1.5 py-0.5 text-[10px] leading-none font-bold tracking-wide text-white uppercase'>
+                                Most played
+                            </span>
                             <button
                                 onClick={() => setClassicOpen(true)}
-                                className='flex w-22.5 cursor-pointer flex-col items-center justify-center border dark:border-zinc-600 bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                                className='flex w-22.5 cursor-pointer flex-col items-center justify-center border-2 border-pink-500 bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:bg-zinc-800 dark:hover:bg-zinc-700'
                             >
                                 <ClassicIcon />
                                 Classic
                             </button>
                         </div>
                         <div className='relative flex flex-row items-center justify-center'>
-                            <span className='absolute -top-2 -right-2 z-10 rounded-full bg-pink-500 px-1.5 py-0.5 text-[10px] leading-none font-bold tracking-wide text-white uppercase'>
-                                Updated
-                            </span>
                             <button
                                 onClick={() => setVisualOpen(true)}
-                                className='flex w-22.5 cursor-pointer flex-col items-center border-pink-500 justify-center border-2 bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                                className='flex w-22.5 cursor-pointer flex-col items-center justify-center border bg-[#f3f3f3] p-3 hover:bg-[#dbdbdb] dark:border-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                             >
                                 <VisualIcon />
                                 Visual
