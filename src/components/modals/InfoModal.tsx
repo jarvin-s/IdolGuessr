@@ -20,7 +20,7 @@ export default function InfoModal({
     onClose,
     onShowFeedback,
     onShowHelp,
-    // onShowHistory,
+    onShowHistory,
     gameMode = 'daily',
 }: InfoModalProps) {
     const feedbackUnread = useFeedbackUnread()
@@ -102,8 +102,8 @@ export default function InfoModal({
                     {gameMode === 'daily' && (
                         <button
                             type='button'
-                            disabled
-                            className='flex w-full cursor-not-allowed items-center gap-4 rounded-lg border border-gray-200 p-4 opacity-60 dark:border-zinc-700'
+                            onClick={onShowHistory}
+                            className='flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
                         >
                             <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800'>
                                 <HistoryIcon />
@@ -115,7 +115,7 @@ export default function InfoModal({
                                     Past idols
                                 </h3>
                                 <p className='text-sm text-gray-500 dark:text-zinc-400'>
-                                    Temporarily unavailable
+                                    Play a previous daily idol
                                 </p>
                             </div>
                             <ChevronRightIcon />

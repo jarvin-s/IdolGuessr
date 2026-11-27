@@ -843,26 +843,65 @@ export interface HistoryDailyImage extends DailyImage {
     play_date: string
 }
 
+function amsterdamDate(date = new Date()): string {
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Amsterdam',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).format(date)
+}
+
 export async function getDailyImageByDate(
     date: string
 ): Promise<HistoryDailyImage | null> {
-    const startOfDay = `${date}T00:00:00`
-    const endOfDay = `${date}T23:59:59`
-
     const { data, error } = await supabase
         .from('dailies_public')
         .select(
-            'id, group_type, play_date, img_bucket, chosen_by, chosen_by_url'
+            'id, group_type, play_day, img_bucket, group_name, chosen_by, chosen_by_url'
         )
-        .gte('play_date', startOfDay)
-        .lte('play_date', endOfDay)
+        .eq('play_day', date)
+        .lt('play_day', amsterdamDate())
         .maybeSingle()
 
     if (error || !data) {
         return null
     }
 
-    return { ...data, name: '' } as HistoryDailyImage
+    return {
+        ...data,
+        play_date: data.play_day,
+        name: '',
+    } as HistoryDailyImage
+}
+
+export async function judgePastDailyGuess(
+    dailyId: number,
+    guess: string,
+    finalGuess: boolean
+): Promise<{ correct: boolean; absentLetters: string[]; answer: string | null } | null> {
+    const session = await ensureBrowserSession()
+    if (!session) return null
+
+    const { data, error } = await supabase.rpc('judge_past_daily_guess', {
+        p_daily_id: dailyId,
+        p_guess: guess,
+        p_final: finalGuess,
+    })
+    if (error || !data || typeof data !== 'object') {
+        console.error('judge_past_daily_guess', error)
+        return null
+    }
+
+    const row = data as { correct?: boolean; absent_letters?: unknown; answer?: string | null }
+    const absent = Array.isArray(row.absent_letters)
+        ? row.absent_letters.filter((letter): letter is string => typeof letter === 'string')
+        : []
+    return {
+        correct: Boolean(row.correct),
+        absentLetters: absent,
+        answer: typeof row.answer === 'string' && row.answer ? row.answer : null,
+    }
 }
 
 export async function getAvailableDailyDates(): Promise<{
@@ -870,29 +909,18 @@ export async function getAvailableDailyDates(): Promise<{
     firstDate: string | null
     lastDate: string | null
 }> {
-    const now = new Date()
-    const gmtPlus1 = new Date(now.getTime() + 60 * 60 * 1000)
-    const today = gmtPlus1.toISOString().split('T')[0]
-    const endOfToday = `${today}T23:59:59`
-
     const { data, error } = await supabase
         .from('dailies_public')
-        .select('play_date')
-        .lte('play_date', endOfToday)
-        .order('play_date', { ascending: true })
+        .select('play_day')
+        .lt('play_day', amsterdamDate())
+        .order('play_day', { ascending: true })
 
     if (error) {
         return { dates: [], firstDate: null, lastDate: null }
     }
 
     const dates =
-        data?.map((d) => {
-            const playDate = new Date(d.play_date)
-            const year = playDate.getFullYear()
-            const month = String(playDate.getMonth() + 1).padStart(2, '0')
-            const day = String(playDate.getDate()).padStart(2, '0')
-            return `${year}-${month}-${day}`
-        }) || []
+        data?.map((d) => String(d.play_day).slice(0, 10)) || []
 
     return {
         dates,

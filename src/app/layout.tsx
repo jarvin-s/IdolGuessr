@@ -50,7 +50,7 @@ export const metadata: Metadata = {
         },
     },
     description:
-        'Guess your favourite K-pop idols through clues, pixelated images and much more!',
+        'Guess your favourite K-pop idols through clues, pixelated images and much more! New idols appear every day at 12:00 AM CET',
     keywords: [
         'kpop',
         'k-pop',
@@ -94,14 +94,14 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         title: 'IdolGuessr - K-pop Idol Guessing Game',
         description:
-            'Guess your favorite K-pop idols through clues, pixelated images and much more!',
+            'Guess your favorite K-pop idols through clues, pixelated images and much more! New idols appear every day at 12:00 AM CET',
         images: [shareImage],
         site: 'IdolGuessr',
     },
     openGraph: {
         title: 'IdolGuessr - K-pop Idol Guessing Game',
         description:
-            'Guess your favorite K-pop idols through clues, pixelated images and much more!',
+            'Guess your favorite K-pop idols through clues, pixelated images and much more! New idols appear every day at 12:00 AM CET',
         images: [
             {
                 url: shareImage,

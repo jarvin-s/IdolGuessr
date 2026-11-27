@@ -16,6 +16,7 @@ import {
     getImageUrl,
     getDailyImageByDate,
     getTodayDailyGuessCount,
+    judgePastDailyGuess,
     type CurrentDaily,
     type HistoryDailyImage,
 } from '@/lib/supabase'
@@ -90,6 +91,7 @@ export default function DailyClient({
     >(new Set())
     const [historyNotInList, setHistoryNotInList] = useState(false)
     const hasShownWinModalRef = useRef(false)
+    const historyGuessInFlight = useRef(false)
     const {
         gameMode,
         handleGameModeChange,
@@ -135,7 +137,10 @@ export default function DailyClient({
         handleSkip,
         loadNextUnlimited,
         unlimitedCurrentStreak,
-    } = useGameController(initialDaily)
+    } = useGameController(
+        initialDaily,
+        historyDate !== null && historyImage !== null
+    )
 
     const [inputMode, , inputModeReady] = useInputMode()
     const [todayGuessCount, setTodayGuessCount] = useState<number | null>(null)
@@ -236,71 +241,86 @@ export default function DailyClient({
                         return
                     }
 
-                    const normalizedName =
-                        historyImage.name?.toUpperCase().trim() || ''
-                    const isCorrect = normalizedGuess === normalizedName
-
-                    setHistoryIsAnimating(true)
-
-                    if (!isCorrect) {
-                        setHistoryLastIncorrectGuess(normalizedGuess)
-                        setHistoryCurrentGuess('')
-
-                        const correctLetters = new Set(normalizedName.split(''))
-                        const incorrectLettersInGuess = normalizedGuess
-                            .split('')
-                            .filter((letter) => !correctLetters.has(letter))
-
-                        const newDisabledLetters = new Set(
-                            historyDisabledLetters
+                    if (historyGuessInFlight.current) return
+                    historyGuessInFlight.current = true
+                    const slotsLeft = historyGuesses.filter(
+                        (guess) => guess === 'empty'
+                    ).length
+                    void (async () => {
+                        const verdict = await judgePastDailyGuess(
+                            historyImage.id,
+                            normalizedGuess,
+                            slotsLeft <= 1
                         )
-                        incorrectLettersInGuess.forEach((letter) =>
-                            newDisabledLetters.add(letter)
-                        )
-                        setHistoryDisabledLetters(newDisabledLetters)
+                        if (!verdict) {
+                            historyGuessInFlight.current = false
+                            return
+                        }
+                        if (verdict.answer) {
+                            setHistoryImage((current) =>
+                                current
+                                    ? { ...current, name: verdict.answer ?? '' }
+                                    : current
+                            )
+                        }
 
-                        setTimeout(() => {
+                        setHistoryIsAnimating(true)
+
+                        if (!verdict.correct) {
+                            setHistoryLastIncorrectGuess(normalizedGuess)
+                            setHistoryCurrentGuess('')
+                            setHistoryDisabledLetters((current) => {
+                                const next = new Set(current)
+                                verdict.absentLetters.forEach((letter) =>
+                                    next.add(letter)
+                                )
+                                return next
+                            })
+
+                            setTimeout(() => {
+                                historyGuessInFlight.current = false
+                                setHistoryIsAnimating(false)
+                                setHistoryLastIncorrectGuess('')
+                                setHistoryGuesses((prev) => {
+                                    const newGuesses = [...prev] as Array<
+                                        'correct' | 'incorrect' | 'empty'
+                                    >
+                                    const emptyIndex = newGuesses.findIndex(
+                                        (g) => g === 'empty'
+                                    )
+                                    if (emptyIndex === -1) return prev
+                                    newGuesses[emptyIndex] = 'incorrect'
+
+                                    const remainingAfterThis =
+                                        newGuesses.filter(
+                                            (g) => g === 'empty'
+                                        ).length
+                                    if (remainingAfterThis === 0) {
+                                        setTimeout(() => {
+                                            setHistoryGameLost(true)
+                                        }, 300)
+                                    }
+                                    return newGuesses
+                                })
+                            }, 500)
+                        } else {
+                            const emptyIndex = historyGuesses.findIndex(
+                                (g) => g === 'empty'
+                            )
+                            historyGuessInFlight.current = false
+                            setHistoryGameWon(true)
                             setHistoryIsAnimating(false)
-                            setHistoryLastIncorrectGuess('')
+                            setHistoryCurrentGuess('')
                             setHistoryGuesses((prev) => {
                                 const newGuesses = [...prev] as Array<
                                     'correct' | 'incorrect' | 'empty'
                                 >
-                                const emptyIndex = newGuesses.findIndex(
-                                    (g) => g === 'empty'
-                                )
                                 if (emptyIndex === -1) return prev
-                                newGuesses[emptyIndex] = 'incorrect'
-
-                                const remainingAfterThis = newGuesses.filter(
-                                    (g) => g === 'empty'
-                                ).length
-                                if (remainingAfterThis === 0) {
-                                    setTimeout(() => {
-                                        setHistoryGameLost(true)
-                                        // Win modal disabled for past idols
-                                    }, 300)
-                                }
+                                newGuesses[emptyIndex] = 'correct'
                                 return newGuesses
                             })
-                        }, 500)
-                    } else {
-                        const emptyIndex = historyGuesses.findIndex(
-                            (g) => g === 'empty'
-                        )
-                        setHistoryGameWon(true)
-                        setHistoryIsAnimating(false)
-                        setHistoryCurrentGuess('')
-                        setHistoryGuesses((prev) => {
-                            const newGuesses = [...prev] as Array<
-                                'correct' | 'incorrect' | 'empty'
-                            >
-                            if (emptyIndex === -1) return prev
-                            newGuesses[emptyIndex] = 'correct'
-                            // Win modal disabled for past idols
-                            return newGuesses
-                        })
-                    }
+                        }
+                    })()
                 }
             } else if (key === '✕') {
                 if (!historyGameWon && !historyGameLost) {
@@ -329,7 +349,6 @@ export default function DailyClient({
             historyGameWon,
             historyGameLost,
             historyLastIncorrectGuess,
-            historyDisabledLetters,
         ]
     )
 
