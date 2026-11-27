@@ -191,13 +191,13 @@ export default function IdolTextInput({
     return (
         <div className={`relative w-full shrink-0 ${className}`}>
             <div
-                className={`flex items-center rounded-md border-2 transition-colors ${bgClass} ${borderClass} ${
+                className={`flex flex-nowrap items-center rounded-md border-2 transition-colors duration-300 ${bgClass} ${borderClass} ${
                     isAnimating && !gameWon ? 'shake-animation' : ''
                 }`}
             >
                 {result && (
                     <span className='ml-3 shrink-0 text-white'>
-                        <FeedbackIcon mark={result} className='h-5 w-5' />
+                        <FeedbackIcon mark={result} className='h-5 w-5 shrink-0 text-white' />
                     </span>
                 )}
                 <input
@@ -233,7 +233,7 @@ export default function IdolTextInput({
                     aria-controls={LISTBOX_ID}
                     aria-expanded={open && suggestions.length > 0}
                     aria-autocomplete='list'
-                    className={`w-full bg-transparent px-4 py-3 text-lg font-bold tracking-wider outline-none ${
+                    className={`min-w-0 flex-1 bg-transparent px-4 py-3 text-lg font-bold tracking-wider whitespace-nowrap outline-none ${
                         showingLoss ? 'normal-case' : 'uppercase'
                     } ${
                         feedback || showingCorrect || showingLoss
@@ -247,7 +247,7 @@ export default function IdolTextInput({
                               : 'text-black placeholder:text-black/30 disabled:opacity-50 dark:text-zinc-100 dark:placeholder:text-zinc-100/30'
                     }`}
                 />
-                {!showingCorrect && !showingLoss && (
+                {!showingCorrect && !showingLoss && !feedback && (
                     <button
                         type='button'
                         onMouseDown={(e) => e.preventDefault()}

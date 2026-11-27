@@ -34,7 +34,7 @@ export default function FeedbackIcon({
 }) {
     if (mark === 'correct') {
         return (
-            <svg viewBox='0 0 16 16' aria-hidden className={className} fill='none'>
+            <svg viewBox='0 0 16 16' width='16' height='16' aria-hidden className={className} fill='none'>
                 <path
                     d='M3.2 8.2 6.4 11.4 12.8 4.6'
                     stroke='currentColor'
@@ -47,7 +47,7 @@ export default function FeedbackIcon({
     }
     if (mark === 'wrong') {
         return (
-            <svg viewBox='0 0 16 16' aria-hidden className={className} fill='none'>
+            <svg viewBox='0 0 16 16' width='16' height='16' aria-hidden className={className} fill='none'>
                 <path
                     d='M4 4 12 12M12 4 4 12'
                     stroke='currentColor'
@@ -58,7 +58,7 @@ export default function FeedbackIcon({
         )
     }
     return (
-        <svg viewBox='0 0 16 16' aria-hidden className={className}>
+        <svg viewBox='0 0 16 16' width='16' height='16' aria-hidden className={className}>
             <circle cx='8' cy='8' r='5.2' fill='none' stroke='currentColor' strokeWidth='1.8' />
             <path d='M8 2.8 A5.2 5.2 0 0 0 8 13.2 Z' fill='currentColor' />
         </svg>

@@ -92,20 +92,15 @@ export default function GuessInput({
             className={`mb-3 w-full flex-shrink-0 rounded-md ${display.bgColor}`}
         >
             <div
-                className={`flex flex-col items-center justify-center rounded-lg px-4 py-2 text-center font-bold tracking-wider transition-all duration-300 ${
+                className={`flex flex-nowrap items-center justify-center gap-2 rounded-lg px-4 py-2 text-center font-bold tracking-wider transition-colors duration-300 ${
                     isAnimating && !gameWon ? 'shake-animation' : ''
                 }`}
                 style={{ minHeight: '3rem' }}
             >
-                <span className={`flex w-full items-center justify-center gap-2 text-lg break-words select-none ${display.textColor}`}>
-                    {display.mark && <FeedbackIcon mark={display.mark} className='h-5 w-5 shrink-0' />}
-                    {display.text}
+                {display.mark && <FeedbackIcon mark={display.mark} className='h-5 w-5 shrink-0 text-white' />}
+                <span className={`min-w-0 text-lg select-none ${gameLost ? '' : 'whitespace-nowrap'} ${display.textColor}`}>
+                    {display.text || display.subText}
                 </span>
-                {display.subText && (
-                    <span className="text-xl select-none text-white/80">
-                        {display.subText}
-                    </span>
-                )}
             </div>
         </div>
     )
