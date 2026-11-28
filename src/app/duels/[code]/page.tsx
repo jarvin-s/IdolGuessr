@@ -52,6 +52,7 @@ export default function DuelLobbyPage() {
                 myId={lobby.myId}
                 isHost={lobby.isHost}
                 onlineIds={lobby.onlineIds}
+                reconnecting={lobby.reconnecting}
                 canStart={lobby.canStart}
                 onChangeConfig={(config) => void lobby.changeConfig(config)}
                 onChangeFormat={(format) => void lobby.changeFormat(format)}

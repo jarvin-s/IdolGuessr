@@ -6,7 +6,7 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import { duelQueueHeartbeat, joinDuelQueue, leaveDuelQueue } from '@/lib/duels/api'
 import { QUEUE_HEARTBEAT_SECONDS } from '@/lib/duels/constants'
 import { duelErrorMessage } from '@/lib/duels/errors'
-import { ensureRealtimeAuth, subscribeDuelUser } from '@/lib/duels/realtime'
+import { subscribeDuelUser, whenDuelSocketReady } from '@/lib/duels/realtime'
 import { supabaseAnonKey, supabaseUrl } from '@/lib/supabase/env'
 import { supabase } from '@/lib/supabase'
 import type { DuelConfig } from '@/lib/duels/types'
@@ -53,12 +53,13 @@ export function useDuelQueue() {
             setConfig(next)
             setElapsedSeconds(0)
             try {
-                await ensureRealtimeAuth()
                 unsubscribeRef.current?.()
+                const topic = `duel-user:${profile.id}`
                 unsubscribeRef.current = subscribeDuelUser(profile.id, {
                     onMatchFound: go,
                     onKicked: () => undefined,
                 })
+                await whenDuelSocketReady(topic)
                 const result = await joinDuelQueue(next)
                 if (result.status === 'matched' && result.match_id) {
                     go(result.match_id)

@@ -1,26 +1,15 @@
-import { supabase } from '@/lib/supabase'
+import { subscribeDuelTopic, whenDuelTopicReady, type DuelSocketStatus } from '@/lib/duels/socket'
 import type { DuelLobby, DuelMatchEvent } from '@/lib/duels/types'
-import type { RealtimeChannel } from '@supabase/supabase-js'
 
-let authPromise: Promise<void> | null = null
+type StatusHandler = (status: DuelSocketStatus) => void
+type ClockHandler = (serverNow: string) => void
 
-export function ensureRealtimeAuth(): Promise<void> {
-    if (!authPromise) {
-        authPromise = supabase.realtime.setAuth().then(() => undefined).catch((error) => {
-            authPromise = null
-            throw error
-        })
-    }
-    return authPromise
+function payload(value: unknown): Record<string, unknown> {
+    return value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
 }
 
-function onStatus(channel: RealtimeChannel, onChange?: (status: string) => void) {
-    return (status: string) => {
-        onChange?.(status)
-        if (status === 'SUBSCRIBED') {
-            void channel.track({ online_at: Date.now() })
-        }
-    }
+export function whenDuelSocketReady(topic: string) {
+    return whenDuelTopicReady(topic)
 }
 
 export function subscribeDuelUser(
@@ -28,84 +17,70 @@ export function subscribeDuelUser(
     handlers: {
         onMatchFound: (matchId: string) => void
         onKicked: (lobbyId: string) => void
-        onStatus?: (status: string) => void
-    }
+        onStatus?: StatusHandler
+        onClock?: ClockHandler
+    },
 ): () => void {
-    const channel = supabase.channel(`duel-user:${userId}`, {
-        config: { private: true },
+    return subscribeDuelTopic(`duel-user:${userId}`, {
+        onStatus: handlers.onStatus,
+        onClock: handlers.onClock,
+        onPresence: () => undefined,
+        onEvent: ({ event, payload: body }) => {
+            const data = payload(body)
+            if (event === 'match_found' && data.match_id) handlers.onMatchFound(String(data.match_id))
+            if (event === 'kicked' && data.lobby_id) handlers.onKicked(String(data.lobby_id))
+        },
     })
-    channel
-        .on('broadcast', { event: 'match_found' }, ({ payload }) => {
-            if (payload?.match_id) handlers.onMatchFound(String(payload.match_id))
-        })
-        .on('broadcast', { event: 'kicked' }, ({ payload }) => {
-            if (payload?.lobby_id) handlers.onKicked(String(payload.lobby_id))
-        })
-        .subscribe((status) => handlers.onStatus?.(status))
-    return () => {
-        void supabase.removeChannel(channel)
-    }
 }
 
 export function subscribeDuelLobby(
     lobbyId: string,
-    userId: string,
+    _userId: string,
     handlers: {
         onLobby: (lobby: DuelLobby) => void
         onMatchStarted: (matchId: string) => void
         onPresence: (onlineIds: string[]) => void
-        onStatus?: (status: string) => void
-    }
+        onStatus?: StatusHandler
+        onClock?: ClockHandler
+    },
 ): () => void {
-    const channel = supabase.channel(`duel-lobby:${lobbyId}`, {
-        config: { private: true, presence: { key: userId } },
+    return subscribeDuelTopic(`duel-lobby:${lobbyId}`, {
+        onStatus: handlers.onStatus,
+        onClock: handlers.onClock,
+        onPresence: (online) => handlers.onPresence(online),
+        onEvent: ({ event, payload: body }) => {
+            const data = payload(body)
+            if (event === 'lobby_updated' && data.lobby) handlers.onLobby(data.lobby as DuelLobby)
+            if (event === 'match_started' && data.match_id) handlers.onMatchStarted(String(data.match_id))
+        },
     })
-    channel
-        .on('broadcast', { event: 'lobby_updated' }, ({ payload }) => {
-            if (payload?.lobby) handlers.onLobby(payload.lobby as DuelLobby)
-        })
-        .on('broadcast', { event: 'match_started' }, ({ payload }) => {
-            if (payload?.match_id) handlers.onMatchStarted(String(payload.match_id))
-        })
-        .on('presence', { event: 'sync' }, () => {
-            handlers.onPresence(Object.keys(channel.presenceState()))
-        })
-        .subscribe(onStatus(channel, handlers.onStatus))
-    return () => {
-        void supabase.removeChannel(channel)
-    }
 }
 
 export function subscribeDuelMatch(
     matchId: string,
-    userId: string,
+    _userId: string,
     handlers: {
         onEvent: (event: DuelMatchEvent) => void
         onPresence: (onlineIds: string[]) => void
-        onStatus?: (status: string) => void
-    }
+        onStatus?: StatusHandler
+        onClock?: ClockHandler
+    },
 ): () => void {
-    const channel = supabase.channel(`duel:${matchId}`, {
-        config: { private: true, presence: { key: userId } },
+    return subscribeDuelTopic(`duel:${matchId}`, {
+        onStatus: handlers.onStatus,
+        onClock: handlers.onClock,
+        onPresence: (online) => handlers.onPresence(online),
+        onEvent: ({ event, payload: body }) => {
+            const data = payload(body)
+            if (event === 'player_guessed') {
+                handlers.onEvent({ type: 'player_guessed', ...data } as DuelMatchEvent)
+            } else if (event === 'round_resolved') {
+                handlers.onEvent({ type: 'round_resolved', ...data } as DuelMatchEvent)
+            } else if (event === 'match_finished') {
+                handlers.onEvent({ type: 'match_finished', ...data } as DuelMatchEvent)
+            } else if (event === 'player_left') {
+                handlers.onEvent({ type: 'player_left', ...data } as DuelMatchEvent)
+            }
+        },
     })
-    channel
-        .on('broadcast', { event: 'player_guessed' }, ({ payload }) => {
-            handlers.onEvent({ type: 'player_guessed', ...payload })
-        })
-        .on('broadcast', { event: 'round_resolved' }, ({ payload }) => {
-            handlers.onEvent({ type: 'round_resolved', ...payload })
-        })
-        .on('broadcast', { event: 'match_finished' }, ({ payload }) => {
-            handlers.onEvent({ type: 'match_finished', ...payload })
-        })
-        .on('broadcast', { event: 'player_left' }, ({ payload }) => {
-            handlers.onEvent({ type: 'player_left', ...payload })
-        })
-        .on('presence', { event: 'sync' }, () => {
-            handlers.onPresence(Object.keys(channel.presenceState()))
-        })
-        .subscribe(onStatus(channel, handlers.onStatus))
-    return () => {
-        void supabase.removeChannel(channel)
-    }
 }

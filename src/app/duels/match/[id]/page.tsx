@@ -79,6 +79,7 @@ export default function DuelMatchPage() {
                 multiplier={round?.multiplier ?? 1}
                 roundNo={round?.round_no ?? state.last_result?.round_no ?? 1}
                 onlineIds={match.onlineIds}
+                reconnecting={match.reconnecting}
                 correctIds={round?.correct_players ?? []}
                 doneIds={round?.players_done ?? []}
                 pressured={match.pressured}

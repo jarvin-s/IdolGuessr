@@ -10,7 +10,8 @@ import {
 } from '@/lib/duels/api'
 import { COUNTDOWN_SECONDS, ROUND_SECONDS } from '@/lib/duels/constants'
 import { duelErrorCode, duelErrorMessage } from '@/lib/duels/errors'
-import { ensureRealtimeAuth, subscribeDuelMatch } from '@/lib/duels/realtime'
+import { subscribeDuelMatch } from '@/lib/duels/realtime'
+import type { DuelSocketStatus } from '@/lib/duels/socket'
 import type {
     DuelGuessResult,
     DuelMatchEvent,
@@ -78,6 +79,17 @@ function reduce(model: Model, action: Action): Model {
     if (action.type === 'error') return { ...model, error: action.error }
     if (action.type === 'presence') return { ...model, onlineIds: action.ids }
     if (action.type === 'snapshot') {
+        const current = model.duel
+        const currentRound = current?.current_round?.round_no ?? 0
+        const incomingRound = action.duel.current_round?.round_no ?? 0
+        if (
+            current &&
+            current.status === 'active' &&
+            action.duel.status === 'active' &&
+            incomingRound < currentRound
+        ) {
+            return model
+        }
         return {
             ...model,
             duel: action.duel,
@@ -198,6 +210,7 @@ export function useDuelMatch(matchId: string) {
     const { profile, ready } = useAuth()
     const { now, sync } = useServerClock()
     const [model, dispatch] = useReducer(reduce, undefined, initial)
+    const [connection, setConnection] = useState<DuelSocketStatus>('connecting')
     const [tick, setTick] = useState(0)
     const modelRef = useRef(model)
     modelRef.current = model
@@ -223,7 +236,6 @@ export function useDuelMatch(matchId: string) {
             if (cancelled) return
             applySnapshot(duel)
             if (!resubscribe) return
-            await ensureRealtimeAuth()
             if (cancelled) return
             unsubscribe = subscribeDuelMatch(matchId, selfId, {
                 onEvent: (event) => {
@@ -231,13 +243,12 @@ export function useDuelMatch(matchId: string) {
                     dispatch({ type: 'event', event, selfId })
                 },
                 onPresence: (ids) => dispatch({ type: 'presence', ids }),
+                onClock: (iso) => syncRef.current(iso),
                 onStatus: (next) => {
                     const previous = status
                     status = next
-                    if (
-                        next === 'SUBSCRIBED' &&
-                        (previous === 'CHANNEL_ERROR' || previous === 'TIMED_OUT')
-                    ) {
+                    setConnection(next)
+                    if (next === 'open' && previous === 'reconnecting') {
                         void getDuelState(matchId).then(applySnapshot).catch(() => undefined)
                     }
                 },
@@ -351,6 +362,7 @@ export function useDuelMatch(matchId: string) {
         pressured: derived.pressured,
         feed: model.feed,
         onlineIds: model.onlineIds,
+        reconnecting: connection === 'reconnecting',
         overlayIdol: model.overlayIdol,
         submitGuess,
         forfeit,

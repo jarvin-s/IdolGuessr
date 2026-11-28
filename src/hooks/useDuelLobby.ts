@@ -12,7 +12,8 @@ import {
     updateDuelLobby,
 } from '@/lib/duels/api'
 import { duelErrorMessage } from '@/lib/duels/errors'
-import { ensureRealtimeAuth, subscribeDuelLobby, subscribeDuelUser } from '@/lib/duels/realtime'
+import { subscribeDuelLobby, subscribeDuelUser } from '@/lib/duels/realtime'
+import type { DuelSocketStatus } from '@/lib/duels/socket'
 import type { DuelConfig, DuelFormat, DuelLobby } from '@/lib/duels/types'
 
 export function duelRematchKey(matchId: string) {
@@ -38,6 +39,7 @@ export function useDuelLobby(code: string) {
     const router = useRouter()
     const [lobby, setLobby] = useState<DuelLobby | null>(null)
     const [onlineIds, setOnlineIds] = useState<string[]>([])
+    const [connection, setConnection] = useState<DuelSocketStatus>('connecting')
     const [error, setError] = useState('')
     const myId = profile?.id ?? ''
 
@@ -66,19 +68,20 @@ export function useDuelLobby(code: string) {
                 openMatch(snapshot.match_id, snapshot.code)
                 return
             }
-            await ensureRealtimeAuth()
             if (cancelled) return
+            const onStatus = (next: DuelSocketStatus) => {
+                const previous = status
+                status = next
+                setConnection(next)
+                if (next === 'open' && previous === 'reconnecting') {
+                    void getDuelLobby(code).then(setLobby).catch(() => undefined)
+                }
+            }
             unsubscribe = subscribeDuelLobby(snapshot.id, myId, {
                 onLobby: setLobby,
                 onMatchStarted: (matchId) => openMatch(matchId, snapshot.code),
                 onPresence: setOnlineIds,
-                onStatus: (next) => {
-                    const previous = status
-                    status = next
-                    if (next === 'SUBSCRIBED' && (previous === 'CHANNEL_ERROR' || previous === 'TIMED_OUT')) {
-                        void getDuelLobby(code).then(setLobby).catch(() => undefined)
-                    }
-                },
+                onStatus,
             })
             unsubscribeUser = subscribeDuelUser(myId, {
                 onMatchFound: () => undefined,
@@ -117,6 +120,7 @@ export function useDuelLobby(code: string) {
         isHost: !!lobby && lobby.host_id === myId,
         canStart,
         onlineIds,
+        reconnecting: connection === 'reconnecting',
         error,
         ready,
         changeFormat: (format: DuelFormat) => {

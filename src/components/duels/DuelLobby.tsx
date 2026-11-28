@@ -19,6 +19,7 @@ export default function DuelLobby({
     myId,
     isHost,
     onlineIds,
+    reconnecting = false,
     onChangeConfig,
     onChangeFormat,
     onMove,
@@ -31,6 +32,7 @@ export default function DuelLobby({
     myId: string
     isHost: boolean
     onlineIds: string[]
+    reconnecting?: boolean
     canStart: boolean
     onChangeConfig: (config: DuelConfig) => void
     onChangeFormat: (format: DuelFormat) => void
@@ -109,6 +111,9 @@ export default function DuelLobby({
                 >
                     {copied ? 'Copied' : 'Copy invite link'}
                 </button>
+                {reconnecting ? (
+                    <p className='mt-2 text-xs font-semibold text-amber-600'>Reconnecting...</p>
+                ) : null}
             </div>
             <div className='grid grid-cols-3 gap-2'>
                 {formats.map((format) => (

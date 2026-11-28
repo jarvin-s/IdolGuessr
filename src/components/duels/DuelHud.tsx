@@ -14,6 +14,7 @@ export default function DuelHud({
     multiplier,
     roundNo,
     onlineIds,
+    reconnecting = false,
     correctIds,
     doneIds,
     pressured,
@@ -26,6 +27,7 @@ export default function DuelHud({
     multiplier: number
     roundNo: number
     onlineIds: string[]
+    reconnecting?: boolean
     correctIds: string[]
     doneIds: string[]
     pressured: boolean
@@ -57,6 +59,9 @@ export default function DuelHud({
                 <p className='text-[10px] font-bold tracking-wide text-zinc-500 uppercase'>Round {roundNo}</p>
                 <RoundTimer secondsLeft={secondsLeft} pressured={pressured} />
                 <MultiplierBadge multiplier={multiplier} />
+                {reconnecting ? (
+                    <p className='text-[10px] font-semibold text-amber-600'>Reconnecting...</p>
+                ) : null}
             </div>
             <div className='space-y-2'>
                 <HealthBar hp={theirHp} side='right' tone='opponent' shake={shakeTeam !== null && shakeTeam !== myTeam} />
