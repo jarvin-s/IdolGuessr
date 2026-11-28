@@ -21,6 +21,7 @@ import {
     type CurrentDaily,
     type DailyImage as DailyRow,
     getImageUrl,
+    matchesVisualGroupFilter,
     trackUnlimitedGame,
     resetGuessTimer,
     clearSeenIdols,
@@ -353,8 +354,10 @@ export function useGameController(
                 }
 
                 if (
-                    currentFilter !== null &&
-                    savedImage.group_category !== currentFilter
+                    !matchesVisualGroupFilter(
+                        savedImage.group_category,
+                        currentFilter
+                    )
                 ) {
                     unlimitedStats.clearGameState(activeDifficulty, activeImageMode)
                     const newImages = await pullImages(true)
@@ -433,12 +436,12 @@ export function useGameController(
 
                     if (allImagesValid) {
                         const filteredPrefetched =
-                            currentFilter !== null
-                                ? savedGameState.prefetchedImages.filter(
-                                      (img) =>
-                                          img.group_category === currentFilter
-                                  )
-                                : savedGameState.prefetchedImages
+                            savedGameState.prefetchedImages.filter((img) =>
+                                matchesVisualGroupFilter(
+                                    img.group_category,
+                                    currentFilter
+                                )
+                            )
 
                         if (filteredPrefetched.length > 0) {
                             setPrefetchedImages(filteredPrefetched)
@@ -1334,8 +1337,10 @@ export function useGameController(
                         zoom_y: savedGameState.zoomY,
                     }
                     if (
-                        groupFilter &&
-                        savedImage.group_category !== groupFilter
+                        !matchesVisualGroupFilter(
+                            savedImage.group_category,
+                            groupFilter
+                        )
                     ) {
                         unlimitedStats.clearGameState(difficulty)
                         setDailyImage(null)

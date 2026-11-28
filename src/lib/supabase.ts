@@ -298,6 +298,14 @@ async function fetchUnseen<T extends { img_bucket?: string }>(
     return second.data ?? []
 }
 
+export function matchesVisualGroupFilter(
+    category: string | null | undefined,
+    filter: string | null | undefined
+) {
+    if (!filter || filter === 'both') return true
+    return category === filter || category === 'mixed-group'
+}
+
 export async function getMultipleRandomHangulImages(
     count: number,
     groupFilter?: 'boy-group' | 'girl-group' | null,
@@ -363,7 +371,7 @@ export async function getMultipleRandomUnlimitedImages(
     if (!data) return []
     const rows = withoutAnswer(data).filter((img) => {
         if (!img.group_category || !img.base64_group) return false
-        if (!bind && groupFilter && img.group_category !== groupFilter)
+        if (!bind && !matchesVisualGroupFilter(img.group_category, groupFilter))
             return false
         return true
     })

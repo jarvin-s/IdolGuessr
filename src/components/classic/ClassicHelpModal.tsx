@@ -181,10 +181,11 @@ const ATTRIBUTES: Array<{
     },
     {
         name: 'Gender',
-        text: 'A check when the idol has the same gender.',
+        text: 'A check when the idol has the same gender. Co-ed groups show Mixed.',
         tiles: [
             { label: 'Gender', value: 'Female', tone: 'correct' },
             { label: 'Gender', value: 'Male', tone: 'wrong' },
+            { label: 'Gender', value: 'Mixed', tone: 'wrong' },
         ],
     },
     {

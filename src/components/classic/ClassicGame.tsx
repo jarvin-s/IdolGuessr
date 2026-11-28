@@ -224,7 +224,11 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
     const suggestions = useMemo(() => {
         const filter = game?.groupFilter ?? 'both'
         if (filter === 'both') return pool
-        return pool.filter((idol) => idol.groupCategory === filter)
+        return pool.filter(
+            (idol) =>
+                idol.groupCategory === filter ||
+                idol.groupCategory === 'mixed-group'
+        )
     }, [pool, game?.groupFilter])
 
     const finishReveal = useCallback(() => {
