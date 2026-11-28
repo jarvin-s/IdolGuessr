@@ -31,9 +31,11 @@ import {
 import {
     getClassicGame,
     getProfile,
+    getStreaks,
     playerReady,
     savePlayerSettings,
     subscribePlayer,
+    type StreakRow,
 } from '@/lib/player'
 
 function friendly(error: unknown) {
@@ -67,6 +69,19 @@ function filterLabel(group: ClassicGroup) {
     return 'All groups'
 }
 
+function classicStreak(mode: ClassicMode): StreakRow | null {
+    return (
+        getStreaks().find(
+            (row) => row.mode === 'classic' && row.difficulty === mode
+        ) ?? null
+    )
+}
+
+function averageGuesses(row: StreakRow | null) {
+    if (!row || row.total_wins <= 0) return null
+    return ((row.win_guesses ?? 0) / row.total_wins).toFixed(1)
+}
+
 export default function ClassicGame({ mode }: { mode: ClassicMode }) {
     const router = useRouter()
     const [game, setGame] = useState<ClassicState | null>(null)
@@ -83,6 +98,8 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
     const [playMore, setPlayMore] = useState(false)
     const [revealHold, setRevealHold] = useState(false)
     const [confirmGiveUp, setConfirmGiveUp] = useState(false)
+    const [streak, setStreak] = useState<StreakRow | null>(null)
+    const [endedStreak, setEndedStreak] = useState<number | null>(null)
     const [filterOpen, setFilterOpen] = useState(false)
     const [showAccount, setShowAccount] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
@@ -95,7 +112,10 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
     const revealTimer = useRef<number | null>(null)
 
     useEffect(() => {
-        const sync = () => setGame(getClassicGame(mode))
+        const sync = () => {
+            setGame(getClassicGame(mode))
+            setStreak(classicStreak(mode))
+        }
         sync()
         return subscribePlayer(sync)
     }, [mode])
@@ -234,6 +254,7 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
             setNewestId(idol.id)
             const result = await submitClassic(mode, idol.id)
             if (result.solved) {
+                setEndedStreak(null)
                 if (mode === 'daily') setWinCount((count) => (count ?? 0) + 1)
                 holdResult.current = true
                 setRevealHold(true)
@@ -257,7 +278,9 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
         setBusy(true)
         setError('')
         try {
+            const ended = classicStreak(mode)?.current_streak ?? 0
             await giveUpClassic(mode)
+            setEndedStreak(ended)
             setConfirmGiveUp(false)
             setResultOpen(true)
         } catch (err) {
@@ -280,6 +303,7 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
         try {
             await startClassicRound(group)
             setNewestId(null)
+            setEndedStreak(null)
             setConfirmGiveUp(false)
             setFilterOpen(false)
             setResultOpen(false)
@@ -292,6 +316,13 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
     }
 
     const groupLabel = filterLabel(game?.groupFilter ?? 'both')
+    const average = averageGuesses(streak)
+    const showReveal = mode === 'infinite' && game?.status === 'in_progress'
+    const showResult = finished && !resultOpen && !revealHold
+    const resultStreak =
+        game?.status === 'gave_up'
+            ? (endedStreak ?? streak?.current_streak ?? 0)
+            : (streak?.current_streak ?? 0)
 
     return (
         <div className='min-h-screen bg-white dark:bg-zinc-950'>
@@ -328,20 +359,39 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
                                 guessed today&apos;s idol
                             </p>
                         )}
-                        {mode === 'infinite' &&
-                            (game?.status === 'in_progress' ? (
-                                <p className='mt-2 text-sm font-semibold text-gray-500 dark:text-zinc-400'>
+                        {mode === 'infinite' && (
+                            <div className='mt-1 flex items-center justify-center'>
+                                <p className='rounded-full bg-pink-600 px-4 py-1 text-lg font-bold text-black dark:text-white'>
                                     {groupLabel}
                                 </p>
-                            ) : (
-                                <button
-                                    type='button'
-                                    onClick={() => setFilterOpen(true)}
-                                    className='mt-2 cursor-pointer text-sm font-semibold text-gray-500 underline dark:text-zinc-400'
-                                >
-                                    {groupLabel}
-                                </button>
-                            ))}
+                            </div>
+                        )}
+                        {mode === 'infinite' && (
+                            <>
+                                <div className='mt-4 flex items-center justify-center gap-5'>
+                                    <span className='inline-flex items-center gap-1 text-xl font-bold text-[#e09200]'>
+                                        <FireIcon />
+                                        {streak?.current_streak ?? 0}
+                                    </span>
+                                    {/* <div className='flex items-center gap-2'>
+                                        <span className='rounded-full border border-pink-600 bg-pink-600/40 px-4 py-1 text-base text-pink-300 uppercase'>
+                                            Best{' '}
+                                        </span>
+                                        <span className='font-semibold text-black dark:text-white'>
+                                            {streak?.max_streak ?? 0}
+                                        </span>
+                                    </div>
+                                    <div className='flex items-center gap-2'>
+                                        <span className='rounded-full border border-pink-600 bg-pink-600/40 px-4 py-1 text-base text-pink-300 uppercase'>
+                                            Average{' '}
+                                        </span>
+                                        <span className='font-semibold text-black dark:text-white'>
+                                            {average ?? '-'}
+                                        </span>
+                                    </div> */}
+                                </div>
+                            </>
+                        )}
                     </div>
                     {loading ? (
                         <p className='mt-6 text-center text-sm text-gray-500 dark:text-zinc-400'>
@@ -373,47 +423,38 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
                                 {error}
                             </p>
                         )}
-                        {mode === 'daily' &&
-                            game?.status === 'in_progress' &&
-                            game.guesses.length >= 3 && (
-                                <div className='mt-4 flex justify-center'>
+                        {(mode === 'daily' &&
+                            ((game?.status === 'in_progress' &&
+                                game.guesses.length >= 3) ||
+                                showResult)) ||
+                        (mode === 'infinite' && (showReveal || showResult)) ? (
+                            <div className='mt-4 flex justify-center'>
+                                {showResult ? (
+                                    <button
+                                        type='button'
+                                        onClick={() => setResultOpen(true)}
+                                        className='cursor-pointer rounded-full bg-pink-600 px-4 py-2 font-bold text-white hover:bg-pink-700'
+                                    >
+                                        Result
+                                    </button>
+                                ) : (
                                     <button
                                         type='button'
                                         onClick={() => setConfirmGiveUp(true)}
                                         className='cursor-pointer rounded-full bg-red-600 px-4 py-2 font-bold text-white hover:bg-red-700'
                                     >
-                                        Give up
+                                        {mode === 'infinite'
+                                            ? 'Reveal'
+                                            : 'Give up'}
                                     </button>
-                                </div>
-                            )}
+                                )}
+                            </div>
+                        ) : null}
                         <GuessGrid
                             guesses={game?.guesses ?? []}
                             newestId={newestId}
                             onRevealEnd={finishReveal}
                         />
-                        {mode === 'infinite' &&
-                            game?.status === 'in_progress' && (
-                                <div className='mt-4 flex justify-center'>
-                                    <button
-                                        type='button'
-                                        onClick={() => setConfirmGiveUp(true)}
-                                        className='cursor-pointer rounded-full bg-red-600 px-4 py-2 font-bold text-white hover:bg-red-700'
-                                    >
-                                        Give up
-                                    </button>
-                                </div>
-                            )}
-                        {finished && !resultOpen && !revealHold && (
-                            <div className='mt-4 flex justify-center'>
-                                <button
-                                    type='button'
-                                    onClick={() => setResultOpen(true)}
-                                    className='cursor-pointer rounded-full bg-pink-600 px-4 py-2 font-bold text-white hover:bg-pink-700'
-                                >
-                                    Result
-                                </button>
-                            </div>
-                        )}
                     </>
                 )}
             </div>
@@ -430,6 +471,12 @@ export default function ClassicGame({ mode }: { mode: ClassicMode }) {
                 answer={game?.answer ?? null}
                 guesses={game?.guesses ?? []}
                 dailyId={game?.dailyId ?? null}
+                stats={{
+                    streak: resultStreak,
+                    best: streak?.max_streak ?? 0,
+                    average,
+                    ended: game?.status === 'gave_up' && endedStreak != null,
+                }}
                 onClose={() => {
                     setResultOpen(false)
                     offerPlayMore()
@@ -566,7 +613,7 @@ function GiveUpModal({
     return (
         <div className='fixed inset-0 z-600 flex items-center justify-center bg-black/40 px-4'>
             <div
-                className='modal-fade-in relative w-full max-w-sm rounded-md border border-pink-600 bg-white p-6 text-center shadow-xl dark:bg-zinc-900'
+                className='modal-fade-in relative w-full max-w-sm rounded-md bg-white p-6 text-center shadow-xl dark:bg-zinc-900'
                 role='dialog'
                 aria-modal='true'
                 aria-labelledby='classic-give-up-title'
@@ -589,7 +636,7 @@ function GiveUpModal({
                     <button
                         type='button'
                         onClick={onCancel}
-                        className='cursor-pointer rounded-full bg-gray-200 px-4 py-2 font-bold dark:bg-zinc-800'
+                        className='cursor-pointer rounded-full bg-gray-200 px-4 py-2 font-bold transition-colors hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                     >
                         Cancel
                     </button>
@@ -604,6 +651,27 @@ function GiveUpModal({
                 </div>
             </div>
         </div>
+    )
+}
+
+function FireIcon() {
+    return (
+        <svg
+            xmlns='http://www.w3.org/2000/svg'
+            width='36'
+            height='36'
+            viewBox='0 0 24 24'
+            aria-hidden
+        >
+            <path
+                fill='#e09200'
+                d='M12.832 21.801c3.126-.626 7.168-2.875 7.168-8.69c0-5.291-3.873-8.815-6.658-10.434c-.619-.36-1.342.113-1.342.828v1.828c0 1.442-.606 4.074-2.29 5.169c-.86.559-1.79-.278-1.894-1.298l-.086-.838c-.1-.974-1.092-1.565-1.87-.971C4.461 8.46 3 10.33 3 13.11C3 20.221 8.289 22 10.933 22q.232 0 .484-.015c.446-.056 0 .099 1.415-.185'
+            />
+            <path
+                fill='#faeb9f'
+                d='M8 18.444c0 2.62 2.111 3.43 3.417 3.542c.446-.056 0 .099 1.415-.185C13.871 21.434 15 20.492 15 18.444c0-1.297-.819-2.098-1.46-2.473c-.196-.115-.424.03-.441.256c-.056.718-.746 1.29-1.215.744c-.415-.482-.59-1.187-.59-1.638v-.59c0-.354-.357-.59-.663-.408C9.495 15.008 8 16.395 8 18.445'
+            />
+        </svg>
     )
 }
 

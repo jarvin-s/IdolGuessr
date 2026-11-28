@@ -18,6 +18,7 @@ export default function ClassicWinModal({
     answer,
     guesses,
     dailyId,
+    stats,
     onClose,
     onNext,
 }: {
@@ -26,6 +27,12 @@ export default function ClassicWinModal({
     answer: ClassicAnswer | null
     guesses: ClassicFeedback[]
     dailyId: number | null
+    stats?: {
+        streak: number
+        best: number
+        average: string | null
+        ended?: boolean
+    } | null
     onClose: () => void
     onNext?: () => void
 }) {
@@ -124,6 +131,35 @@ export default function ClassicWinModal({
                         </p>
                         <p className='mb-6 text-sm text-gray-500 dark:text-zinc-400'>{answer.group_name}</p>
 
+                        {stats ? (
+                            <div className='mb-6 grid w-full grid-cols-3 gap-2 text-center'>
+                                <div>
+                                    <div className='text-2xl font-bold text-black dark:text-zinc-100'>
+                                        {stats.streak}
+                                    </div>
+                                    <div className='text-xs text-gray-500 dark:text-zinc-400'>
+                                        {stats.ended ? 'Streak ended' : 'Streak'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className='text-2xl font-bold text-black dark:text-zinc-100'>
+                                        {stats.best}
+                                    </div>
+                                    <div className='text-xs text-gray-500 dark:text-zinc-400'>
+                                        Best
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className='text-2xl font-bold text-black dark:text-zinc-100'>
+                                        {stats.average ?? '—'}
+                                    </div>
+                                    <div className='text-xs text-gray-500 dark:text-zinc-400'>
+                                        Average guesses
+                                    </div>
+                                </div>
+                            </div>
+                        ) : null}
+
                         {portrait ? (
                             <div className='mb-4 w-full overflow-hidden sm:rounded-lg'>
                                 <div className='relative aspect-square w-full'>
@@ -180,7 +216,7 @@ export default function ClassicWinModal({
                             <button
                                 type='button'
                                 onClick={onNext}
-                                className='mb-3 w-full cursor-pointer rounded-full bg-green-400 px-6 py-3 text-base font-bold text-white transition-colors hover:bg-green-500'
+                                className='mb-3 w-full cursor-pointer rounded-full bg-green-500 px-6 py-3 text-base font-bold text-white transition-colors hover:bg-green-500'
                             >
                                 NEXT IDOL
                             </button>

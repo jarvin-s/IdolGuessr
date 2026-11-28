@@ -14,4 +14,5 @@ export const COUNTRIES: Record<string, { name: string; code: string }> = {
     German: { name: 'German', code: 'de' },
     British: { name: 'British', code: 'gb' },
     Hong_Konger: { name: 'Hong Konger', code: 'hk' },
+    Indonesian: { name: 'Indonesian', code: 'id' },
 }

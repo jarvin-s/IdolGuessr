@@ -309,7 +309,7 @@ export default function ClassicHelpModal({
                                     Each guess reveals the idol&apos;s attributes, and the tiles show how close you are.
                                 </p>
                                 <p className='mt-2 text-sm leading-relaxed text-gray-600 dark:text-zinc-300'>
-                                    In the daily, Give up appears after your 3rd guess. It reveals the answer and ends the round.
+                                    In the daily, Give up appears after your 3rd guess. It reveals the answer and ends the round. In infinite, Reveal sits above the grid. It shows the answer and resets your streak. A correct guess keeps the streak and updates your average guesses.
                                 </p>
                             </div>
 
