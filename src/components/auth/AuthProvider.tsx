@@ -8,7 +8,7 @@ import {
     type ReactNode,
 } from 'react'
 import posthog from 'posthog-js'
-import { supabase, setAccountId } from '@/lib/supabase'
+import { ensureBrowserSession, setAccountId } from '@/lib/supabase'
 import {
     getProfile,
     importLegacyProgress,
@@ -52,18 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const unsubscribe = subscribePlayer(sync)
 
         const boot = async () => {
-            const { data } = await supabase.auth.getSession()
-            let user = data.session?.user ?? null
+            const session = await ensureBrowserSession()
+            const user = session?.user ?? null
             if (!user) {
-                const signed = await supabase.auth.signInAnonymously()
-                if (signed.error) {
-                    if (!cancelled) {
-                        setError(signed.error.message)
-                        setReady(true)
-                    }
-                    return
+                if (!cancelled) {
+                    setError('Could not start a guest session')
+                    setReady(true)
                 }
-                user = signed.data.user
+                return
             }
             setAccountId(user?.id ?? null)
             await refreshOverview()

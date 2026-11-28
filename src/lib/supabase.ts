@@ -1,8 +1,16 @@
 import { createBrowserClient } from '@supabase/ssr'
+import type { Session } from '@supabase/supabase-js'
 import {
     INFINITE_GEN_VALUES,
     isActiveInfiniteGenFilter,
 } from '@/utils/genFilter'
+import {
+    accessTokenStillValid,
+    clearBrowserSession,
+    readBrowserSession,
+    rememberBrowserSession,
+    withBackupAccessToken,
+} from '@/lib/browserSession'
 import { supabaseAnonKey, supabaseUrl } from '@/lib/supabase/env'
 import { randomId } from '@/utils/randomId'
 import {
@@ -11,7 +19,113 @@ import {
     startInfiniteRound,
 } from '@/lib/game/actions'
 
-export const supabase = createBrowserClient(supabaseUrl(), supabaseAnonKey())
+let cookieHealStarted = false
+
+function sendWithBackup(input: RequestInfo | URL, init: RequestInit | undefined) {
+    const backed = withBackupAccessToken(supabaseAnonKey(), input, init)
+    if (!backed) return fetch(input, init)
+    scheduleCookieHeal()
+    if (input instanceof Request) return fetch(new Request(input, { headers: backed.headers }))
+    return fetch(input, { ...init, headers: backed.headers })
+}
+
+async function browserFetch(
+    input: RequestInfo | URL,
+    init: RequestInit | undefined,
+    allowRetry: boolean,
+): Promise<Response> {
+    const response = await sendWithBackup(input, init)
+    if (!allowRetry || response.status !== 400) return response
+    const url =
+        input instanceof Request
+            ? input.url
+            : input instanceof URL
+              ? input.toString()
+              : String(input)
+    if (!url.includes('/rest/v1/')) return response
+    let body = ''
+    try {
+        body = await response.clone().text()
+    } catch {
+        return response
+    }
+    if (!body.includes('not_authenticated')) return response
+    const session = await ensureBrowserSession()
+    if (!session?.access_token) return response
+    return browserFetch(input, init, false)
+}
+
+export const supabase = createBrowserClient(supabaseUrl(), supabaseAnonKey(), {
+    global: {
+        fetch: (input, init) => {
+            if (typeof window === 'undefined') return fetch(input, init)
+            return browserFetch(input, init, true)
+        },
+    },
+})
+
+if (typeof window !== 'undefined') {
+    supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.access_token) rememberBrowserSession(session)
+    })
+}
+
+function scheduleCookieHeal() {
+    if (cookieHealStarted || typeof window === 'undefined') return
+    cookieHealStarted = true
+    void supabase.auth.getSession().then(async ({ data }) => {
+        if (data.session?.access_token) return
+        const saved = readBrowserSession()
+        if (!saved?.access_token || !saved.refresh_token) return
+        const restored = await supabase.auth.setSession({
+            access_token: saved.access_token,
+            refresh_token: saved.refresh_token,
+        })
+        if (restored.data.session) rememberBrowserSession(restored.data.session)
+    }).catch(() => undefined)
+}
+
+let ensuringSession: Promise<Session | null> | null = null
+
+export function ensureBrowserSession(): Promise<Session | null> {
+    if (!ensuringSession) {
+        ensuringSession = ensureBrowserSessionOnce().finally(() => {
+            ensuringSession = null
+        })
+    }
+    return ensuringSession
+}
+
+async function ensureBrowserSessionOnce(): Promise<Session | null> {
+    if (typeof window === 'undefined') return null
+    const { data } = await supabase.auth.getSession()
+    if (data.session?.access_token) {
+        rememberBrowserSession(data.session)
+        return data.session
+    }
+
+    const saved = readBrowserSession()
+    if (saved?.access_token && saved.refresh_token) {
+        if (accessTokenStillValid(saved)) {
+            rememberBrowserSession(saved)
+            scheduleCookieHeal()
+            return saved
+        }
+        const refreshed = await supabase.auth.refreshSession({ refresh_token: saved.refresh_token })
+        if (refreshed.data.session?.access_token) {
+            rememberBrowserSession(refreshed.data.session)
+            return refreshed.data.session
+        }
+        clearBrowserSession()
+    }
+
+    const signed = await supabase.auth.signInAnonymously()
+    if (signed.error || !signed.data.session) return null
+    rememberBrowserSession(signed.data.session)
+    return signed.data.session
+}
+
+export { clearBrowserSession }
 
 export interface DailyImage {
     id: number
@@ -393,6 +507,7 @@ export async function signInAdmin(
 }
 
 export async function signOutAdmin(): Promise<void> {
+    clearBrowserSession()
     const { error } = await supabase.auth.signOut()
     if (error) throw error
 }
@@ -649,7 +764,7 @@ export async function trackUnlimitedGame(
     difficulty: UnlimitedGameData['difficulty'] = 'normal',
     mode: UnlimitedGameData['mode'] = 'pixelated'
 ): Promise<void> {
-    if (streak < 1) return
+    if (streak < 5) return
     const userId = getAccountId()
     if (!userId) return
 
@@ -728,26 +843,65 @@ export interface HistoryDailyImage extends DailyImage {
     play_date: string
 }
 
+function amsterdamDate(date = new Date()): string {
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Amsterdam',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).format(date)
+}
+
 export async function getDailyImageByDate(
     date: string
 ): Promise<HistoryDailyImage | null> {
-    const startOfDay = `${date}T00:00:00`
-    const endOfDay = `${date}T23:59:59`
-
     const { data, error } = await supabase
         .from('dailies_public')
         .select(
-            'id, group_type, play_date, img_bucket, chosen_by, chosen_by_url'
+            'id, group_type, play_day, img_bucket, group_name, chosen_by, chosen_by_url'
         )
-        .gte('play_date', startOfDay)
-        .lte('play_date', endOfDay)
+        .eq('play_day', date)
+        .lt('play_day', amsterdamDate())
         .maybeSingle()
 
     if (error || !data) {
         return null
     }
 
-    return { ...data, name: '' } as HistoryDailyImage
+    return {
+        ...data,
+        play_date: data.play_day,
+        name: '',
+    } as HistoryDailyImage
+}
+
+export async function judgePastDailyGuess(
+    dailyId: number,
+    guess: string,
+    finalGuess: boolean
+): Promise<{ correct: boolean; absentLetters: string[]; answer: string | null } | null> {
+    const session = await ensureBrowserSession()
+    if (!session) return null
+
+    const { data, error } = await supabase.rpc('judge_past_daily_guess', {
+        p_daily_id: dailyId,
+        p_guess: guess,
+        p_final: finalGuess,
+    })
+    if (error || !data || typeof data !== 'object') {
+        console.error('judge_past_daily_guess', error)
+        return null
+    }
+
+    const row = data as { correct?: boolean; absent_letters?: unknown; answer?: string | null }
+    const absent = Array.isArray(row.absent_letters)
+        ? row.absent_letters.filter((letter): letter is string => typeof letter === 'string')
+        : []
+    return {
+        correct: Boolean(row.correct),
+        absentLetters: absent,
+        answer: typeof row.answer === 'string' && row.answer ? row.answer : null,
+    }
 }
 
 export async function getAvailableDailyDates(): Promise<{
@@ -755,29 +909,18 @@ export async function getAvailableDailyDates(): Promise<{
     firstDate: string | null
     lastDate: string | null
 }> {
-    const now = new Date()
-    const gmtPlus1 = new Date(now.getTime() + 60 * 60 * 1000)
-    const today = gmtPlus1.toISOString().split('T')[0]
-    const endOfToday = `${today}T23:59:59`
-
     const { data, error } = await supabase
         .from('dailies_public')
-        .select('play_date')
-        .lte('play_date', endOfToday)
-        .order('play_date', { ascending: true })
+        .select('play_day')
+        .lt('play_day', amsterdamDate())
+        .order('play_day', { ascending: true })
 
     if (error) {
         return { dates: [], firstDate: null, lastDate: null }
     }
 
     const dates =
-        data?.map((d) => {
-            const playDate = new Date(d.play_date)
-            const year = playDate.getFullYear()
-            const month = String(playDate.getMonth() + 1).padStart(2, '0')
-            const day = String(playDate.getDate()).padStart(2, '0')
-            return `${year}-${month}-${day}`
-        }) || []
+        data?.map((d) => String(d.play_day).slice(0, 10)) || []
 
     return {
         dates,

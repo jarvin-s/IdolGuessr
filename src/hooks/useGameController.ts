@@ -63,8 +63,13 @@ const posthogConfigured = Boolean(
         process.env.NEXT_PUBLIC_POSTHOG_HOST
 )
 
-export function useGameController(initialDaily?: CurrentDaily | null) {
+export function useGameController(
+    initialDaily?: CurrentDaily | null,
+    suspendInput = false
+) {
     const pathname = usePathname()
+    const suspendInputRef = useRef(suspendInput)
+    suspendInputRef.current = suspendInput
     const [gameMode, setGameMode] = useState<'daily' | 'unlimited'>('daily')
     const [currentGuess, setCurrentGuess] = useState('')
     const [lastIncorrectGuess, setLastIncorrectGuess] = useState('')
@@ -688,7 +693,7 @@ export function useGameController(initialDaily?: CurrentDaily | null) {
                 )
                 if (hasGuesses) {
                     const currentStreak = unlimitedStats.stats.currentStreak
-                    if (currentStreak >= 1 && !hasTrackedCurrentGame.current) {
+                    if (currentStreak >= 5 && !hasTrackedCurrentGame.current) {
                         void trackUnlimitedGame(currentStreak, activeDifficulty, imageMode)
                         hasTrackedCurrentGame.current = true
                     }
@@ -939,6 +944,7 @@ export function useGameController(initialDaily?: CurrentDaily | null) {
 
     const handleKeyPress = useCallback(
         (key: string, guessOverride?: string) => {
+            if (suspendInputRef.current) return
             if (gameMode === 'daily' && todayCompleted) return
             if ((gameMode === 'unlimited' || pathname === '/infinite') && !dailyImage) return
 
@@ -1049,7 +1055,7 @@ export function useGameController(initialDaily?: CurrentDaily | null) {
                                             unlimitedStats.stats.currentStreak
                                         setLostStreak(currentStreak)
                                         if (
-                                            currentStreak >= 1 &&
+                                            currentStreak >= 5 &&
                                             !hasTrackedCurrentGame.current
                                         ) {
                                             void trackUnlimitedGame(
@@ -1158,6 +1164,7 @@ export function useGameController(initialDaily?: CurrentDaily | null) {
 
     useEffect(() => {
         const handlePhysicalKeyPress = (event: KeyboardEvent) => {
+            if (suspendInputRef.current) return
             const target = event.target as HTMLElement
             if (
                 target.tagName === 'INPUT' ||

@@ -1,3 +1,6 @@
+'use client'
+
+import { GuessDot } from '@/components/theme/FeedbackIcon'
 import StreakPopup from './StreakPopup'
 import HangulGameOverModal from './HangulGameOverModal'
 import { useEffect, useState, useRef } from 'react'
@@ -186,16 +189,7 @@ export default function HangulDisplay({
                         </h1>
                         <div className='flex gap-2.5'>
                             {guesses.map((guess, index) => (
-                                <div
-                                    key={index}
-                                    className={`h-4 w-4 rounded-full ${
-                                        guess === 'correct'
-                                            ? 'bg-green-400'
-                                            : guess === 'incorrect'
-                                              ? 'bg-red-400/75'
-                                              : 'bg-white'
-                                    }`}
-                                />
+                                <GuessDot key={index} guess={guess} />
                             ))}
                         </div>
                     </div>

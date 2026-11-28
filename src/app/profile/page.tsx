@@ -118,6 +118,9 @@ export default function ProfilePage() {
                 </span>
             </Link>
             <h1 className='mt-4 text-3xl font-bold uppercase'>Profile</h1>
+            {profile?.nickname?.trim() ? (
+                <p className='mt-2 text-lg font-semibold'>{profile.nickname}</p>
+            ) : null}
             {profile?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img

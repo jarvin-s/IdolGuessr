@@ -1,14 +1,16 @@
+'use client'
+
 import type { AttributeStatus } from '@/lib/classic'
 import { COUNTRIES } from '@/components/classic/countries'
+import FeedbackIcon, { type FeedbackMark } from '@/components/theme/FeedbackIcon'
+import { useColorblind } from '@/components/theme/ColorblindProvider'
+import { feedbackPalette } from '@/lib/feedbackPalette'
 import { motion } from 'motion/react'
 import Image from 'next/image'
 
-const TONE: Record<AttributeStatus, string> = {
-    correct: 'bg-[#3aa346]',
-    partial: 'bg-[#e39b2b]',
-    wrong: 'bg-[#d64545]',
-    higher: 'bg-[#d64545]',
-    lower: 'bg-[#d64545]',
+function markFor(status: AttributeStatus): FeedbackMark | null {
+    if (status === 'correct' || status === 'partial' || status === 'wrong') return status
+    return null
 }
 
 function formatHeight(value: string | number) {
@@ -20,7 +22,7 @@ function formatHeight(value: string | number) {
     return `${cm}cm/${feet}'${inches}`
 }
 
-function NationalityValue({ value, matched }: { value: string; matched?: string[] }) {
+function NationalityValue({ value, matched, matchedClass }: { value: string; matched?: string[]; matchedClass: string }) {
     const parts = value.split(',').map((part) => part.trim()).filter(Boolean)
     const hits = new Set((matched ?? []).map((part) => part.trim().toLowerCase()))
     const split = parts.length > 1 && hits.size > 0 && parts.some((part) => !hits.has(part.toLowerCase()))
@@ -32,7 +34,7 @@ function NationalityValue({ value, matched }: { value: string; matched?: string[
                 const fade = split && !correct ? 'opacity-40' : ''
                 const label = country?.name ?? part
                 const labelClass = correct
-                    ? 'rounded-md bg-green-600 px-1.5 py-0.5 text-xs leading-none font-semibold text-white'
+                    ? `rounded-md px-1.5 py-0.5 text-xs leading-none font-semibold text-white ${matchedClass}`
                     : 'text-xs leading-none'
                 if (!country) {
                     return (
@@ -83,7 +85,10 @@ export default function AttributeCell({
     delay?: number
     onFlipEnd?: () => void
 }) {
+    const { colorblind, attributeIcons } = useColorblind()
+    const palette = feedbackPalette(colorblind)
     const direction = status === 'higher' ? 'up' : status === 'lower' ? 'down' : null
+    const mark = attributeIcons ? markFor(status) : null
     const showNationality = column === 'nationality' && typeof value === 'string' && value !== ''
 
     return (
@@ -96,7 +101,7 @@ export default function AttributeCell({
             onAnimationComplete={animate ? onFlipEnd : undefined}
         >
             <div
-                className={`absolute inset-0 flex items-center justify-center overflow-hidden rounded-md px-2 text-center text-sm font-semibold text-white ${TONE[status]}`}
+                className={`absolute inset-0 flex items-center justify-center overflow-hidden rounded-md px-2 text-center text-sm font-semibold text-white ${palette[status]}`}
                 style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
             >
                 {direction && (
@@ -110,9 +115,14 @@ export default function AttributeCell({
                         }}
                     />
                 )}
+                {mark && (
+                    <span className='absolute top-1 right-1 z-10 text-white'>
+                        <FeedbackIcon mark={mark} className='h-3.5 w-3.5' />
+                    </span>
+                )}
                 <span className='relative z-10 min-w-0 leading-tight wrap-break-word'>
                     {showNationality ? (
-                        <NationalityValue value={value} matched={matched} />
+                        <NationalityValue value={value} matched={matched} matchedClass={palette.matched} />
                     ) : (
                         formatAttribute(column, value)
                     )}

@@ -44,6 +44,7 @@ function averageLabel(value: number | null | undefined) {
     return value.toFixed(1)
 }
 
+const PAGE_SIZE = 50
 const PODIUM = [2, 1, 3] as const
 const LIST_ROW_HEIGHT = '3rem'
 const LIST_ROW_GAP = '0.5rem'
@@ -270,6 +271,7 @@ export default function LeaderboardPage() {
         useState<(typeof CLASSIC_LISTS)[number]['id']>('daily')
     const [difficulty, setDifficulty] = useState<InfiniteDifficulty>('normal')
     const [imageMode, setImageMode] = useState<ImageMode>('pixelated')
+    const [page, setPage] = useState(0)
     const [rows, setRows] = useState<LeaderboardRow[]>([])
     const [me, setMe] = useState<{
         rank: number | null
@@ -307,7 +309,8 @@ export default function LeaderboardPage() {
                         : tab === 'classic'
                           ? classicList
                           : '',
-                    tab === 'infinite' ? imageMode : ''
+                    tab === 'infinite' ? imageMode : '',
+                    page * PAGE_SIZE
                 )
                 if (cancelled) return
                 setRows(data.rows ?? [])
@@ -326,7 +329,7 @@ export default function LeaderboardPage() {
         return () => {
             cancelled = true
         }
-    }, [tab, difficulty, imageMode, classicList])
+    }, [tab, difficulty, imageMode, classicList, page])
 
     return (
         <main className='mx-auto min-h-screen max-w-lg px-4 py-10'>
@@ -377,7 +380,10 @@ export default function LeaderboardPage() {
                             <button
                                 key={item.id}
                                 type='button'
-                                onClick={() => setTab(item.id)}
+                                onClick={() => {
+                                    setTab(item.id)
+                                    setPage(0)
+                                }}
                                 className={segmentClass(tab === item.id)}
                             >
                                 {item.label}
@@ -392,7 +398,10 @@ export default function LeaderboardPage() {
                                 <button
                                     key={option.id}
                                     type='button'
-                                    onClick={() => setClassicList(option.id)}
+                                    onClick={() => {
+                                        setClassicList(option.id)
+                                        setPage(0)
+                                    }}
                                     className={segmentClass(
                                         classicList === option.id
                                     )}
@@ -411,7 +420,10 @@ export default function LeaderboardPage() {
                                     <button
                                         key={option}
                                         type='button'
-                                        onClick={() => setDifficulty(option)}
+                                        onClick={() => {
+                                            setDifficulty(option)
+                                            setPage(0)
+                                        }}
                                         className={segmentClass(
                                             difficulty === option
                                         )}
@@ -427,7 +439,10 @@ export default function LeaderboardPage() {
                                     <button
                                         key={option}
                                         type='button'
-                                        onClick={() => setImageMode(option)}
+                                        onClick={() => {
+                                            setImageMode(option)
+                                            setPage(0)
+                                        }}
                                         className={segmentClass(
                                             imageMode === option
                                         )}

@@ -1,6 +1,9 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import FeedbackIcon from '@/components/theme/FeedbackIcon'
+import { useColorblind } from '@/components/theme/ColorblindProvider'
+import { feedbackPalette } from '@/lib/feedbackPalette'
 import idolNames from '@/data/idolNames.json'
 
 const LISTBOX_ID = 'idol-guess-suggestions'
@@ -173,24 +176,30 @@ export default function IdolTextInput({
         correctAnswer
     ).trim()
 
-    const borderClass = showingCorrect
-        ? 'border-green-400'
-        : showingLoss || feedback
-          ? 'border-red-400'
-          : 'border-gray-300 dark:border-zinc-600'
-    const bgClass = showingCorrect
-        ? 'bg-green-400'
-        : showingLoss || feedback
-          ? 'bg-red-400'
+    const { colorblind } = useColorblind()
+    const palette = feedbackPalette(colorblind)
+    const result = showingCorrect ? 'correct' : showingLoss || feedback ? 'wrong' : null
+    const borderClass = result
+        ? 'border-transparent'
+        : 'border-gray-300 dark:border-zinc-600'
+    const bgClass = result === 'correct'
+        ? palette.bannerCorrect
+        : result === 'wrong'
+          ? palette.bannerWrong
           : 'bg-gray-200 dark:bg-zinc-800'
 
     return (
         <div className={`relative w-full shrink-0 ${className}`}>
             <div
-                className={`flex items-center rounded-md border-2 transition-colors ${bgClass} ${borderClass} ${
+                className={`flex flex-nowrap items-center rounded-md border-2 transition-colors duration-300 ${bgClass} ${borderClass} ${
                     isAnimating && !gameWon ? 'shake-animation' : ''
                 }`}
             >
+                {result && (
+                    <span className='ml-3 shrink-0 text-white'>
+                        <FeedbackIcon mark={result} className='h-5 w-5 shrink-0 text-white' />
+                    </span>
+                )}
                 <input
                     ref={inputRef}
                     type='text'
@@ -224,7 +233,7 @@ export default function IdolTextInput({
                     aria-controls={LISTBOX_ID}
                     aria-expanded={open && suggestions.length > 0}
                     aria-autocomplete='list'
-                    className={`w-full bg-transparent px-4 py-3 text-lg font-bold tracking-wider outline-none ${
+                    className={`min-w-0 flex-1 bg-transparent px-4 py-3 text-lg font-bold tracking-wider whitespace-nowrap outline-none ${
                         showingLoss ? 'normal-case' : 'uppercase'
                     } ${
                         feedback || showingCorrect || showingLoss
@@ -238,7 +247,7 @@ export default function IdolTextInput({
                               : 'text-black placeholder:text-black/30 disabled:opacity-50 dark:text-zinc-100 dark:placeholder:text-zinc-100/30'
                     }`}
                 />
-                {!showingCorrect && !showingLoss && (
+                {!showingCorrect && !showingLoss && !feedback && (
                     <button
                         type='button'
                         onMouseDown={(e) => e.preventDefault()}

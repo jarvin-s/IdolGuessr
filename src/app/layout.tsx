@@ -4,6 +4,7 @@ import Script from 'next/script'
 import './globals.css'
 import { Analytics } from '@vercel/analytics/next'
 import LiveAnnouncementBanner from '@/components/announcements/LiveAnnouncementBanner'
+import { ColorblindProvider } from '@/components/theme/ColorblindProvider'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import { FeedbackNoticeProvider } from '@/components/feedback/FeedbackNoticeProvider'
@@ -13,6 +14,21 @@ import { themeInitScript } from '@/components/theme/theme'
 const proximaNovaRegular = localFont({
     src: '../../public/fonts/proximanova_regular.ttf',
 })
+
+const PRODUCTION_SITE = 'https://idolguessr.fun'
+const TEST_SITE = 'https://j390jefj890wef.vercel.app'
+
+function siteOrigin() {
+    const vercelUrl = process.env.VERCEL_URL ?? ''
+    if (vercelUrl.includes('j390jefj890wef')) return TEST_SITE
+    const vercelEnv = process.env.NEXT_PUBLIC_VERCEL_ENV
+    const isTest = vercelEnv
+        ? vercelEnv !== 'production'
+        : process.env.NODE_ENV !== 'production'
+    return isTest ? TEST_SITE : PRODUCTION_SITE
+}
+
+const shareImage = `${siteOrigin()}/images/og-image.png`
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://idolguessr.fun'),
@@ -34,7 +50,7 @@ export const metadata: Metadata = {
         },
     },
     description:
-        'Guess The K-pop Idol - A fun web game where K-pop fans test their knowledge by guessing idols from pixelated photos.',
+        'Guess your favourite K-pop idols through clues, pixelated images and much more! New idols appear every day at 12:00 AM CET',
     keywords: [
         'kpop',
         'k-pop',
@@ -74,10 +90,27 @@ export const metadata: Metadata = {
         'idol kpop guess app',
         'kpop idol guess app',
     ],
+    twitter: {
+        card: 'summary_large_image',
+        title: 'IdolGuessr - K-pop Idol Guessing Game',
+        description:
+            'Guess your favorite K-pop idols through clues, pixelated images and much more! New idols appear every day at 12:00 AM CET',
+        images: [shareImage],
+        site: 'IdolGuessr',
+    },
     openGraph: {
         title: 'IdolGuessr - K-pop Idol Guessing Game',
         description:
-            'Guess The K-pop Idol - A fun web game where K-pop fans test their knowledge by guessing idols from pixelated photos.',
+            'Guess your favorite K-pop idols through clues, pixelated images and much more! New idols appear every day at 12:00 AM CET',
+        images: [
+            {
+                url: shareImage,
+                width: 1200,
+                height: 630,
+                alt: 'Play now on IdolGuessr',
+            },
+        ],
+        siteName: 'IdolGuessr',
     },
 }
 
@@ -94,14 +127,16 @@ export default function RootLayout({
             >
                 <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
                 <ThemeProvider>
-                    <AuthProvider>
-                        <FeedbackNoticeProvider>
-                            {children}
-                            <GuestSavePrompt />
-                            <LiveAnnouncementBanner />
-                            <Analytics />
-                        </FeedbackNoticeProvider>
-                    </AuthProvider>
+                    <ColorblindProvider>
+                        <AuthProvider>
+                            <FeedbackNoticeProvider>
+                                {children}
+                                <GuestSavePrompt />
+                                <LiveAnnouncementBanner />
+                                <Analytics />
+                            </FeedbackNoticeProvider>
+                        </AuthProvider>
+                    </ColorblindProvider>
                 </ThemeProvider>
                 <meta
                     name='google-site-verification'
@@ -119,13 +154,6 @@ export default function RootLayout({
                         gtag('config', 'G-6V9ZCS0XZP');
                     `}
                 </Script>
-                <Script
-                    src='https://scripts.mediavine.com/tags/02f25e0b-b180-4f3e-88d5-9ffba965602c.js'
-                    strategy='afterInteractive'
-                    async
-                    data-noptimize='1'
-                    data-cfasync='false'
-                />
             </body>
         </html>
     )

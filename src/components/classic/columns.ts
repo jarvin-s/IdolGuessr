@@ -12,7 +12,7 @@ export const GUESS_COLUMNS: Array<{
     { key: 'gen', label: 'Gen' },
     { key: 'agency', label: 'Agency' },
     { key: 'nationality', label: 'Nationality' },
-    { key: 'positions', label: 'Position(s)' },
+    { key: 'positions', label: 'Positions' },
     { key: 'birth_year', label: 'Birth year' },
     { key: 'height', label: 'Height' },
 ]

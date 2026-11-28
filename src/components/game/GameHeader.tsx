@@ -155,9 +155,12 @@ export default function GameHeader({
                    
                         <button
                             onClick={() => setShowSettings(true)}
-                            className='flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
+                            className='flex h-10 w-10 relative cursor-pointer border border-pink-600 items-center justify-center rounded-lg bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                             aria-label='Settings'
                         >
+                            <span className='absolute -top-2 z-10 rounded-full bg-pink-500 px-1.5 py-0.5 text-[10px] leading-none font-bold tracking-wide text-white uppercase'>
+                                New
+                            </span>
                             <Image
                                 width={24}
                                 height={24}

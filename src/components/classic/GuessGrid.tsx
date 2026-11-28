@@ -1,12 +1,19 @@
 import GuessRow from '@/components/classic/GuessRow'
 import { GUESS_COLUMNS } from '@/components/classic/columns'
 import type { ClassicFeedback } from '@/lib/classic'
-import { Space_Grotesk } from 'next/font/google'
+import localFont from 'next/font/local'
 
-const spaceGrotesk = Space_Grotesk({
-    subsets: ['latin'],
-    weight: ['400', '500', '600', '700'],
+const maleoTrials = localFont({
+    src: '../../../public/fonts/maleotrials-black.otf',
 })
+
+const proximaNova = localFont({
+    src: '../../../public/fonts/proximanova_bold.otf',
+})
+
+const headingClass =
+    'flex items-end justify-center px-0.5 text-center text-2xl leading-tight text-black uppercase dark:text-white ' +
+    maleoTrials.className
 
 export default function GuessGrid({
     guesses,
@@ -30,17 +37,12 @@ export default function GuessGrid({
     return (
         <div className='mt-6 min-w-0 overflow-x-auto pb-2'>
             <div
-                className={`mx-auto grid w-max grid-cols-[7.5rem_repeat(8,7.5rem)] gap-x-1.5 gap-y-1.5 ${spaceGrotesk.className}`}
+                className={`mx-auto grid w-max grid-cols-[7.5rem_repeat(8,7.5rem)] gap-x-1.5 gap-y-1.5 ${proximaNova.className}`}
                 style={{ perspective: '1200px' }}
             >
-                <div className='flex items-end justify-center px-1 text-center text-sm font-semibold tracking-wide text-black dark:text-white uppercase'>
-                    Idol
-                </div>
+                <div className={headingClass}>Idol</div>
                 {GUESS_COLUMNS.map((column) => (
-                    <div
-                        key={column.key}
-                        className='flex items-end justify-center px-1 text-center text-sm font-semibold tracking-wide text-black dark:text-white uppercase'
-                    >
+                    <div key={column.key} className={headingClass}>
                         {column.label}
                     </div>
                 ))}

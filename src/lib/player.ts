@@ -3,6 +3,7 @@
 import {
     getMultipleRandomHangulImages,
     getMultipleRandomUnlimitedImages,
+    clearBrowserSession,
     supabase,
     type DailyImage,
     type HangulImage,
@@ -895,12 +896,13 @@ export async function saveNickname(nickname: string) {
     return overview
 }
 
-export async function fetchLeaderboard(mode: string, difficulty = '', imageMode = '') {
+export async function fetchLeaderboard(mode: string, difficulty = '', imageMode = '', offset = 0) {
     const { data, error } = await supabase.rpc('get_leaderboard', {
         p_mode: mode,
         p_difficulty: difficulty,
         p_image_mode: imageMode,
         p_limit: 50,
+        p_offset: offset,
     })
     if (error) throw error
     return data as {
@@ -912,6 +914,7 @@ export async function fetchLeaderboard(mode: string, difficulty = '', imageMode 
             avg_guesses: number | null
             is_me: boolean
         }>
+        total: number
         me: {
             rank: number | null
             nickname: string | null
@@ -995,6 +998,7 @@ export async function signInWithEmail(email: string): Promise<'sent' | 'signed-i
 }
 
 export async function signOutToGuest() {
+    clearBrowserSession()
     await supabase.auth.signOut()
     const { data, error } = await supabase.auth.signInAnonymously()
     if (error) throw error
@@ -1019,7 +1023,9 @@ function isLegacyImportKey(key: string) {
     return (
         key.startsWith('idol-guessr-') &&
         !key.startsWith(LEGACY_BACKUP_PREFIX) &&
-        key !== 'idol-guessr-theme'
+        key !== 'idol-guessr-theme' &&
+        key !== 'idol-guessr-colorblind' &&
+        key !== 'idol-guessr-attribute-icons'
     )
 }
 

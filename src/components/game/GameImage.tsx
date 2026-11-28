@@ -1,3 +1,6 @@
+'use client'
+
+import { GuessDot } from '@/components/theme/FeedbackIcon'
 import { getImageUrl } from '@/lib/supabase'
 import { getZoomScale, type ImageMode } from '@/utils/difficulty'
 import StreakPopup from './StreakPopup'
@@ -488,16 +491,7 @@ export default function GameImage({
                         </h1>
                         <div className='flex gap-1 md:gap-2.5'>
                             {guesses.map((guess, index) => (
-                                <div
-                                    key={index}
-                                    className={`h-3 w-3 rounded-full md:h-4 md:w-4 ${
-                                        guess === 'correct'
-                                            ? 'bg-green-400'
-                                            : guess === 'incorrect'
-                                              ? 'bg-red-400'
-                                              : 'bg-white'
-                                    }`}
-                                />
+                                <GuessDot key={index} guess={guess} />
                             ))}
                         </div>
                     </div>
